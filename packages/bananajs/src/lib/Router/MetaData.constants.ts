@@ -14,4 +14,10 @@ export enum MetadataKeys {
   API_OPERATION = 'banana:api_operation',
   API_BODY = 'banana:api_body',
   API_RESPONSE = 'banana:api_response',
+  // Phase 3 — Caching
+  CACHE = 'banana:cache',
+  CACHE_EVICT = 'banana:cache_evict',
+  // Phase 3 — ORM (used by plugin packages)
+  TRANSACTIONAL = 'banana:transactional',
+  INJECT_REPOSITORY = 'banana:inject_repository',
 }

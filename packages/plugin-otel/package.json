@@ -1,0 +1,52 @@
+{
+  "name": "@banana-universe/plugin-otel",
+  "version": "0.1.0",
+  "description": "OpenTelemetry plugin for BananaJS — automatic HTTP instrumentation and span enrichment.",
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sprakas/banana-universe.git"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "peerDependencies": {
+    "@banana-universe/bananajs": ">=0.3.0",
+    "@opentelemetry/api": ">=1.4.0",
+    "@opentelemetry/auto-instrumentations-node": ">=0.40.0",
+    "@opentelemetry/sdk-node": ">=0.50.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    },
+    "@opentelemetry/auto-instrumentations-node": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-node": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@banana-universe/bananajs": "*",
+    "@opentelemetry/api": "^1.4.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.40.0",
+    "@opentelemetry/sdk-node": "^0.50.0",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2"
+  }
+}

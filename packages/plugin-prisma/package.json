@@ -1,0 +1,43 @@
+{
+  "name": "@banana-universe/plugin-prisma",
+  "version": "0.1.0",
+  "description": "Prisma plugin for BananaJS — PrismaClient registration and @Transactional decorator.",
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sprakas/banana-universe.git"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "peerDependencies": {
+    "@banana-universe/bananajs": ">=0.3.0",
+    "@prisma/client": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@prisma/client": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@banana-universe/bananajs": "*",
+    "@prisma/client": "^5.0.0",
+    "awilix": "^13.0.3",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2"
+  }
+}

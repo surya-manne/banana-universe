@@ -6,6 +6,30 @@ Current implementation state. Very brief — references other docs. The only cha
 
 ## Modules
 
+### packages/bananajs v0.3.0 [Phase 3 Complete]
+
+**Phase 3 additions:**
+
+- **Plugin architecture**: `BananaPlugin` interface with `AppContext` abstraction; async lifecycle: `register()` → `initializeControllers` → `onReady()` → `_finalizeSetup()` → `onShutdown()` (reverse); `BananaApp.create()` handles async plugin flow; sync constructor warns if plugins provided
+- **In-core caching**: `@Cache({ ttl, key })` / `@CacheEvict({ pattern })` method decorators + `CacheManager` singleton with `MemoryCacheStore` (TTL, glob eviction) + `CacheStore` interface for custom backends (Redis etc.)
+- **Prometheus metrics**: `createMetricsMiddleware()` (mounts before routes) + `/metrics` endpoint; `http_requests_total`, `http_request_duration_ms`, `http_errors_total` counters/histograms; `prom-client` optional peer
+- **DevTools endpoint**: `GET /_banana/routes` — returns route table JSON; returns 404 in production; enabled via `devTools: true` option
+- **TC39 decorator migration plan**: `docs/TC39-DECORATORS.md` — full audit, migration path, parameter decorator blocker, v2.0.0 timeline
+
+**New plugin packages (v0.1.0):**
+
+- `@banana-universe/plugin-typeorm` — `TypeOrmPlugin()`, `@InjectRepository(Entity)`, `@Transactional()` with `AsyncLocalStorage` + awilix repository injection
+- `@banana-universe/plugin-prisma` — `PrismaPlugin(client)`, `@Transactional()` with `prismaClient.$transaction` + `AsyncLocalStorage`
+- `@banana-universe/plugin-otel` — `OpenTelemetryPlugin({ serviceName })`, NodeSDK with HTTP auto-instrumentation, span enrichment middleware (mounts in `register()` pre-route)
+- `@banana-universe/plugin-zod` — `ZodPlugin()` + `@ZodBody/@ZodQuery/@ZodParams(schema)` decorators; coexists with class-validator
+
+**New CLI commands:**
+
+- `bananajs routes` — static AST scan of `src/` for `@Controller` + HTTP method decorators; colored table output
+- `bananajs migrate` — Express → BananaJS route codemod; generates `*.controller.ts` files from Express route patterns
+- `bananajs db --status` — ORM migration checker; async `exec` of `npx typeorm migration:show` / `npx prisma migrate status`
+- `bananajs openapi export [--out path] [--client typescript]` — exports OpenAPI spec; optionally generates TypeScript types via `openapi-typescript`
+
 ### packages/bananajs v0.2.0 [Phase 2 Complete]
 
 **Framework core (pre-existing):**
@@ -89,23 +113,20 @@ Current implementation state. Very brief — references other docs. The only cha
 | ------------------------------- | ----------- | ------- |
 | Phase 1 — Foundation            | ✅ Complete | v0.1.0  |
 | Phase 2 — Core Enterprise       | ✅ Complete | v0.2.0  |
-| Phase 3 — Advanced Architecture | ⏳ Pending  | —       |
+| Phase 3 — Advanced Architecture | ✅ Complete | v0.3.0  |
 | Phase 4 — Enterprise & AI-First | ⏳ Pending  | —       |
 
 ## Next Session Starting Point
 
-**Start Phase 3** per `plans/EnterpriseRoadmapV2.md` (Phase 3 — Advanced Architecture, months 9–15).
+**Start Phase 4** per `plans/EnterpriseRoadmapV2.md` (Phase 4 — Enterprise & AI-First).
 
-Phase 3 tasks:
+Key architectural decisions from Phase 3:
 
-- 3.1 Plugin architecture (`BananaPlugin` interface with `AppContext` abstraction, lifecycle hooks)
-- 3.2 ORM integration patterns (`@banana-universe/plugin-typeorm`, `@banana-universe/plugin-prisma`)
-- 3.3 Caching layer (`@Cache`/`@CacheEvict`, in-memory + Redis backends)
-- 3.4 Telemetry & observability (OpenTelemetry plugin, Prometheus `/metrics`, health check enhancements)
-- 3.5 Advanced CLI (`bananajs routes`, `bananajs migrate --scan`, `bananajs openapi export`)
-- 3.6 Pagination already done in Phase 2
-- 3.7 TC39 decorator migration plan
-- 3.8 Zod validation adapter plugin (`@banana-universe/plugin-zod`)
+- Plugin lifecycle: `BananaPlugin.register(ctx)` runs before `initializeControllers` (critical for pre-route middleware placement)
+- Metrics middleware is mounted pre-route in constructor/initializePlugins; metrics endpoint is registered in `_finalizeSetup`
+- `emitDecoratorMetadata` is NOT set — `@InjectRepository` uses explicit `paramIndex` stored on class prototype
+- Module-level `typeormDataSource` in plugin-typeorm — single DataSource per app (multiple not supported)
+- `CacheManager` singleton — `reset()` available for testing
 
 Key architectural decisions from Phase 2:
 
@@ -118,8 +139,9 @@ Key architectural decisions from Phase 2:
 
 ## Change Log
 
-| Date       | Change                                                                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                  |
-| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                   |
-| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide |
+| Date       | Change                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                 |
+| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                  |
+| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                |
+| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan |

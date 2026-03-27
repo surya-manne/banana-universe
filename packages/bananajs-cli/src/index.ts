@@ -7,6 +7,10 @@ import chalk from 'chalk'
 import { spawn } from 'child_process'
 import inquirer from 'inquirer'
 import { generateController, generateDto, generateMiddleware } from './lib/generate'
+import { listRoutes } from './lib/routes'
+import { migrateCodemod } from './lib/migrate'
+import { dbStatus } from './lib/db'
+import { openapiExport } from './lib/openapi'
 
 const MONGO_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-mongo-app-template.git'
 const SQL_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-sql-app-template.git'
@@ -35,6 +39,55 @@ program
   .option('--dry-run', 'Print files that would be created without writing them')
   .action((type: string, name: string, options: { dryRun?: boolean }) => {
     generateResource(type, name, options.dryRun ?? false).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+program
+  .command('routes')
+  .description('List registered routes (static scan of src/ directory)')
+  .action(() => {
+    listRoutes().catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+program
+  .command('migrate')
+  .description('Express → BananaJS route codemod (generates controller files from Express routes)')
+  .action(() => {
+    migrateCodemod().catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+program
+  .command('db')
+  .description('Database tools')
+  .option('--status', 'Show ORM migration status (TypeORM/Prisma)')
+  .action((opts: { status?: boolean }) => {
+    if (opts.status) {
+      dbStatus().catch((err: unknown) => {
+        console.error('Unexpected error:', err)
+        process.exit(1)
+      })
+    } else {
+      console.log(chalk.yellow('No action specified. Use --status to check migration status.'))
+    }
+  })
+
+const openapiCmd = program.command('openapi').description('OpenAPI tools')
+
+openapiCmd
+  .command('export')
+  .description('Export OpenAPI spec and optionally generate TypeScript types')
+  .option('--out <path>', 'Output path for the spec file')
+  .option('--client <type>', 'Generate client SDK (supported: typescript)')
+  .action((opts: { out?: string; client?: string }) => {
+    openapiExport(opts).catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })
