@@ -1,0 +1,39 @@
+{
+  "name": "@banana-universe/bananajs-cli",
+  "version": "0.0.10",
+  "description": "A command-line interface (CLI) tool to create a new Bananajs app with different configurations, such as MongoDB or SQL-based setups. This CLI helps you quickly set up a project with your desired backend configuration.",
+  "bin": {
+    "bananajs": "./dist/index.js"
+  },
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sprakas/banana-universe.git"
+  },
+  "homepage": "https://github.com/sprakas/banana-universe/tree/main/packages/bananajs-cli",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {
+    "chalk": "4.1.2",
+    "inquirer": "^12.5.2",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.2.2"
+  }
+}

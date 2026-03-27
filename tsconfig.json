@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/bananajs-demo"
+    },
+    {
+      "path": "./packages/bananajs"
+    },
+    {
+      "path": "./packages/bananajs-cli"
+    }
+  ]
+}

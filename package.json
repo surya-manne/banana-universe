@@ -1,0 +1,62 @@
+{
+  "name": "@banana-universe/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "publish:bananajs": "nx build bananajs && cd packages/bananajs && npm publish --access public",
+    "publish:bananajs-cli": "nx build bananajs-cli && cd packages/bananajs-cli && npm publish --access public"
+  },
+  "private": true,
+  "dependencies": {
+    "axios": "^1.6.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@nx/eslint": "20.6.4",
+    "@nx/eslint-plugin": "20.6.4",
+    "@nx/express": "20.6.4",
+    "@nx/js": "20.6.4",
+    "@nx/node": "20.6.4",
+    "@nx/web": "20.6.4",
+    "@nx/webpack": "20.6.4",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
+    "@svgr/webpack": "^8.0.1",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@types/express": "^4.17.21",
+    "@types/node": "~18.16.9",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^9.0.0",
+    "jsonc-eslint-parser": "^2.1.0",
+    "nx": "20.6.4",
+    "prettier": "^2.6.2",
+    "react-refresh": "^0.10.0",
+    "tslib": "^2.3.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "verdaccio": "^6.0.5",
+    "webpack-cli": "^5.1.4"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "nx": {
+    "includedScripts": [],
+    "targets": {
+      "local-registry": {
+        "executor": "@nx/js:verdaccio",
+        "options": {
+          "port": 4873,
+          "config": ".verdaccio/config.yml",
+          "storage": "tmp/local-registry/storage"
+        }
+      }
+    }
+  }
+}
