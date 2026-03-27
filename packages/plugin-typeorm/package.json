@@ -26,10 +26,12 @@
   ],
   "peerDependencies": {
     "@banana-universe/bananajs": ">=0.3.0",
+    "@banana-universe/ddd": ">=0.1.0",
     "typeorm": ">=0.3.0"
   },
   "devDependencies": {
     "@banana-universe/bananajs": "*",
+    "@banana-universe/ddd": "*",
     "awilix": "^13.0.3",
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2",

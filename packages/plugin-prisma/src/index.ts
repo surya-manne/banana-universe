@@ -107,3 +107,10 @@ export function PrismaPlugin(prismaClient: unknown): BananaPlugin {
     },
   }
 }
+
+export { PrismaRepositoryAdapter, type PrismaModelDelegate } from './PrismaRepositoryAdapter.js'
+export {
+  PrismaScopedUnitOfWork,
+  PrismaTransactionRollback,
+  runWithPrismaUnitOfWork,
+} from './PrismaUnitOfWork.js'

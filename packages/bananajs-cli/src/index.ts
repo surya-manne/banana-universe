@@ -7,6 +7,7 @@ import chalk from 'chalk'
 import { spawn } from 'child_process'
 import inquirer from 'inquirer'
 import { generateController, generateDto, generateMiddleware } from './lib/generate'
+import { buildDddModuleFiles, type OrmChoice } from './lib/generate-module.js'
 import { listRoutes } from './lib/routes'
 import { migrateCodemod } from './lib/migrate'
 import { dbStatus } from './lib/db'
@@ -20,7 +21,7 @@ const program = new Command()
 
 program
   .name('bananajs')
-  .version('0.2.0')
+  .version('0.3.0')
   .description('BananaJS CLI — scaffold and generate BananaJS resources')
 
 program
@@ -36,14 +37,27 @@ program
 program
   .command('generate <type> <name>')
   .alias('g')
-  .description('Generate a BananaJS resource (controller | dto | middleware)')
+  .description(
+    'Generate a BananaJS resource (controller | dto | middleware | module — DDD layered module)',
+  )
   .option('--dry-run', 'Print files that would be created without writing them')
-  .action((type: string, name: string, options: { dryRun?: boolean }) => {
-    generateResource(type, name, options.dryRun ?? false).catch((err: unknown) => {
-      console.error('Unexpected error:', err)
-      process.exit(1)
-    })
-  })
+  .option(
+    '--orm <orm>',
+    'For type module: typeorm | prisma | none (default: typeorm if non-interactive)',
+  )
+  .option('--out <dir>', 'Output base directory (for type module; default: ./src)')
+  .action(
+    (type: string, name: string, options: { dryRun?: boolean; orm?: string; out?: string }) => {
+      generateResource(type, name, {
+        dryRun: options.dryRun ?? false,
+        orm: options.orm,
+        out: options.out,
+      }).catch((err: unknown) => {
+        console.error('Unexpected error:', err)
+        process.exit(1)
+      })
+    },
+  )
 
 program
   .command('routes')
@@ -94,7 +108,9 @@ openapiCmd
     })
   })
 
-const aiCmd = program.command('ai').description('AI-powered code generation, documentation, and review')
+const aiCmd = program
+  .command('ai')
+  .description('AI-powered code generation, documentation, and review')
 
 aiCmd
   .command('generate')
@@ -136,7 +152,13 @@ aiCmd
 program.parse(process.argv)
 
 async function createApp(appNameArg?: string): Promise<void> {
-  const prompts: { type: string; name: string; message: string; default?: string; choices?: string[] }[] = []
+  const prompts: {
+    type: string
+    name: string
+    message: string
+    default?: string
+    choices?: string[]
+  }[] = []
 
   if (!appNameArg) {
     prompts.push({
@@ -210,13 +232,23 @@ async function setupAppConfiguration(appDir: string, appName: string, repo: stri
   })
 }
 
-async function generateResource(type: string, name: string, dryRun: boolean): Promise<void> {
-  const validTypes = ['controller', 'dto', 'middleware']
+async function generateResource(
+  type: string,
+  name: string,
+  opts: { dryRun: boolean; orm?: string; out?: string },
+): Promise<void> {
+  const validTypes = ['controller', 'dto', 'middleware', 'module']
   if (!validTypes.includes(type)) {
     console.log(chalk.red(`Unknown type: "${type}". Valid types: ${validTypes.join(', ')}`))
     process.exit(1)
   }
 
+  if (type === 'module') {
+    await generateModuleResource(name, opts)
+    return
+  }
+
+  const dryRun = opts.dryRun
   let fileName: string
   let content: string
 
@@ -242,4 +274,51 @@ async function generateResource(type: string, name: string, dryRun: boolean): Pr
 
   await fs.writeFile(outputPath, content, 'utf-8')
   console.log(chalk.green(`Created: ${outputPath}`))
+}
+
+async function generateModuleResource(
+  name: string,
+  opts: { dryRun: boolean; orm?: string; out?: string },
+): Promise<void> {
+  let ormChoice: OrmChoice
+  const raw = opts.orm?.toLowerCase()
+  if (raw === 'typeorm' || raw === 'prisma' || raw === 'none') {
+    ormChoice = raw
+  } else if (opts.orm !== undefined) {
+    console.log(chalk.red(`Invalid --orm "${opts.orm}". Use typeorm, prisma, or none.`))
+    process.exit(1)
+  } else if (process.stdin.isTTY) {
+    const answers = await inquirer.prompt<{ orm: OrmChoice }>([
+      {
+        type: 'list',
+        name: 'orm',
+        message: 'Which ORM adapter?',
+        choices: [
+          { name: 'TypeORM (default)', value: 'typeorm' },
+          { name: 'Prisma', value: 'prisma' },
+          { name: 'None (in-memory stub)', value: 'none' },
+        ],
+        default: 'typeorm',
+      },
+    ])
+    ormChoice = answers.orm
+  } else {
+    ormChoice = 'typeorm'
+  }
+
+  const outBase = path.join(process.cwd(), opts.out ?? 'src')
+  const files = buildDddModuleFiles(name, ormChoice)
+
+  for (const f of files) {
+    const outputPath = path.join(outBase, f.relativePath)
+    if (opts.dryRun) {
+      console.log(chalk.cyan(`[dry-run] Would create: ${outputPath}`))
+      console.log(chalk.gray('---'))
+      console.log(chalk.gray(f.content))
+      continue
+    }
+    await fs.mkdir(path.dirname(outputPath), { recursive: true })
+    await fs.writeFile(outputPath, f.content, 'utf-8')
+    console.log(chalk.green(`Created: ${outputPath}`))
+  }
 }

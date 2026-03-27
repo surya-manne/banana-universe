@@ -16,6 +16,7 @@ banana-universe/
 │                   ├── User.controller.ts   # User resource endpoints (CRUD)
 │                   └── User.dto.ts          # DTOs for request validation
 ├── packages/
+│   ├── ddd/                        # DDD primitives (@banana-universe/ddd): Entity, Repository, layer decorators
 │   ├── bananajs/                   # Core framework library (@banana-universe/bananajs)
 │   │   └── src/
 │   │       ├── index.ts            # Public API barrel export

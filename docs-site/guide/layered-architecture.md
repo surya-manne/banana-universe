@@ -1,16 +1,16 @@
 # Layered architecture & DDD
 
-::: info Phase 6 — `@banana-universe/ddd`
-The **`ddd`** package and **`bananajs generate module`** layered output are specified in **`plans/EnterpriseRoadmapV3.md`** and tracked for delivery in **Phase 6**. This page describes **where the framework is going**—not a limitation of what you can build **today**.
+::: info `@banana-universe/ddd`
+The **`ddd`** package provides **Entity**, **ValueObject**, **AggregateRoot**, **Repository** / **FindCriteria**, **UnitOfWork**, and **@DomainService** / **@ApplicationService** (layer metadata + `Injectable`). Use **`bananajs generate module <name>`** for a full layered scaffold.
 :::
 
-## Today
+## Manual layout
 
-You can already structure code as **domain / application / infrastructure** manually—BananaJS does not force a flat layout. **Plugins** (`TypeOrmPlugin`, `PrismaPlugin`, …) are designed so **infrastructure** concerns attach at the edges while **controllers** stay thin.
+You can structure code as **domain / application / infrastructure** without the package—BananaJS does not force a flat layout. **Plugins** (`TypeOrmPlugin`, `PrismaPlugin`, …) attach **infrastructure** at the edges while **controllers** stay thin.
 
-## Target shape (Phase 6)
+## Generated module shape
 
-Generated modules will follow a **clear bounded context**:
+`bananajs generate module <name> [--orm typeorm|prisma|none] [--out ./src]` produces a **bounded context**:
 
 ```
 src/<name>/
@@ -38,7 +38,7 @@ The roadmap adopts a **`FindCriteria<T>`**-style API (eq / in / like / gt / lt, 
 
 ## CLI
 
-**`bananajs generate module <name> --orm typeorm|prisma|none`** will scaffold the right infrastructure stub; **default `typeorm`** preserves backward compatibility for existing workflows.
+**`bananajs generate module <name> --orm typeorm|prisma|none`** scaffolds the infrastructure stub; **`typeorm`** is the default when stdin is not a TTY.
 
 ## Transactions
 

@@ -37,6 +37,10 @@ jobs:
         run: npx tsc -p tsconfig.lib.json --noEmit
         working-directory: packages/bananajs-cli
 
+      - name: Type check — packages/ddd
+        run: npx tsc -p tsconfig.lib.json --noEmit
+        working-directory: packages/ddd
+
       - name: Type check — packages/plugin-typeorm
         run: npx tsc -p tsconfig.lib.json --noEmit
         working-directory: packages/plugin-typeorm

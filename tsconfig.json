@@ -11,6 +11,9 @@
     },
     {
       "path": "./packages/bananajs-cli"
+    },
+    {
+      "path": "./packages/ddd"
     }
   ]
 }

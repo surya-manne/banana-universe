@@ -1,7 +1,7 @@
 {
-  "name": "@banana-universe/plugin-prisma",
+  "name": "@banana-universe/ddd",
   "version": "0.1.0",
-  "description": "Prisma plugin for BananaJS — PrismaClient registration and @Transactional decorator.",
+  "description": "Domain-driven design primitives for BananaJS — Entity, ValueObject, AggregateRoot, Repository, layer decorators.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
   "repository": {
@@ -24,22 +24,16 @@
     "dist",
     "!**/*.tsbuildinfo"
   ],
-  "peerDependencies": {
-    "@banana-universe/bananajs": ">=0.3.0",
-    "@banana-universe/ddd": ">=0.1.0",
-    "@prisma/client": ">=5.0.0"
+  "scripts": {
+    "test": "tsc -p tsconfig.lib.json && node --test dist/__tests__/**/*.js"
   },
-  "peerDependenciesMeta": {
-    "@prisma/client": {
-      "optional": false
-    }
+  "peerDependencies": {
+    "@banana-universe/bananajs": ">=0.4.0",
+    "reflect-metadata": ">=0.2.0"
   },
   "devDependencies": {
     "@banana-universe/bananajs": "*",
-    "@banana-universe/ddd": "*",
-    "@prisma/client": "^5.0.0",
-    "awilix": "^13.0.3",
-    "express": "^4.21.2",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "typescript": "~5.7.2"
   }
 }

@@ -206,3 +206,6 @@ export function TypeOrmPlugin(options: TypeOrmPluginOptions): BananaPlugin {
     },
   }
 }
+
+export { TypeOrmRepositoryAdapter } from './TypeOrmRepositoryAdapter.js'
+export { TypeOrmUnitOfWork } from './TypeOrmUnitOfWork.js'

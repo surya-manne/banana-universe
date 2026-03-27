@@ -5,8 +5,7 @@ on:
     tags:
       - 'v*' # triggers on v0.4.0, v0.5.0, etc.
 
-# Explicit publish ordering: bananajs → @banana-universe/ddd (Phase 6) → plugin-* → bananajs-cli
-# @banana-universe/ddd will be inserted between bananajs and plugin-* when Phase 6 ships.
+# Explicit publish ordering: bananajs → @banana-universe/ddd → plugin-* → bananajs-cli
 #
 # TODO Phase 6+: Switch to Nx affected for selective publish:
 #   npx nx affected --target=publish --base=last-tag
@@ -38,7 +37,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # 2. ORM plugins — depend on bananajs peer
+      # 2. DDD primitives — peer of plugins + CLI-generated apps
+      - name: Build & publish ddd
+        run: npx nx build ddd && cd packages/ddd && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # 3. ORM plugins — depend on bananajs + ddd peers
       - name: Build & publish plugin-typeorm
         run: npx nx build plugin-typeorm && cd packages/plugin-typeorm && npm publish --access public
         env:
@@ -49,7 +54,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # 3. Observability & utility plugins
+      # 4. Observability & utility plugins
       - name: Build & publish plugin-otel
         run: npx nx build plugin-otel && cd packages/plugin-otel && npm publish --access public
         env:
@@ -70,7 +75,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # 4. CLI — publishes last; may reference versions of all packages above
+      # 5. CLI — publishes last; may reference versions of all packages above
       - name: Build & publish bananajs-cli
         run: npx nx build bananajs-cli && cd packages/bananajs-cli && npm publish --access public
         env:

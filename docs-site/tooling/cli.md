@@ -2,7 +2,7 @@
 
 The **`bananajs`** CLI is a **first-class product surface**: scaffolding, codegen, static analysis, DB/OpenAPI tooling, and **AI** flows—built to scale with the **LLM and DDD roadmap** ([Philosophy](/guide/philosophy), [Roadmap](/guide/roadmap)).
 
-Package: **`@banana-universe/bananajs-cli`** · Entry: **`bananajs`**. Source: **`packages/bananajs-cli/src/index.ts`** (Commander.js). Version **0.2.0** at time of writing.
+Package: **`@banana-universe/bananajs-cli`** · Entry: **`bananajs`**. Source: **`packages/bananajs-cli/src/index.ts`** (Commander.js). Version **0.3.0** at time of writing.
 
 ## Global
 
@@ -21,10 +21,15 @@ Scaffolds an app by **cloning** a GitHub template (MongoDB or SQL). Requires **`
 
 ## `bananajs generate <type> <name>` (alias: `g`)
 
-**Types:** `controller` | `dto` | `middleware`
+**Types:** `controller` | `dto` | `middleware` | **`module`**
 
-- Writes **`cwd/<name>.controller.ts`** (or `.dto.ts` / `.middleware.ts`)
+- **`controller` / `dto` / `middleware`** — writes **`cwd/<name>.controller.ts`** (or `.dto.ts` / `.middleware.ts`)
+- **`module`** — layered **DDD** tree under **`--out`** (default **`./src`**): `domain/`, `application/`, `infrastructure/`, and **`<kebab>.controller.ts`**
+  - **`--orm typeorm|prisma|none`** — infrastructure stub (default: **`typeorm`** in non-interactive mode; interactive prompt when TTY and `--orm` omitted)
+  - **`--out <dir>`** — base directory for generated folders
 - **`--dry-run`** — print content without writing
+
+See [Layered architecture & DDD](/guide/layered-architecture).
 
 ## `bananajs routes`
 
@@ -56,7 +61,7 @@ Subcommands:
 Shared: **`--out <dir>`**, **`--dry-run`** where applicable.
 
 ::: info Phase 7
-**`bananajs ai setup`**, **`.bananarc.json`**, and **`ai generate --module`** (full DDD module) are on the [roadmap](/guide/roadmap), not necessarily in the CLI yet.
+**`bananajs ai setup`**, **`.bananarc.json`**, and **`ai generate --module`** (LLM-driven DDD module) are on the [roadmap](/guide/roadmap). Use **`bananajs generate module`** today for scaffolded modules without an LLM.
 :::
 
 ## Related
