@@ -1,37 +1,131 @@
 import * as path from 'path'
-import { toKebabCase, toPascalCase } from './utils/naming.js'
+import type { ModuleFile } from './generate-module.js'
+import type { OrmChoice } from './generate-module.js'
+import { toCamelCase, toKebabCase, toPascalCase } from './utils/naming.js'
+import { normalizeExtractionType } from './utils/type-mapping.js'
+import type { EntityExtraction } from './llm/entity-extraction.js'
 
-export { toKebabCase, toPascalCase } from './utils/naming.js'
-
-export type OrmChoice = 'typeorm' | 'prisma' | 'none'
-
-export interface ModuleFile {
-  relativePath: string
-  content: string
+interface NormalizedField {
+  name: string
+  ts: string
+  optional: boolean
 }
 
-export function buildDddModuleFiles(entityNameRaw: string, orm: OrmChoice): ModuleFile[] {
-  const Pascal = toPascalCase(entityNameRaw)
-  const kebab = toKebabCase(entityNameRaw)
+function normalizeFields(extraction: EntityExtraction): NormalizedField[] {
+  return extraction.fields.map((f) => ({
+    name: safeIdentifier(f.name),
+    ts: normalizeExtractionType(f.type),
+    optional: f.optional === true,
+  }))
+}
+
+function safeIdentifier(name: string): string {
+  const cleaned = name.replace(/[^a-zA-Z0-9_$]/g, '_')
+  const base = /^[0-9]/.test(cleaned) ? `_${cleaned}` : cleaned
+  return base || 'field'
+}
+
+function validatorDecorators(ts: string, required: boolean): string {
+  if (ts === 'number') {
+    return required ? '  @IsNumber()\n' : '  @IsOptional()\n  @IsNumber()\n'
+  }
+  if (ts === 'boolean') {
+    return required ? '  @IsBoolean()\n' : '  @IsOptional()\n  @IsBoolean()\n'
+  }
+  if (ts === 'Date') {
+    return required ? '  @IsDate()\n' : '  @IsOptional()\n  @IsDate()\n'
+  }
+  if (ts.endsWith('[]')) {
+    return (
+      (required ? '  @IsArray()\n' : '  @IsOptional()\n  @IsArray()\n') +
+      '  @IsString({ each: true })\n'
+    )
+  }
+  return required ? '  @IsNotEmpty()\n  @IsString()\n' : '  @IsOptional()\n  @IsString()\n'
+}
+
+function createDtoFields(fields: NormalizedField[]): string {
+  return fields
+    .map((f) => {
+      const dec = validatorDecorators(f.ts, !f.optional)
+      const opt = f.optional ? '?' : ''
+      return `${dec}  ${f.name}${opt}: ${f.ts}`
+    })
+    .join('\n\n')
+}
+
+function updateDtoFields(fields: NormalizedField[]): string {
+  return fields
+    .map((f) => {
+      const dec = validatorDecorators(f.ts, false)
+      return `${dec}  ${f.name}?: ${f.ts}`
+    })
+    .join('\n\n')
+}
+
+function entityPropsInterface(Pascal: string, fields: NormalizedField[]): string {
+  const lines = fields.map((f) => `  ${f.name}${f.optional ? '?' : ''}: ${f.ts}`)
+  return `export interface ${Pascal}Props {
+  id: string
+${lines.join('\n')}
+  createdAt?: Date
+  updatedAt?: Date
+}`
+}
+
+function entityGetters(fields: NormalizedField[]): string {
+  return fields
+    .map((f) => {
+      return `  get ${f.name}(): ${f.ts} {
+    return this.props.${f.name}${f.optional ? '!' : ''}
+  }`
+    })
+    .join('\n\n')
+}
+
+function typeormColumn(field: NormalizedField): string {
+  const ts = field.ts
+  if (ts === 'number') return `@Column('double precision')\n  ${field.name}!: number`
+  if (ts === 'boolean') return `@Column()\n  ${field.name}!: boolean`
+  if (ts === 'Date') return `@Column({ type: 'timestamp' })\n  ${field.name}!: Date`
+  if (ts.endsWith('[]')) return `@Column('simple-json')\n  ${field.name}!: string[]`
+  return `@Column()\n  ${field.name}!: string`
+}
+
+function prismaRowFields(fields: NormalizedField[]): string {
+  return fields.map((f) => `  ${f.name}: ${f.ts}`).join('\n')
+}
+
+function toDomainProps(fields: NormalizedField[]): string {
+  return fields.map((f) => `      ${f.name}: orm.${f.name}`).join(',\n')
+}
+
+/**
+ * Build DDD module files from LLM/schema extraction (Phase 7 multi-step generator).
+ */
+export function buildDddModuleFromExtraction(
+  extraction: EntityExtraction,
+  orm: OrmChoice,
+): ModuleFile[] {
+  const Pascal = toPascalCase(extraction.entityName)
+  const kebab = toKebabCase(extraction.entityName)
+  const c = toCamelCase(Pascal)
   const base = path.join(kebab)
+  const fields = normalizeFields(extraction)
+
+  const propsIface = entityPropsInterface(Pascal, fields)
+  const getters = entityGetters(fields)
 
   const domainEntity = `import { Entity } from '@banana-universe/ddd'
 
-export interface ${Pascal}Props {
-  id: string
-  name: string
-  createdAt?: Date
-  updatedAt?: Date
-}
+${propsIface}
 
 export class ${Pascal} extends Entity<${Pascal}Props> {
   constructor(props: ${Pascal}Props) {
     super(props)
   }
 
-  get name(): string {
-    return this.props.name
-  }
+${getters}
 }
 `
 
@@ -42,24 +136,24 @@ export type ${Pascal}Repository = Repository<${Pascal}>
 `
 
   const domainService = `import { DomainService } from '@banana-universe/ddd'
+import type { ${Pascal} } from './${kebab}.entity.js'
 
 @DomainService()
 export class ${Pascal}DomainService {
-  // Domain rules — no HTTP or ORM imports
+  validate(_entity: ${Pascal}): void {
+    // Domain invariants — extend as needed
+  }
 }
 `
 
-  const appDto = `import { IsNotEmpty, IsString } from 'class-validator'
+  const appDto = `import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class Create${Pascal}Dto {
-  @IsNotEmpty()
-  @IsString()
-  name!: string
+${createDtoFields(fields) || '  @IsNotEmpty()\n  @IsString()\n  placeholder!: string'}
 }
 
 export class Update${Pascal}Dto {
-  @IsString()
-  name?: string
+${updateDtoFields(fields) || '  @IsOptional()\n  @IsString()\n  placeholder?: string'}
 }
 `
 
@@ -70,44 +164,68 @@ export class Update${Pascal}Dto {
     { relativePath: path.join(base, 'application', `${kebab}.dto.ts`), content: appDto },
     {
       relativePath: path.join(base, 'application', `${kebab}.app-service.ts`),
-      content: simplifyAppService(Pascal, kebab),
+      content: buildAppService(Pascal, kebab, c, fields),
     },
     {
       relativePath: path.join(base, `${kebab}.controller.ts`),
-      content: simplifyController(Pascal, kebab),
+      content: buildController(Pascal, kebab),
     },
   ]
 
   if (orm === 'typeorm') {
     files.push({
       relativePath: path.join(base, 'infrastructure', 'typeorm', `${kebab}.orm-entity.ts`),
-      content: typeormEntity(Pascal, kebab),
+      content: buildTypeormEntity(Pascal, kebab, fields),
     })
     files.push({
       relativePath: path.join(base, 'infrastructure', 'typeorm', `${kebab}.typeorm-repository.ts`),
-      content: typeormRepo(Pascal, kebab),
+      content: buildTypeormRepo(Pascal, kebab, fields),
     })
   } else if (orm === 'prisma') {
     files.push({
       relativePath: path.join(base, 'infrastructure', 'prisma', `${kebab}.prisma-repository.ts`),
-      content: prismaRepo(Pascal, kebab),
+      content: buildPrismaRepo(Pascal, kebab, fields),
     })
   } else {
     files.push({
       relativePath: path.join(base, 'infrastructure', `${kebab}.in-memory-repository.ts`),
-      content: inMemoryRepo(Pascal, kebab),
+      content: buildInMemoryRepo(Pascal, kebab, fields),
     })
   }
 
   return files
 }
 
-function camel(pascal: string): string {
-  return pascal.charAt(0).toLowerCase() + pascal.slice(1)
-}
+function buildAppService(
+  Pascal: string,
+  kebab: string,
+  c: string,
+  fields: NormalizedField[],
+): string {
+  const hasFields = fields.length > 0
+  const createProps = hasFields
+    ? `const props: ${Pascal}Props = {
+      id: randomUUID(),
+${fields.map((f) => `      ${f.name}: dto.${f.name}`).join(',\n')},
+    }
+    const entity = new ${Pascal}(props)
+    return this.${c}Repository.save(entity)`
+    : `throw new Error('No fields defined for entity')`
 
-function simplifyAppService(Pascal: string, kebab: string): string {
-  const c = camel(Pascal)
+  const updateBlock = hasFields
+    ? `const existing = await this.${c}Repository.findById(id)
+    if (!existing) return null
+    const props: ${Pascal}Props = {
+      id: existing.id as string,
+${fields
+  .map((f) => `      ${f.name}: dto.${f.name} !== undefined ? dto.${f.name} : existing.${f.name}`)
+  .join(',\n')},
+      createdAt: existing.createdAt,
+      updatedAt: existing.updatedAt,
+    }
+    return this.${c}Repository.save(new ${Pascal}(props))`
+    : `return null`
+
   return `import { ApplicationService } from '@banana-universe/ddd'
 import type { ${Pascal}Repository } from '../domain/${kebab}.repository.js'
 import { ${Pascal}, type ${Pascal}Props } from '../domain/${kebab}.entity.js'
@@ -127,24 +245,11 @@ export class ${Pascal}AppService {
   }
 
   async create(dto: Create${Pascal}Dto): Promise<${Pascal}> {
-    const props: ${Pascal}Props = {
-      id: randomUUID(),
-      name: dto.name,
-    }
-    const entity = new ${Pascal}(props)
-    return this.${c}Repository.save(entity)
+    ${createProps}
   }
 
   async update(id: string, dto: Update${Pascal}Dto): Promise<${Pascal} | null> {
-    const existing = await this.${c}Repository.findById(id)
-    if (!existing) return null
-    const props: ${Pascal}Props = {
-      id: existing.id as string,
-      name: dto.name ?? existing.name,
-      createdAt: existing.createdAt,
-      updatedAt: existing.updatedAt,
-    }
-    return this.${c}Repository.save(new ${Pascal}(props))
+    ${updateBlock}
   }
 
   async remove(id: string): Promise<void> {
@@ -154,14 +259,16 @@ export class ${Pascal}AppService {
 `
 }
 
-function simplifyController(Pascal: string, kebab: string): string {
+function buildController(Pascal: string, kebab: string): string {
   return `import { Body, Controller, Delete, Get, Injectable, Param, Post, Put } from '@banana-universe/bananajs'
+import { ApiTags } from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
 import { SuccessResponse } from '@banana-universe/bananajs'
 import { ${Pascal}AppService } from './application/${kebab}.app-service.js'
 import type { Create${Pascal}Dto, Update${Pascal}Dto } from './application/${kebab}.dto.js'
 
 @Injectable()
+@ApiTags('${kebab}')
 @Controller('/${kebab}')
 export class ${Pascal}Controller {
   constructor(private readonly app: ${Pascal}AppService) {}
@@ -204,7 +311,8 @@ export class ${Pascal}Controller {
 `
 }
 
-function typeormEntity(Pascal: string, kebab: string): string {
+function buildTypeormEntity(Pascal: string, kebab: string, fields: NormalizedField[]): string {
+  const cols = fields.map((f) => `  ${typeormColumn(f)}`).join('\n\n')
   return `import { Column, CreateDateColumn, Entity as OrmEntity, PrimaryColumn, UpdateDateColumn } from 'typeorm'
 
 @OrmEntity('${kebab}')
@@ -212,8 +320,7 @@ export class ${Pascal}OrmEntity {
   @PrimaryColumn('uuid')
   id!: string
 
-  @Column()
-  name!: string
+${cols}
 
   @CreateDateColumn()
   createdAt!: Date
@@ -224,7 +331,8 @@ export class ${Pascal}OrmEntity {
 `
 }
 
-function typeormRepo(Pascal: string, kebab: string): string {
+function buildTypeormRepo(Pascal: string, kebab: string, fields: NormalizedField[]): string {
+  const td = toDomainProps(fields)
   return `import type { DataSource } from 'typeorm'
 import { TypeOrmRepositoryAdapter } from '@banana-universe/plugin-typeorm'
 import { ${Pascal} } from '../../domain/${kebab}.entity.js'
@@ -238,7 +346,7 @@ export class ${Pascal}TypeOrmRepository extends TypeOrmRepositoryAdapter<${Pasca
   toDomain(orm: ${Pascal}OrmEntity): ${Pascal} {
     return new ${Pascal}({
       id: orm.id,
-      name: orm.name,
+${td},
       createdAt: orm.createdAt,
       updatedAt: orm.updatedAt,
     })
@@ -247,7 +355,7 @@ export class ${Pascal}TypeOrmRepository extends TypeOrmRepositoryAdapter<${Pasca
   toPersistence(domain: ${Pascal}): ${Pascal}OrmEntity {
     const row = new ${Pascal}OrmEntity()
     row.id = domain.id as string
-    row.name = domain.name
+${fields.map((f) => `    row.${f.name} = domain.${f.name}`).join('\n')}
     row.createdAt = domain.createdAt
     row.updatedAt = domain.updatedAt
     return row
@@ -256,16 +364,16 @@ export class ${Pascal}TypeOrmRepository extends TypeOrmRepositoryAdapter<${Pasca
 `
 }
 
-function prismaRepo(Pascal: string, kebab: string): string {
-  const modelAccessor = camel(Pascal)
+function buildPrismaRepo(Pascal: string, kebab: string, fields: NormalizedField[]): string {
+  const modelAccessor = toCamelCase(Pascal)
+  const rowFields = prismaRowFields(fields)
   return `import type { PrismaClient } from '@prisma/client'
 import { PrismaRepositoryAdapter } from '@banana-universe/plugin-prisma'
 import { ${Pascal} } from '../../domain/${kebab}.entity.js'
 
-/** Prisma model must match \`model ${Pascal}\` in schema.prisma — client delegate: prisma.${modelAccessor} */
 type ${Pascal}Row = {
   id: string
-  name: string
+${rowFields}
   createdAt: Date
   updatedAt: Date
 }
@@ -278,7 +386,7 @@ export class ${Pascal}PrismaRepository extends PrismaRepositoryAdapter<${Pascal}
   toDomain(row: ${Pascal}Row): ${Pascal} {
     return new ${Pascal}({
       id: row.id,
-      name: row.name,
+${fields.map((f) => `      ${f.name}: row.${f.name}`).join(',\n')},
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     })
@@ -287,7 +395,7 @@ export class ${Pascal}PrismaRepository extends PrismaRepositoryAdapter<${Pascal}
   toPersistence(domain: ${Pascal}): ${Pascal}Row {
     return {
       id: domain.id as string,
-      name: domain.name,
+${fields.map((f) => `      ${f.name}: domain.${f.name}`).join(',\n')},
       createdAt: domain.createdAt,
       updatedAt: domain.updatedAt,
     }
@@ -296,7 +404,7 @@ export class ${Pascal}PrismaRepository extends PrismaRepositoryAdapter<${Pascal}
 `
 }
 
-function inMemoryRepo(Pascal: string, kebab: string): string {
+function buildInMemoryRepo(Pascal: string, kebab: string, _fields: NormalizedField[]): string {
   return `import type { FindCriteria } from '@banana-universe/ddd'
 import type { ${Pascal}Repository } from '../domain/${kebab}.repository.js'
 import { ${Pascal} } from '../domain/${kebab}.entity.js'

@@ -1,17 +1,140 @@
-# API reference (generated)
+**@banana-universe/bananajs**
 
-This directory is produced by **TypeDoc** from **`packages/bananajs/src/index.ts`** (see **`docs-site/typedoc.json`**).
+***
 
-```bash
-cd docs-site
-npm run typedoc
-```
+# @banana-universe/bananajs
 
-## Relationship to hand-written docs
+## Enumerations
 
-- **Guides & reference pages** in `docs-site/guide/`, `reference/`, `integrations/`, etc. explain behavior and link here for **signatures**.
-- They are updated from **source + `plans/`**, not from the root **`README.md`** alone.
+- [ErrorType](enumerations/ErrorType.md)
+- [HTTPMethod](enumerations/HTTPMethod.md)
+- [ResponseStatus](enumerations/ResponseStatus.md)
+- [StatusCode](enumerations/StatusCode.md)
+- [ValidationSource](enumerations/ValidationSource.md)
 
-## Output format
+## Classes
 
-**`typedoc-plugin-markdown`** emits Markdown files under **`api/`**. VitePress includes them as part of the site when present.
+- [ApiError](classes/ApiError.md)
+- [ApiResponse](classes/ApiResponse.md)
+- [BadGatewayError](classes/BadGatewayError.md)
+- [BadGatewayResponse](classes/BadGatewayResponse.md)
+- [BadRequestError](classes/BadRequestError.md)
+- [BadRequestResponse](classes/BadRequestResponse.md)
+- [BananaApp](classes/BananaApp.md)
+- [CacheManager](classes/CacheManager.md)
+- [ConflictError](classes/ConflictError.md)
+- [ConflictResponse](classes/ConflictResponse.md)
+- [ForbiddenError](classes/ForbiddenError.md)
+- [ForbiddenResponse](classes/ForbiddenResponse.md)
+- [GatewayTimeoutError](classes/GatewayTimeoutError.md)
+- [GatewayTimeoutResponse](classes/GatewayTimeoutResponse.md)
+- [InternalError](classes/InternalError.md)
+- [InternalErrorResponse](classes/InternalErrorResponse.md)
+- [NotFoundError](classes/NotFoundError.md)
+- [NotFoundResponse](classes/NotFoundResponse.md)
+- [PaginatedResponse](classes/PaginatedResponse.md)
+- [PaginationDto](classes/PaginationDto.md)
+- [PaymentRequiredError](classes/PaymentRequiredError.md)
+- [PaymentRequiredErrorResponse](classes/PaymentRequiredErrorResponse.md)
+- [PinoLogger](classes/PinoLogger.md)
+- [ServiceUnavailableError](classes/ServiceUnavailableError.md)
+- [ServiceUnavailableResponse](classes/ServiceUnavailableResponse.md)
+- [SuccessResponse](classes/SuccessResponse.md)
+- [TooManyRequestsError](classes/TooManyRequestsError.md)
+- [TooManyRequestsResponse](classes/TooManyRequestsResponse.md)
+- [UnauthorisedError](classes/UnauthorisedError.md)
+- [UnauthorizedResponse](classes/UnauthorizedResponse.md)
+
+## Interfaces
+
+- [AbacGuard](interfaces/AbacGuard.md)
+- [ApiBodyOptions](interfaces/ApiBodyOptions.md)
+- [ApiOperationOptions](interfaces/ApiOperationOptions.md)
+- [ApiResponseOptions](interfaces/ApiResponseOptions.md)
+- [AppContext](interfaces/AppContext.md)
+- [AuthGuard](interfaces/AuthGuard.md)
+- [BananaAppOptions](interfaces/BananaAppOptions.md)
+- [BananaConfigInstance](interfaces/BananaConfigInstance.md)
+- [BananaPlugin](interfaces/BananaPlugin.md)
+- [CacheEvictOptions](interfaces/CacheEvictOptions.md)
+- [CacheOptions](interfaces/CacheOptions.md)
+- [CacheStore](interfaces/CacheStore.md)
+- [CanOptions](interfaces/CanOptions.md)
+- [ConfigFieldDef](interfaces/ConfigFieldDef.md)
+- [FrameworkAdapter](interfaces/FrameworkAdapter.md)
+- [HealthCheck](interfaces/HealthCheck.md)
+- [HealthCheckResult](interfaces/HealthCheckResult.md)
+- [HealthResponse](interfaces/HealthResponse.md)
+- [IRouter](interfaces/IRouter.md)
+- [Logger](interfaces/Logger.md)
+- [PaginationMeta](interfaces/PaginationMeta.md)
+- [RateLimitOptions](interfaces/RateLimitOptions.md)
+- [RequestContextData](interfaces/RequestContextData.md)
+- [RolesGuard](interfaces/RolesGuard.md)
+- [RouteDefinition](interfaces/RouteDefinition.md)
+- [RouteInfo](interfaces/RouteInfo.md)
+- [SanitizeOptions](interfaces/SanitizeOptions.md)
+- [TenantOptions](interfaces/TenantOptions.md)
+- [ThrottleOptions](interfaces/ThrottleOptions.md)
+- [UploadConfig](interfaces/UploadConfig.md)
+- [UploadOptions](interfaces/UploadOptions.md)
+
+## Type Aliases
+
+- [ConfigResult](type-aliases/ConfigResult.md)
+- [ConfigSchema](type-aliases/ConfigSchema.md)
+- [Constructor](type-aliases/Constructor.md)
+- [HealthStatus](type-aliases/HealthStatus.md)
+
+## Variables
+
+- [Delete](variables/Delete.md)
+- [ErrorMiddleware](variables/ErrorMiddleware.md)
+- [Get](variables/Get.md)
+- [Patch](variables/Patch.md)
+- [Post](variables/Post.md)
+- [Put](variables/Put.md)
+- [RequestContext](variables/RequestContext.md)
+- [requestContextMiddleware](variables/requestContextMiddleware.md)
+
+## Functions
+
+- [ApiBody](functions/ApiBody.md)
+- [ApiOperation](functions/ApiOperation.md)
+- [ApiResponseDoc](functions/ApiResponseDoc.md)
+- [ApiTags](functions/ApiTags.md)
+- [Auth](functions/Auth.md)
+- [BananaConfig](functions/BananaConfig.md)
+- [BananaRouter](functions/BananaRouter.md)
+- [Body](functions/Body.md)
+- [Cache](functions/Cache.md)
+- [CacheEvict](functions/CacheEvict.md)
+- [Can](functions/Can.md)
+- [Controller](functions/Controller.md)
+- [createDevToolsEndpoint](functions/createDevToolsEndpoint.md)
+- [createErrorMiddleware](functions/createErrorMiddleware.md)
+- [createHealthEndpoint](functions/createHealthEndpoint.md)
+- [createMetricsEndpoint](functions/createMetricsEndpoint.md)
+- [createMetricsMiddleware](functions/createMetricsMiddleware.md)
+- [createTenantMiddleware](functions/createTenantMiddleware.md)
+- [getTenantId](functions/getTenantId.md)
+- [Headers](functions/Headers.md)
+- [Injectable](functions/Injectable.md)
+- [isInjectable](functions/isInjectable.md)
+- [methodDecoratorFactory](functions/methodDecoratorFactory.md)
+- [Params](functions/Params.md)
+- [Public](functions/Public.md)
+- [Query](functions/Query.md)
+- [RateLimit](functions/RateLimit.md)
+- [Roles](functions/Roles.md)
+- [runWithTenant](functions/runWithTenant.md)
+- [Sanitize](functions/Sanitize.md)
+- [Tenant](functions/Tenant.md)
+- [Throttle](functions/Throttle.md)
+- [Upload](functions/Upload.md)
+
+## References
+
+### default
+
+Renames and re-exports [BananaApp](classes/BananaApp.md)

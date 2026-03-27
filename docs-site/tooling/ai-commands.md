@@ -6,12 +6,12 @@ Commands live under **`bananajs ai`** (`packages/bananajs-cli/src/lib/ai.ts` and
 
 ## `bananajs ai generate`
 
-| Option                     | Description                                                                                                 |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **`--from-schema <file>`** | JSON Schema or OpenAPI file — deterministic codegen (no LLM required for basic flows)                       |
-| **`--from-prompt <text>`** | Natural language — uses Vercel **`ai`** SDK / OpenAI-compatible providers; requires API keys as implemented |
-| **`--out <dir>`**          | Output directory (default: current working directory)                                                       |
-| **`--dry-run`**            | Print generated files without writing                                                                       |
+| Option                     | Description                                                                                           |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **`--from-schema <file>`** | JSON Schema or OpenAPI file — deterministic codegen (no LLM required for basic flows)                 |
+| **`--from-prompt <text>`** | Natural language — uses the LLM from **`.bananarc.json`** (Ollama offline by default; cloud optional) |
+| **`--out <dir>`**          | Output directory (default: current working directory)                                                 |
+| **`--dry-run`**            | Print generated files without writing                                                                 |
 
 Implementation details and provider matrix can change between releases — inspect **`packages/bananajs-cli`** for the current stack.
 
@@ -28,13 +28,8 @@ Reviews a controller for BananaJS best practices.
 
 - **`--file <path>`** — required target file
 
-## Roadmap (Phase 7)
+## DDD module generation (Phase 7)
 
-Per **`plans/EnterpriseRoadmapV3.md`**:
-
-- **`bananajs ai setup`** — interactive provider selection
-- **`.bananarc.json`** — project-level LLM and generator settings
-- **`bananajs ai generate --module`** — full DDD module from a description
-- Retry / timeout / Zod validation of LLM JSON — see architect review doc
+Shipped: **`bananajs ai setup`**, **`.bananarc.json`**, **`bananajs ai generate --module`**, offline **Ollama** default, Zod-validated extraction, and the **`llm/`** provider layer. Full walkthrough: **[AI module generation](/tooling/ai-module-generation)**.
 
 See [Roadmap](/guide/roadmap).

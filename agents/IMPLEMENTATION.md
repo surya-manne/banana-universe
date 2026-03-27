@@ -155,9 +155,19 @@ Current implementation state. Very brief — references other docs. The only cha
 
 - **`bananajs generate module <name>`** — DDD folder scaffold under **`--out`** (default `./src`); **`--orm typeorm|prisma|none`** (TTY prompt if omitted; default **`typeorm`** when non-interactive)
 
+### packages/bananajs-cli Phase 7 — LLM module generator [Complete]
+
+- **`packages/bananajs-cli/src/lib/llm/`** — `LlmProvider`, **`OllamaProvider`** (default), **`LlamaCppProvider`**, **`VercelAiProvider`** (`ai` + `@ai-sdk/openai` / `@ai-sdk/anthropic`), **`resolveLlmProvider`**, fetch retry/timeout via **`.bananarc.json`**
+- **`.bananarc.json`** — `llm` + `generate` namespaces (defaults: Ollama, `defaultOrm`, `outDir`)
+- **`bananajs ai setup`** — interactive provider wizard; probes Ollama when applicable
+- **`bananajs ai generate --module`** — Zod-validated JSON extraction → **`buildDddModuleFromExtraction`** (Phase 6 layout); **`--from-schema`** skips LLM extraction; **`--detailed`**, **`--debug`**, **`--orm`**, **`--out`**, **`--dry-run`**
+- **`ai generate --from-prompt` / `ai doc` / `ai review`** — use **`resolveLlmProvider`** + `.bananarc.json` (offline Ollama supported)
+- Extracted utilities: **`lib/utils/naming.ts`**, **`lib/utils/type-mapping.ts`**, **`lib/schema-parse.ts`**, **`lib/templates/legacy-scaffold.ts`**, prompts under **`lib/llm/prompts/`**
+
 **Docs:**
 
 - `docs-site/guide/layered-architecture.md`, `docs-site/tooling/cli.md` updated for Phase 6
+- `docs-site/tooling/ai-module-generation.md` — Phase 7 walkthrough
 
 ### Phase 5 — Documentation & GitHub Publishing [In Progress]
 
@@ -198,10 +208,11 @@ Current implementation state. Very brief — references other docs. The only cha
 | Phase 4 — Enterprise & AI-First             | ✅ Complete    | v0.4.0                 |
 | Phase 5 — Documentation & GitHub Publishing | 🔄 In Progress | —                      |
 | Phase 6 — DDD package & layered codegen     | ✅ Complete    | ddd v0.1.0, CLI v0.3.0 |
+| Phase 7 — LLM DDD module generator          | ✅ Complete    | CLI v0.3.0             |
 
 ## Next Session Starting Point
 
-Phase 5 scaffold complete. Remaining for Phase 5 to go live: `npm ci` in `docs-site/`, enable GitHub Pages on repo (source: `gh-pages` branch), push to trigger `docs.yml`. **Phase 6 shipped:** `@banana-universe/ddd`, ORM repository/UnitOfWork adapters, **`bananajs generate module`**. Next: **Phase 7** (LLM module generator, `.bananarc.json`).
+Phase 5 scaffold complete. Remaining for Phase 5 to go live: `npm ci` in `docs-site/`, enable GitHub Pages on repo (source: `gh-pages` branch), push to trigger `docs.yml`. **Phase 6–7 shipped:** `@banana-universe/ddd`, **`bananajs generate module`**, **`llm/`** providers, **`.bananarc.json`**, **`bananajs ai setup`** + **`ai generate --module`**. Next: **Phase 8** (example recipe apps).
 
 Key architectural decisions from Phase 3:
 
@@ -222,16 +233,17 @@ Key architectural decisions from Phase 2:
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                                                                             |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                                                                                |
-| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                                                                                 |
-| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                                                               |
-| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan                                                                |
-| 2026-03-27 | Phase 4 complete: AI CLI (ai generate/doc/review), @Sanitize/@Can/@Throttle security, @Tenant multi-tenancy, lazy controllers, benchmarks app, plugin-websocket, adapter-fastify stub                                              |
-| 2026-03-27 | Phase 5 scaffold: VitePress docs-site (20 pages), GitHub Actions (docs.yml, ci.yml, publish.yml), ARCHITECTURE.md fix                                                                                                              |
-| 2026-03-27 | docs-site content rewritten from source + plans/ (not README-only); added guide/roadmap.md, guide/layered-architecture.md                                                                                                          |
-| 2026-03-27 | docs-site positioning: AI-first, DX, extendable, DDD-focused; added guide/philosophy.md; home + roadmap + layered-architecture tone                                                                                                |
-| 2026-03-27 | docs-site home: hero SVG, Mermaid architecture diagram, custom CSS; vitepress-plugin-mermaid; api/index.md for /api/; removed repo layout from index                                                                               |
-| 2026-03-27 | docs-site Rosetta-style palette: force-dark, navy #0a1628 + gold #FDB913/#FFB81C + text #A0A9B8; Mermaid + hero SVG aligned                                                                                                        |
-| 2026-03-27 | Phase 6 complete: `@banana-universe/ddd` (Entity/VO/AggregateRoot/Repository/FindCriteria/UoW, @DomainService/@ApplicationService), TypeORM/Prisma adapters + UoW helpers, `bananajs generate module`, CI + publish ordering, docs |
+| Date       | Change                                                                                                                                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                                                                                    |
+| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                                                                                     |
+| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                                                                   |
+| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan                                                                    |
+| 2026-03-27 | Phase 4 complete: AI CLI (ai generate/doc/review), @Sanitize/@Can/@Throttle security, @Tenant multi-tenancy, lazy controllers, benchmarks app, plugin-websocket, adapter-fastify stub                                                  |
+| 2026-03-27 | Phase 5 scaffold: VitePress docs-site (20 pages), GitHub Actions (docs.yml, ci.yml, publish.yml), ARCHITECTURE.md fix                                                                                                                  |
+| 2026-03-27 | docs-site content rewritten from source + plans/ (not README-only); added guide/roadmap.md, guide/layered-architecture.md                                                                                                              |
+| 2026-03-27 | docs-site positioning: AI-first, DX, extendable, DDD-focused; added guide/philosophy.md; home + roadmap + layered-architecture tone                                                                                                    |
+| 2026-03-27 | docs-site home: hero SVG, Mermaid architecture diagram, custom CSS; vitepress-plugin-mermaid; api/index.md for /api/; removed repo layout from index                                                                                   |
+| 2026-03-27 | docs-site Rosetta-style palette: force-dark, navy #0a1628 + gold #FDB913/#FFB81C + text #A0A9B8; Mermaid + hero SVG aligned                                                                                                            |
+| 2026-03-27 | Phase 6 complete: `@banana-universe/ddd` (Entity/VO/AggregateRoot/Repository/FindCriteria/UoW, @DomainService/@ApplicationService), TypeORM/Prisma adapters + UoW helpers, `bananajs generate module`, CI + publish ordering, docs     |
+| 2026-03-27 | Phase 7 complete: `lib/llm/` (Ollama, llama.cpp, Vercel AI), `.bananarc.json`, `bananajs ai setup`, `ai generate --module` + Zod extraction + `generate-ai-module.ts`, refactored `ai.ts`; `docs-site/tooling/ai-module-generation.md` |

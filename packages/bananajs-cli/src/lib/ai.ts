@@ -1,6 +1,16 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import chalk from 'chalk'
+import { loadBananarc } from './llm/bananarc.js'
+import { resolveLlmProvider } from './llm/provider.factory.js'
+import { LEGACY_FLAT_GENERATE_SYSTEM_PROMPT } from './llm/prompts/generate-from-prompt.js'
+import { parseSchema } from './schema-parse.js'
+import {
+  generateControllerTemplate,
+  generateDtoTemplate,
+  generateServiceTemplate,
+} from './templates/legacy-scaffold.js'
+import { toPascalCase } from './utils/naming.js'
 
 export interface AiGenerateOptions {
   fromSchema?: string
@@ -16,126 +26,6 @@ export interface AiDocOptions {
 
 export interface AiReviewOptions {
   file?: string
-}
-
-type SchemaProperties = Record<string, { type?: string }>
-
-interface ParsedSchema {
-  entityName: string
-  fields: Array<{ name: string; type: string }>
-}
-
-const GENERATE_SYSTEM_PROMPT =
-  'You are a BananaJS expert code generator. BananaJS uses decorators for routing.\n' +
-  'Generate TypeScript code for BananaJS controller, DTO, and service.\n' +
-  'Return ONLY three code blocks labeled with triple backticks and "typescript".'
-
-function toPascalCase(str: string): string {
-  return str
-    .replace(/[-_\s]+(.)/g, (_, c: string) => (c as string).toUpperCase())
-    .replace(/^(.)/, (_, c: string) => (c as string).toUpperCase())
-}
-
-function mapJsonTypeToTs(jsonType: string | undefined): string {
-  switch (jsonType) {
-    case 'integer':
-    case 'number':
-      return 'number'
-    case 'boolean':
-      return 'boolean'
-    case 'array':
-      return 'unknown[]'
-    default:
-      return 'string'
-  }
-}
-
-function parseSchema(content: string, filePath: string): ParsedSchema {
-  const parsed = JSON.parse(content) as Record<string, unknown>
-  let entityName: string
-  let properties: SchemaProperties = {}
-
-  if (parsed['components'] && typeof parsed['components'] === 'object') {
-    const components = parsed['components'] as {
-      schemas?: Record<string, { properties?: SchemaProperties }>
-    }
-    const schemas = components.schemas ?? {}
-    const firstKey = Object.keys(schemas)[0]
-    entityName = firstKey
-      ? toPascalCase(firstKey)
-      : toPascalCase(path.basename(filePath, path.extname(filePath)))
-    properties = firstKey ? schemas[firstKey].properties ?? {} : {}
-  } else {
-    const title = typeof parsed['title'] === 'string' ? parsed['title'] : undefined
-    entityName = title
-      ? toPascalCase(title)
-      : toPascalCase(path.basename(filePath, path.extname(filePath)))
-    properties = (parsed['properties'] as SchemaProperties | undefined) ?? {}
-  }
-
-  const fields = Object.entries(properties).map(([name, def]) => ({
-    name,
-    type: mapJsonTypeToTs(def.type),
-  }))
-
-  return { entityName, fields }
-}
-
-function generateControllerTemplate(entityName: string, _fields: string[]): string {
-  return `import { Controller, Get, Post, Put, Delete, Body, Params } from '@banana-universe/bananajs'
-import { ${entityName}Dto } from './${entityName.toLowerCase()}.dto.js'
-
-@Controller('/${entityName.toLowerCase()}s')
-export class ${entityName}Controller {
-  @Get('/')
-  async getAll() {
-    // TODO: implement
-  }
-
-  @Get('/:id')
-  async getById(@Params(${entityName}Dto) params: { id: string }) {
-    // TODO: implement
-  }
-
-  @Post('/')
-  async create(@Body(${entityName}Dto) body: ${entityName}Dto) {
-    // TODO: implement
-  }
-
-  @Put('/:id')
-  async update(@Params(${entityName}Dto) params: { id: string }, @Body(${entityName}Dto) body: Partial<${entityName}Dto>) {
-    // TODO: implement
-  }
-
-  @Delete('/:id')
-  async delete(@Params(${entityName}Dto) params: { id: string }) {
-    // TODO: implement
-  }
-}
-`
-}
-
-function generateDtoTemplate(
-  entityName: string,
-  fields: Array<{ name: string; type: string }>,
-): string {
-  const fieldLines = fields.map((f) => `  @IsOptional()\n  ${f.name}?: ${f.type}`).join('\n\n')
-  return `import { IsOptional } from 'class-validator'
-
-export class ${entityName}Dto {
-${fieldLines || '  // TODO: add fields'}
-}
-`
-}
-
-function generateServiceTemplate(entityName: string): string {
-  return `import { Injectable } from '@banana-universe/bananajs'
-
-@Injectable()
-export class ${entityName}Service {
-  // TODO: inject repository and implement business logic
-}
-`
 }
 
 async function writeOrPrint(filePath: string, content: string, dryRun: boolean): Promise<void> {
@@ -179,7 +69,7 @@ async function generateFromSchema(opts: AiGenerateOptions): Promise<void> {
     process.exit(1)
   }
 
-  let parsed: ParsedSchema
+  let parsed: ReturnType<typeof parseSchema>
   try {
     parsed = parseSchema(content, schemaPath)
   } catch {
@@ -212,31 +102,16 @@ async function generateFromSchema(opts: AiGenerateOptions): Promise<void> {
 }
 
 async function generateFromPrompt(opts: AiGenerateOptions): Promise<void> {
-  if (!process.env['OPENAI_API_KEY']) {
-    console.error(chalk.yellow('Set OPENAI_API_KEY to use AI commands.'))
-    return
-  }
-
-  const aiModule = await import('ai').catch(() => null)
-  if (!aiModule) {
-    console.error(chalk.yellow('Install Vercel AI SDK: npm install ai @ai-sdk/openai'))
-    return
-  }
-
-  const openaiModule = await import('@ai-sdk/openai').catch(() => null)
-  if (!openaiModule) {
-    console.error(chalk.yellow('Install Vercel AI SDK: npm install ai @ai-sdk/openai'))
-    return
-  }
+  const cwd = process.cwd()
+  const config = await loadBananarc(cwd)
+  const provider = resolveLlmProvider(config)
 
   let text: string
   try {
-    const result = await aiModule.generateText({
-      model: openaiModule.openai('gpt-4o-mini'),
-      system: GENERATE_SYSTEM_PROMPT,
-      prompt: opts.fromPrompt!,
+    text = await provider.generate(opts.fromPrompt!, {
+      system: LEGACY_FLAT_GENERATE_SYSTEM_PROMPT,
+      temperature: 0.2,
     })
-    text = result.text
   } catch (err) {
     console.error(chalk.red('AI generation failed:'), err)
     return
@@ -301,22 +176,9 @@ export async function aiGenerate(opts: AiGenerateOptions): Promise<void> {
 }
 
 export async function aiDoc(opts: AiDocOptions): Promise<void> {
-  if (!process.env['OPENAI_API_KEY']) {
-    console.error(chalk.yellow('Set OPENAI_API_KEY to use AI commands.'))
-    return
-  }
-
-  const aiModule = await import('ai').catch(() => null)
-  if (!aiModule) {
-    console.error(chalk.yellow('Install Vercel AI SDK: npm install ai @ai-sdk/openai'))
-    return
-  }
-
-  const openaiModule = await import('@ai-sdk/openai').catch(() => null)
-  if (!openaiModule) {
-    console.error(chalk.yellow('Install Vercel AI SDK: npm install ai @ai-sdk/openai'))
-    return
-  }
+  const cwd = process.cwd()
+  const config = await loadBananarc(cwd)
+  const provider = resolveLlmProvider(config)
 
   let files: string[]
   if (opts.file) {
@@ -347,13 +209,12 @@ export async function aiDoc(opts: AiDocOptions): Promise<void> {
 
     console.log(chalk.blue(`Processing: ${filePath}`))
 
-    let result: { text: string }
+    let resultText: string
     try {
-      result = await aiModule.generateText({
-        model: openaiModule.openai('gpt-4o-mini'),
+      resultText = await provider.generate(content, {
         system:
           'You are a BananaJS expert. Add JSDoc comments to each method in this controller. Return ONLY the updated file content.',
-        prompt: content,
+        temperature: 0.2,
       })
     } catch (err) {
       console.error(chalk.red(`Failed to process ${filePath}:`), err)
@@ -363,9 +224,9 @@ export async function aiDoc(opts: AiDocOptions): Promise<void> {
     if (opts.dryRun) {
       console.log(chalk.cyan(`[dry-run] Updated content for: ${filePath}`))
       console.log(chalk.gray('---'))
-      console.log(chalk.gray(result.text))
+      console.log(chalk.gray(resultText))
     } else {
-      await fs.writeFile(filePath, result.text, 'utf-8')
+      await fs.writeFile(filePath, resultText, 'utf-8')
       console.log(chalk.green(`Updated: ${filePath}`))
     }
   }
@@ -377,11 +238,6 @@ export async function aiReview(opts: AiReviewOptions): Promise<void> {
     return
   }
 
-  if (!process.env['OPENAI_API_KEY']) {
-    console.error(chalk.yellow('Set OPENAI_API_KEY to use AI commands.'))
-    return
-  }
-
   let content: string
   try {
     content = await fs.readFile(opts.file, 'utf-8')
@@ -390,25 +246,16 @@ export async function aiReview(opts: AiReviewOptions): Promise<void> {
     process.exit(1)
   }
 
-  const aiModule = await import('ai').catch(() => null)
-  if (!aiModule) {
-    console.error(chalk.yellow('Install Vercel AI SDK: npm install ai @ai-sdk/openai'))
-    return
-  }
+  const cwd = process.cwd()
+  const config = await loadBananarc(cwd)
+  const provider = resolveLlmProvider(config)
 
-  const openaiModule = await import('@ai-sdk/openai').catch(() => null)
-  if (!openaiModule) {
-    console.error(chalk.yellow('Install Vercel AI SDK: npm install ai @ai-sdk/openai'))
-    return
-  }
-
-  let result: { text: string }
+  let resultText: string
   try {
-    result = await aiModule.generateText({
-      model: openaiModule.openai('gpt-4o-mini'),
+    resultText = await provider.generate(content, {
       system:
         'Review this BananaJS controller for best practices, security issues, naming conventions, and improvements. Be concise and actionable.',
-      prompt: content,
+      temperature: 0.2,
     })
   } catch (err) {
     console.error(chalk.red('AI review failed:'), err)
@@ -416,5 +263,5 @@ export async function aiReview(opts: AiReviewOptions): Promise<void> {
   }
 
   console.log(chalk.bold.blue(`\nAI Review: ${opts.file}\n`))
-  console.log(result.text)
+  console.log(resultText)
 }

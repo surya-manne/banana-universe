@@ -13,6 +13,8 @@ import { migrateCodemod } from './lib/migrate'
 import { dbStatus } from './lib/db'
 import { openapiExport } from './lib/openapi'
 import { aiGenerate, aiDoc, aiReview } from './lib/ai.js'
+import { aiGenerateModule } from './lib/ai-module.js'
+import { aiSetup } from './lib/ai-setup.js'
 
 const MONGO_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-mongo-app-template.git'
 const SQL_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-sql-app-template.git'
@@ -113,18 +115,77 @@ const aiCmd = program
   .description('AI-powered code generation, documentation, and review')
 
 aiCmd
-  .command('generate')
-  .description('Generate BananaJS files from a schema or natural language prompt')
-  .option('--from-schema <file>', 'Path to JSON Schema or OpenAPI spec file')
-  .option('--from-prompt <text>', 'Natural language description (requires OPENAI_API_KEY)')
-  .option('--out <dir>', 'Output directory (default: current directory)')
-  .option('--dry-run', 'Print files without writing')
-  .action((opts: { fromSchema?: string; fromPrompt?: string; out?: string; dryRun?: boolean }) => {
-    aiGenerate(opts).catch((err: unknown) => {
+  .command('setup')
+  .description('Interactive wizard: choose LLM provider and write .bananarc.json')
+  .action(() => {
+    aiSetup().catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })
   })
+
+aiCmd
+  .command('generate')
+  .description(
+    'Generate BananaJS files: flat scaffold (--from-schema / --from-prompt) or full DDD module (--module)',
+  )
+  .option(
+    '--module [description]',
+    'Generate a full DDD module; use with a description, or with --from-schema (bare --module uses schema only)',
+  )
+  .option(
+    '--from-schema <file>',
+    'JSON Schema, OpenAPI spec (flat codegen), or DDD module when used with --module',
+  )
+  .option(
+    '--from-prompt <text>',
+    'Natural language for flat controller+dto+service (uses .bananarc.json LLM)',
+  )
+  .option('--orm <orm>', 'For DDD module: typeorm | prisma | none')
+  .option(
+    '--out <dir>',
+    'Output directory (flat: cwd; DDD: default from .bananarc.json generate.outDir)',
+  )
+  .option('--dry-run', 'Print files without writing')
+  .option('--detailed', 'Second LLM pass to expand domain/application service bodies (DDD module)')
+  .option('--debug', 'Print raw LLM output for extraction/debugging')
+  .action(
+    (opts: {
+      module?: string | boolean
+      fromSchema?: string
+      fromPrompt?: string
+      orm?: string
+      out?: string
+      dryRun?: boolean
+      detailed?: boolean
+      debug?: boolean
+    }) => {
+      const run = async (): Promise<void> => {
+        if (opts.module !== undefined) {
+          await aiGenerateModule({
+            module: typeof opts.module === 'string' ? opts.module : undefined,
+            fromSchema: opts.fromSchema,
+            orm: opts.orm,
+            out: opts.out,
+            dryRun: opts.dryRun,
+            detailed: opts.detailed,
+            debug: opts.debug,
+          })
+          return
+        }
+        await aiGenerate({
+          fromSchema: opts.fromSchema,
+          fromPrompt: opts.fromPrompt,
+          out: opts.out,
+          dryRun: opts.dryRun,
+        })
+      }
+      run().catch((err: unknown) => {
+        console.error('Unexpected error:', err)
+        process.exit(1)
+      })
+    },
+  )
 
 aiCmd
   .command('doc')

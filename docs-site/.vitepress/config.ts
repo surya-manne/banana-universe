@@ -106,6 +106,7 @@ export default withMermaid(
             items: [
               { text: 'CLI Reference', link: '/tooling/cli' },
               { text: 'AI Commands', link: '/tooling/ai-commands' },
+              { text: 'AI module generation', link: '/tooling/ai-module-generation' },
               { text: 'Benchmarks', link: '/tooling/benchmarks' },
             ],
           },
