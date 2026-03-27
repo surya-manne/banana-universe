@@ -19,6 +19,21 @@
       "path": "./packages/plugin-mongoose"
     },
     {
+      "path": "./packages/plugin-typeorm"
+    },
+    {
+      "path": "./packages/plugin-otel"
+    },
+    {
+      "path": "./packages/plugin-zod"
+    },
+    {
+      "path": "./packages/plugin-websocket"
+    },
+    {
+      "path": "./packages/adapter-fastify"
+    },
+    {
       "path": "./apps/example-rest-postgresql"
     },
     {

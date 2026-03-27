@@ -1,0 +1,2 @@
+# VitePress dependency pre-bundle cache — not an Nx project; confuses project graph
+docs-site/.vitepress/cache

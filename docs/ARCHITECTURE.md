@@ -90,5 +90,5 @@ No tests present in current state. Not planned for this iteration — will be ad
 
 ## Publishing
 
-- `npm run publish:bananajs` → builds then `npm publish --access public`
-- Local test via Verdaccio on port 4873: `nx run source:local-registry`
+- **Local only:** `npm run registry:local` starts Verdaccio (Nx `local-registry` target, port 4873, config `.verdaccio/config.yml`).
+- **Publish all packages in order:** `npm run publish:local` → `scripts/publish-local-verdaccio.sh` (optional env `NPM_PUBLISH_REGISTRY` for a non-default URL).

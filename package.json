@@ -2,11 +2,17 @@
   "name": "@banana-universe/source",
   "version": "0.0.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "publish:bananajs": "nx build bananajs && cd packages/bananajs && npm publish --access public",
-    "publish:bananajs-cli": "nx build bananajs-cli && cd packages/bananajs-cli && npm publish --access public"
+    "registry:local": "nx local-registry",
+    "publish:local": "bash scripts/publish-local-verdaccio.sh"
   },
   "private": true,
+  "overrides": {
+    "jwa": "1.4.2"
+  },
   "dependencies": {
     "axios": "^1.6.0",
     "express": "^4.21.2",

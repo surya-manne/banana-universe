@@ -9,5 +9,12 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../ddd/tsconfig.lib.json"
+    },
+    {
+      "path": "../bananajs/tsconfig.lib.json"
+    }
+  ]
 }

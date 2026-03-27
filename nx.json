@@ -1,5 +1,17 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "sync": {
+    "generatorOptions": {
+      "@nx/js:typescript-sync": {
+        "runtimeTsConfigFileNames": [
+          "tsconfig.build.json",
+          "tsconfig.cjs.json",
+          "tsconfig.esm.json",
+          "tsconfig.runtime.json"
+        ]
+      }
+    }
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/eslint.config.mjs"],

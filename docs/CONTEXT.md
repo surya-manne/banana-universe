@@ -31,6 +31,5 @@ BananaJS is an opinionated Node.js framework built for developers who want the p
 
 ## Distribution
 
-- Published to npm as `@banana-universe/bananajs`.
-- Local registry (Verdaccio) available for pre-publish testing.
+- Packages are published and consumed via a **local Verdaccio** registry in this workspace (`npm run registry:local`, `npm run publish:local`); no automated push to public or private online npm registries.
 - GitHub: [https://github.com/surya-manne/banana-universe](https://github.com/surya-manne/banana-universe).

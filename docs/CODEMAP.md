@@ -49,6 +49,7 @@ banana-universe/
 │   ├── skills/                       # Rosetta skill shells
 │   └── agents/                       # Rosetta agent shells
 ├── .verdaccio/config.yml             # Local npm registry config
+├── npmrc.example                     # Copy-paste templates for consumer .npmrc (local / GitHub Packages)
 ├── nx.json                           # Nx workspace config
 ├── package.json                      # Root npm workspaces + shared deps
 ├── tsconfig.base.json                # Shared TypeScript base config

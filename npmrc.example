@@ -1,0 +1,5 @@
+# Copy into ~/.npmrc or a consumer app’s .npmrc so @banana-universe/* resolves to Verdaccio.
+# Start the registry first: npm run registry:local — then match the port from the terminal
+# (default http://localhost:4873/; if 4873 is busy, Nx often uses http://localhost:4874/)
+
+@banana-universe:registry=http://localhost:4873/

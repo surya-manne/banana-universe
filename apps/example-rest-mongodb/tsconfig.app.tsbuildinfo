@@ -1,0 +1,1 @@
+{"root":["./src/article.controller.ts","./src/article.model.ts","./src/article.schema.ts","./src/bootstrap.ts","./src/main.ts","./src/__tests__/app.test.ts"],"version":"5.7.3"}
