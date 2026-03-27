@@ -16,10 +16,16 @@
       "path": "./packages/ddd"
     },
     {
+      "path": "./packages/plugin-mongoose"
+    },
+    {
       "path": "./apps/example-rest-postgresql"
     },
     {
       "path": "./apps/example-rest-mongodb"
+    },
+    {
+      "path": "./apps/example-fastify"
     },
     {
       "path": "./apps/example-websocket-chat"

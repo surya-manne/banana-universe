@@ -1,7 +1,12 @@
 import 'reflect-metadata'
 import type { DataSource } from 'typeorm'
-import { createContainer, asFunction } from 'awilix'
-import { BananaApp, type BananaPlugin, type Constructor } from '@banana-universe/bananajs'
+import { asFunction } from 'awilix'
+import {
+  BananaApp,
+  type BananaPlugin,
+  type Constructor,
+  defineBananaAppOptions,
+} from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
 import { OpenTelemetryPlugin } from '@banana-universe/plugin-otel'
 import { BearerAuthGuard } from './lib/bearer-auth-guard.js'
@@ -16,21 +21,6 @@ export async function createExampleApp(options: {
   typeorm: Record<string, unknown>
   enableOtel?: boolean
 }): Promise<BananaApp> {
-  const container = createContainer()
-  container.register({
-    catalogItemRepository: asFunction(
-      (cradle: { dataSource: DataSource }) => new CatalogItemTypeOrmRepository(cradle.dataSource),
-    ).singleton(),
-    catalogAppService: asFunction(
-      (cradle: { catalogItemRepository: CatalogItemTypeOrmRepository }) =>
-        new CatalogAppService(cradle.catalogItemRepository),
-    ).singleton(),
-    catalogController: asFunction(
-      (cradle: { catalogAppService: CatalogAppService }) =>
-        new CatalogController(cradle.catalogAppService),
-    ).singleton(),
-  })
-
   const plugins: BananaPlugin[] = [TypeOrmPlugin(options.typeorm) as BananaPlugin]
   if (options.enableOtel) {
     plugins.push(
@@ -40,8 +30,20 @@ export async function createExampleApp(options: {
     )
   }
 
-  return BananaApp.create([CatalogController as unknown as Constructor], {
-    container,
+  const appOptions = defineBananaAppOptions({
+    services: {
+      catalogItemRepository: asFunction(
+        (cradle: { dataSource: DataSource }) => new CatalogItemTypeOrmRepository(cradle.dataSource),
+      ).singleton(),
+      catalogAppService: asFunction(
+        (cradle: { catalogItemRepository: CatalogItemTypeOrmRepository }) =>
+          new CatalogAppService(cradle.catalogItemRepository),
+      ).singleton(),
+      catalogController: asFunction(
+        (cradle: { catalogAppService: CatalogAppService }) =>
+          new CatalogController(cradle.catalogAppService),
+      ).singleton(),
+    },
     plugins,
     auth: { guard: new BearerAuthGuard() },
     swagger: { enabled: true },
@@ -51,6 +53,8 @@ export async function createExampleApp(options: {
     requestId: false,
     security: { helmet: false, cors: false },
   })
+
+  return BananaApp.create([CatalogController as unknown as Constructor], appOptions)
 }
 
 export function buildTypeOrmOptions(

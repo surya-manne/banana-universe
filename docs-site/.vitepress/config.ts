@@ -83,7 +83,7 @@ export default withMermaid(
             text: 'Integrations',
             items: [
               { text: 'TypeORM', link: '/integrations/typeorm' },
-              { text: 'Prisma', link: '/integrations/prisma' },
+              { text: 'Mongoose', link: '/integrations/mongoose' },
               { text: 'OpenTelemetry', link: '/integrations/opentelemetry' },
               { text: 'Zod', link: '/integrations/zod' },
             ],

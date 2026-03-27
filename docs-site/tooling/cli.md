@@ -25,7 +25,7 @@ Scaffolds an app by **cloning** a GitHub template (MongoDB or SQL). Requires **`
 
 - **`controller` / `dto` / `middleware`** — writes **`cwd/<name>.controller.ts`** (or `.dto.ts` / `.middleware.ts`)
 - **`module`** — layered **DDD** tree under **`--out`** (default **`./src`**): `domain/`, `application/`, `infrastructure/`, and **`<kebab>.controller.ts`**
-  - **`--orm typeorm|prisma|none`** — infrastructure stub (default: **`typeorm`** in non-interactive mode; interactive prompt when TTY and `--orm` omitted)
+  - **`--orm typeorm|mongoose|none`** — infrastructure stub (default: **`typeorm`** in non-interactive mode; interactive prompt when TTY and `--orm` omitted)
   - **`--out <dir>`** — base directory for generated folders
 - **`--dry-run`** — print content without writing
 
@@ -41,7 +41,7 @@ Static **AST scan** of **`src/`** for `@Controller` and HTTP decorators — prin
 
 ## `bananajs db`
 
-- **`--status`** — runs **`typeorm migration:show`** or **`prisma migrate status`** via `npx` (whichever applies)
+- **`--status`** — runs **`typeorm migration:show`** when a TypeORM config is present; if **`mongoose`** is in `package.json`, prints a short note (no migrate CLI)
 
 ## `bananajs openapi export`
 

@@ -28,7 +28,7 @@ Pass **`plugins: BananaPlugin[]`** inside **`BananaAppOptions`**. Order matters:
 | Package                             | Factory / class                                      |
 | ----------------------------------- | ---------------------------------------------------- |
 | `@banana-universe/plugin-typeorm`   | `TypeOrmPlugin(options)`                             |
-| `@banana-universe/plugin-prisma`    | `PrismaPlugin(prismaClient)`                         |
+| `@banana-universe/plugin-mongoose`  | `MongoosePlugin(connection)`                         |
 | `@banana-universe/plugin-otel`      | `OpenTelemetryPlugin({ serviceName, exporterUrl? })` |
 | `@banana-universe/plugin-zod`       | `ZodPlugin()`                                        |
 | `@banana-universe/plugin-websocket` | `new WebSocketPlugin({ path?, controllers })`        |

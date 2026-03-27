@@ -64,7 +64,7 @@ import { BananaApp } from '@banana-universe/bananajs'
 
 const app = await BananaApp.create([UserController], {
   plugins: [
-    /* TypeORM, Prisma, OTel, WebSocket, … */
+    /* TypeORM, Mongoose, OTel, WebSocket, … */
   ],
 })
 app.getInstance().listen(3000)

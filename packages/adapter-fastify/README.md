@@ -23,9 +23,13 @@ const adapter = new FastifyAdapter()
 adapter.listen(3000) // throws: FastifyAdapter: Not yet implemented.
 ```
 
+## Example: Fastify today (Express bridge)
+
+For a working recipe that runs BananaJS behind Fastify today, see **`apps/example-fastify`** in the monorepo — it uses **`@fastify/express`** to mount the Express app from **`BananaApp.getInstance()`**.
+
 ## Future roadmap
 
-Full Fastify support is targeted for **v2.x** of BananaJS (estimated Q4 2026):
+Full native Fastify support (without Express in the middle) is targeted for **v2.x** of BananaJS (estimated Q4 2026):
 
 1. Implement `addRoute` — register routes on a Fastify instance with Express-compatible middleware shim
 2. Implement `use` — mount Express middleware via `@fastify/express` compatibility layer or native Fastify hooks

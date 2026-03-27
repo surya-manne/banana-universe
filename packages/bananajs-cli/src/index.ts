@@ -45,7 +45,7 @@ program
   .option('--dry-run', 'Print files that would be created without writing them')
   .option(
     '--orm <orm>',
-    'For type module: typeorm | prisma | none (default: typeorm if non-interactive)',
+    'For type module: typeorm | mongoose | none (default: typeorm if non-interactive)',
   )
   .option('--out <dir>', 'Output base directory (for type module; default: ./src)')
   .action(
@@ -84,7 +84,7 @@ program
 program
   .command('db')
   .description('Database tools')
-  .option('--status', 'Show ORM migration status (TypeORM/Prisma)')
+  .option('--status', 'Show ORM migration status (TypeORM); Mongoose has no migrate CLI')
   .action((opts: { status?: boolean }) => {
     if (opts.status) {
       dbStatus().catch((err: unknown) => {
@@ -141,7 +141,7 @@ aiCmd
     '--from-prompt <text>',
     'Natural language for flat controller+dto+service (uses .bananarc.json LLM)',
   )
-  .option('--orm <orm>', 'For DDD module: typeorm | prisma | none')
+  .option('--orm <orm>', 'For DDD module: typeorm | mongoose | none')
   .option(
     '--out <dir>',
     'Output directory (flat: cwd; DDD: default from .bananarc.json generate.outDir)',
@@ -343,10 +343,10 @@ async function generateModuleResource(
 ): Promise<void> {
   let ormChoice: OrmChoice
   const raw = opts.orm?.toLowerCase()
-  if (raw === 'typeorm' || raw === 'prisma' || raw === 'none') {
+  if (raw === 'typeorm' || raw === 'mongoose' || raw === 'none') {
     ormChoice = raw
   } else if (opts.orm !== undefined) {
-    console.log(chalk.red(`Invalid --orm "${opts.orm}". Use typeorm, prisma, or none.`))
+    console.log(chalk.red(`Invalid --orm "${opts.orm}". Use typeorm, mongoose, or none.`))
     process.exit(1)
   } else if (process.stdin.isTTY) {
     const answers = await inquirer.prompt<{ orm: OrmChoice }>([
@@ -356,7 +356,7 @@ async function generateModuleResource(
         message: 'Which ORM adapter?',
         choices: [
           { name: 'TypeORM (default)', value: 'typeorm' },
-          { name: 'Prisma', value: 'prisma' },
+          { name: 'Mongoose', value: 'mongoose' },
           { name: 'None (in-memory stub)', value: 'none' },
         ],
         default: 'typeorm',

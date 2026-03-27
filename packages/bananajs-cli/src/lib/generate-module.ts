@@ -3,7 +3,7 @@ import { toKebabCase, toPascalCase } from './utils/naming.js'
 
 export { toKebabCase, toPascalCase } from './utils/naming.js'
 
-export type OrmChoice = 'typeorm' | 'prisma' | 'none'
+export type OrmChoice = 'typeorm' | 'mongoose' | 'none'
 
 export interface ModuleFile {
   relativePath: string
@@ -87,10 +87,15 @@ export type Update${Pascal}Dto = z.infer<typeof Update${Pascal}Schema>
       relativePath: path.join(base, 'infrastructure', 'typeorm', `${kebab}.typeorm-repository.ts`),
       content: typeormRepo(Pascal, kebab),
     })
-  } else if (orm === 'prisma') {
+  } else if (orm === 'mongoose') {
     files.push({
-      relativePath: path.join(base, 'infrastructure', 'prisma', `${kebab}.prisma-repository.ts`),
-      content: prismaRepo(Pascal, kebab),
+      relativePath: path.join(
+        base,
+        'infrastructure',
+        'mongoose',
+        `${kebab}.mongoose-repository.ts`,
+      ),
+      content: mongooseRepo(Pascal, kebab),
     })
   } else {
     files.push({
@@ -275,37 +280,47 @@ export class ${Pascal}TypeOrmRepository extends TypeOrmRepositoryAdapter<${Pasca
 `
 }
 
-function prismaRepo(Pascal: string, kebab: string): string {
-  const modelAccessor = camel(Pascal)
-  return `import type { PrismaClient } from '@prisma/client'
-import { PrismaRepositoryAdapter } from '@banana-universe/plugin-prisma'
+function mongooseRepo(Pascal: string, kebab: string): string {
+  const schemaVar = `${camel(Pascal)}Schema`
+  return `import { Schema, type Connection, type HydratedDocument } from 'mongoose'
+import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
 import { ${Pascal} } from '../../domain/${kebab}.entity.js'
 
-/** Prisma model must match \`model ${Pascal}\` in schema.prisma — client delegate: prisma.${modelAccessor} */
-type ${Pascal}Row = {
-  id: string
+type ${Pascal}Doc = HydratedDocument<{
   name: string
-  createdAt: Date
-  updatedAt: Date
-}
+  createdAt?: Date
+  updatedAt?: Date
+}>
 
-export class ${Pascal}PrismaRepository extends PrismaRepositoryAdapter<${Pascal}, ${Pascal}Row> {
-  constructor(prisma: PrismaClient) {
-    super(prisma.${modelAccessor} as never)
+const ${schemaVar} = new Schema(
+  {
+    name: { type: String, required: true },
+    createdAt: { type: Date },
+    updatedAt: { type: Date },
+  },
+  { collection: '${kebab}s' },
+)
+
+export class ${Pascal}MongooseRepository extends MongooseRepositoryAdapter<${Pascal}, ${Pascal}Doc> {
+  constructor(connection: Connection) {
+    const existing = connection.models['${Pascal}'] as
+      | import('mongoose').Model<${Pascal}Doc>
+      | undefined
+    const model = existing ?? connection.model<${Pascal}Doc>('${Pascal}', ${schemaVar})
+    super(model)
   }
 
-  toDomain(row: ${Pascal}Row): ${Pascal} {
+  toDomain(doc: ${Pascal}Doc): ${Pascal} {
     return new ${Pascal}({
-      id: row.id,
-      name: row.name,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      id: String(doc._id),
+      name: doc.name,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     })
   }
 
-  toPersistence(domain: ${Pascal}): ${Pascal}Row {
+  toPersistence(domain: ${Pascal}): Partial<${Pascal}Doc> {
     return {
-      id: domain.id as string,
       name: domain.name,
       createdAt: domain.createdAt,
       updatedAt: domain.updatedAt,

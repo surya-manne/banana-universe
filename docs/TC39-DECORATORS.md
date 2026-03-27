@@ -9,30 +9,33 @@
 ## Current Decorator Usage Audit
 
 ### Class Decorators
-| Decorator | Location | `reflect-metadata` usage | Migratability |
-|---|---|---|---|
-| `@Controller(path)` | Router | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
-| `@Injectable()` | DI | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
-| `@Auth()` | Auth | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
-| `@ApiTags(tags)` | OpenAPI | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
-| `@RateLimit(opts)` | RateLimit | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
+
+| Decorator           | Location  | `reflect-metadata` usage              | Migratability      |
+| ------------------- | --------- | ------------------------------------- | ------------------ |
+| `@Controller(path)` | Router    | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
+| `@Injectable()`     | DI        | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
+| `@Auth()`           | Auth      | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
+| `@ApiTags(tags)`    | OpenAPI   | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
+| `@RateLimit(opts)`  | RateLimit | `Reflect.defineMetadata` (write only) | ✅ Straightforward |
 
 ### Method Decorators
-| Decorator | Location | `reflect-metadata` usage | Migratability |
-|---|---|---|---|
-| `@Get/@Post/@Put/@Patch/@Delete` | Router | `Reflect.getMetadata` + `defineMetadata` | ✅ Straightforward |
-| `@Auth()` / `@Roles()` / `@Public()` | Auth | `Reflect.defineMetadata` (write) | ✅ Straightforward |
-| `@ApiOperation` / `@ApiBody` / `@ApiResponseDoc` | OpenAPI | `Reflect.defineMetadata` | ✅ Straightforward |
-| `@RateLimit` / `@Upload` | Feature | `Reflect.defineMetadata` | ✅ Straightforward |
-| `@Cache` / `@CacheEvict` | Cache | `Reflect.defineMetadata` | ✅ Straightforward |
-| `@Transactional()` | ORM plugins | `Reflect.defineMetadata` + descriptor.value wrap | ✅ With changes |
+
+| Decorator                                        | Location    | `reflect-metadata` usage                         | Migratability      |
+| ------------------------------------------------ | ----------- | ------------------------------------------------ | ------------------ |
+| `@Get/@Post/@Put/@Patch/@Delete`                 | Router      | `Reflect.getMetadata` + `defineMetadata`         | ✅ Straightforward |
+| `@Auth()` / `@Roles()` / `@Public()`             | Auth        | `Reflect.defineMetadata` (write)                 | ✅ Straightforward |
+| `@ApiOperation` / `@ApiBody` / `@ApiResponseDoc` | OpenAPI     | `Reflect.defineMetadata`                         | ✅ Straightforward |
+| `@RateLimit` / `@Upload`                         | Feature     | `Reflect.defineMetadata`                         | ✅ Straightforward |
+| `@Cache` / `@CacheEvict`                         | Cache       | `Reflect.defineMetadata`                         | ✅ Straightforward |
+| `@Transactional()`                               | ORM plugins | `Reflect.defineMetadata` + descriptor.value wrap | ✅ With changes    |
 
 ### Parameter Decorators
-| Decorator | Location | `reflect-metadata` usage | Migratability |
-|---|---|---|---|
-| `@Body/@Params/@Query/@Headers` | Validator | Descriptor wrapping (no reflect-metadata read) | ⚠️ Requires redesign |
-| `@ZodBody/@ZodQuery/@ZodParams` | plugin-zod | Descriptor wrapping | ⚠️ Requires redesign |
-| `@InjectRepository(Entity)` | plugin-typeorm | Explicit `paramIndex` + `Reflect.defineMetadata` | ❌ No TC39 equivalent |
+
+| Decorator                       | Location       | `reflect-metadata` usage                         | Migratability         |
+| ------------------------------- | -------------- | ------------------------------------------------ | --------------------- |
+| `@Body/@Params/@Query/@Headers` | Validator      | Descriptor wrapping (no reflect-metadata read)   | ⚠️ Requires redesign  |
+| `@ZodBody/@ZodQuery/@ZodParams` | plugin-zod     | Descriptor wrapping                              | ⚠️ Requires redesign  |
+| `@InjectRepository(Entity)`     | plugin-typeorm | Explicit `paramIndex` + `Reflect.defineMetadata` | ❌ No TC39 equivalent |
 
 ---
 
@@ -47,10 +50,12 @@
 5. **`Reflect.metadata` API** — TC39 does not include `Reflect.defineMetadata`/`Reflect.getMetadata`. A polyfill or alternative metadata storage is required.
 
 ### What Works Without Changes
+
 - Decorators that only call `Reflect.defineMetadata` — storage must migrate to a custom `WeakMap`-based registry
 - Method descriptor wrapping (`descriptor.value` replacement) — still supported in TC39
 
 ### What Requires Redesign
+
 - **Parameter decorators** (`@Body`, `@InjectRepository`) — no TC39 equivalent
   - Option A: Convert to method decorators that read the entire request object
   - Option B: Use a factory pattern: `@Body(Dto)(handlerName)` applied at class level
@@ -61,11 +66,13 @@
 ## Migration Path
 
 ### Phase 3 (Current): Audit and Plan
+
 - ✅ Document all `experimentalDecorators` usage (this document)
 - ✅ Identify which decorators rely on parameter decorator features
 - 📋 Design explicit metadata registration fallback for parameter decorators
 
 ### Phase 4: Migration Execution (before v2.0.0)
+
 1. Add TC39 decorator alternative implementations for all method/class decorators
 2. Replace `Reflect.defineMetadata`/`Reflect.getMetadata` with a `WeakMap`-based metadata registry
 3. Ship TC39 decorator variants under a new import path: `@banana-universe/bananajs/tc39`
@@ -74,7 +81,9 @@
 6. Remove `experimentalDecorators: true` from `tsconfig.base.json` in v2.0.0
 
 ### Parameter Decorator Blocker
+
 `@Body(Dto)`, `@Params(Dto)`, `@Query(Dto)`, and `@InjectRepository(Entity)` are parameter decorators with no TC39 equivalent. Planned resolution:
+
 - Convert to a class-level metadata registry approach
 - `@Body(Dto)` → `@ValidateBody({ create: CreateDto, update: UpdateDto })` class-level OR parse from first argument type via explicit registration
 
@@ -82,13 +91,13 @@
 
 ## Timeline
 
-| Milestone | Target |
-|---|---|
-| Audit complete (this document) | Phase 3 (v0.3.0) |
-| TC39 decorator alternative API design | Phase 4 start |
-| TC39 implementations shipped | Phase 4 mid (v1.5.0) |
-| `experimentalDecorators` deprecated | Phase 4 end (v1.9.0) |
-| Full TC39 migration, v2.0.0 | v2.0.0 |
+| Milestone                             | Target               |
+| ------------------------------------- | -------------------- |
+| Audit complete (this document)        | Phase 3 (v0.3.0)     |
+| TC39 decorator alternative API design | Phase 4 start        |
+| TC39 implementations shipped          | Phase 4 mid (v1.5.0) |
+| `experimentalDecorators` deprecated   | Phase 4 end (v1.9.0) |
+| Full TC39 migration, v2.0.0           | v2.0.0               |
 
 ---
 
@@ -100,7 +109,7 @@
 
 - [ ] Remove `experimentalDecorators: true` from all `tsconfig` files
 - [ ] Update `packages/bananajs` to use TC39 stage 3 decorator syntax
-- [ ] Update `packages/plugin-typeorm`, `plugin-prisma`, `plugin-otel`, `plugin-zod`
+- [ ] Update `packages/plugin-typeorm`, `plugin-mongoose`, `plugin-otel`, `plugin-zod`
 - [ ] Update `packages/plugin-websocket` (note: `@WsBody` is a parameter decorator — TC39 stage 3 does NOT support parameter decorators; requires alternative design)
 - [ ] Publish v2.0.0 with migration guide
 - [ ] Deprecate `experimentalDecorators` path with 6-month notice

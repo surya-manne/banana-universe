@@ -34,7 +34,7 @@ function schemaToExtraction(parsed: ParsedSchema): EntityExtraction {
 
 function resolveOrm(raw: string | undefined, fallback: OrmChoice): OrmChoice {
   const v = raw?.toLowerCase()
-  if (v === 'typeorm' || v === 'prisma' || v === 'none') return v
+  if (v === 'typeorm' || v === 'mongoose' || v === 'none') return v
   return fallback
 }
 

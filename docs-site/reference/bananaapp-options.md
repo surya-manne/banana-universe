@@ -8,6 +8,13 @@ new BananaApp(controllers: Constructor[], options?: BananaAppOptions)
 
 Use **`BananaApp.create(controllers, options)`** when you need **async plugin registration** (`plugins` array).
 
+## Declarative bootstrap (optional)
+
+- **`defineBananaAppOptions({ services, ... })`** — merges **`services`** (Awilix resolvers) into a container and returns **`BananaAppOptions`**
+- **`createBananaContainer(registrations)`** — `createContainer()` + `register()` in one call
+
+See **`packages/bananajs/src/lib/DI/bananaBootstrap.ts`**.
+
 ## `BananaAppOptions` fields (summary)
 
 The interface is defined in **`packages/bananajs/src/lib/Core/App.ts`**. Below is a **conceptual** grouping; see TypeDoc for exact optional/required fields.

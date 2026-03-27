@@ -1,7 +1,7 @@
 {
-  "name": "@banana-universe/plugin-prisma",
+  "name": "@banana-universe/plugin-mongoose",
   "version": "0.1.0",
-  "description": "Prisma plugin for BananaJS — PrismaClient registration and @Transactional decorator.",
+  "description": "Mongoose plugin for BananaJS — Connection registration, @Transactional (sessions), and Repository adapter.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
   "repository": {
@@ -27,19 +27,19 @@
   "peerDependencies": {
     "@banana-universe/bananajs": ">=0.3.0",
     "@banana-universe/ddd": ">=0.1.0",
-    "@prisma/client": ">=5.0.0"
+    "mongoose": ">=8.0.0"
   },
   "peerDependenciesMeta": {
-    "@prisma/client": {
+    "mongoose": {
       "optional": false
     }
   },
   "devDependencies": {
     "@banana-universe/bananajs": "*",
     "@banana-universe/ddd": "*",
-    "@prisma/client": "^5.0.0",
     "awilix": "^13.0.3",
     "express": "^4.21.2",
+    "mongoose": "^8.9.0",
     "reflect-metadata": "^0.2.2"
   }
 }

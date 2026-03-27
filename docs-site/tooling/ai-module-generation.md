@@ -73,7 +73,7 @@ You can pass a bare **`--module`** flag when only the schema is needed (the desc
 
 | Option           | Purpose                                                                             |
 | ---------------- | ----------------------------------------------------------------------------------- |
-| **`--orm`**      | `typeorm` \| `prisma` \| `none` (overrides `generate.defaultOrm`)                   |
+| **`--orm`**      | `typeorm` \| `mongoose` \| `none` (overrides `generate.defaultOrm`)                 |
 | **`--out`**      | Base directory for generated files (default: `generate.outDir` in `.bananarc.json`) |
 | **`--dry-run`**  | Print files without writing                                                         |
 | **`--detailed`** | Optional second LLM pass to expand domain/application service bodies                |

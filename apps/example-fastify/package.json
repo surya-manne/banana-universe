@@ -1,0 +1,20 @@
+{
+  "name": "@banana-universe/example-fastify",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Recipe: Fastify + @fastify/express mounting BananaJS (Express) — hybrid HTTP stack",
+  "scripts": {
+    "build": "tsc -p tsconfig.app.json",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@banana-universe/bananajs": "*",
+    "@fastify/express": "^4.0.2",
+    "fastify": "^5.2.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2"
+  }
+}

@@ -2,7 +2,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 
 export type LlmProviderKind = 'ollama' | 'llamacpp' | 'openai' | 'anthropic'
-export type OrmPreference = 'typeorm' | 'prisma' | 'none'
+export type OrmPreference = 'typeorm' | 'mongoose' | 'none'
 
 export interface BananarcConfig {
   llm?: {
@@ -63,6 +63,10 @@ function mergeBananarc(parsed: BananarcConfig): BananarcConfig {
     for (const [k, v] of Object.entries(parsed.generate)) {
       if (v !== undefined) (generate as Record<string, unknown>)[k] = v
     }
+  }
+  const rawOrm = (generate as { defaultOrm?: string }).defaultOrm
+  if (rawOrm === 'prisma') {
+    ;(generate as { defaultOrm: OrmPreference }).defaultOrm = 'mongoose'
   }
   return { llm, generate }
 }

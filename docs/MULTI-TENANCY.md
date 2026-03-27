@@ -1,6 +1,6 @@
 # Multi-Tenancy Guide
 
-How to build multi-tenant applications with BananaJS. Covers tenant identification, tenant-scoped caching, and per-tenant database patterns using the TypeORM and Prisma plugins.
+How to build multi-tenant applications with BananaJS. Covers tenant identification, tenant-scoped caching, and per-tenant database patterns using the TypeORM and Mongoose plugins.
 
 ---
 
@@ -115,19 +115,13 @@ export class User {
 const users = await repo.find({ where: { tenantId: getTenantId() } })
 ```
 
-### Prisma: Tenant Filtering
+### Mongoose: Tenant Filtering
 
 ```typescript
-import { PrismaPlugin } from '@banana-universe/plugin-prisma'
 import { getTenantId } from '@banana-universe/bananajs'
 
-// Row-level filtering pattern
-const prisma = new PrismaClient()
-
-// In service:
-const users = await prisma.user.findMany({
-  where: { tenantId: getTenantId() },
-})
+// Row-level filtering — add tenant to Mongoose queries, same idea as SQL:
+// await articleModel.find({ tenantId: getTenantId() })
 ```
 
 ### Per-Tenant Connection Pooling

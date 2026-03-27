@@ -1,27 +1,36 @@
 import 'reflect-metadata'
-import { createContainer, asFunction } from 'awilix'
-import { BananaApp, type Constructor } from '@banana-universe/bananajs'
-import { PrismaPlugin } from '@banana-universe/plugin-prisma'
-import { PrismaClient } from '@prisma/client'
+import mongoose from 'mongoose'
+import { asFunction } from 'awilix'
+import {
+  BananaApp,
+  type BananaPlugin,
+  type Constructor,
+  defineBananaAppOptions,
+} from '@banana-universe/bananajs'
+import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
 import { ArticleController } from './article.controller.js'
+import { getArticleModel } from './article.model.js'
+import type { ArticleDoc } from './article.model.js'
+import type { Model } from 'mongoose'
 
 export async function createMongoApp(): Promise<BananaApp> {
-  const prisma = new PrismaClient()
-  const container = createContainer()
-  container.register({
-    prisma: asFunction(() => prisma).singleton(),
-    articleController: asFunction(
-      (cradle: { prisma: PrismaClient }) => new ArticleController(cradle.prisma),
-    ).singleton(),
-  })
+  const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/banana_example'
+  const connection = await mongoose.createConnection(uri).asPromise()
 
-  return BananaApp.create([ArticleController as unknown as Constructor], {
-    container,
-    plugins: [PrismaPlugin(prisma) as import('@banana-universe/bananajs').BananaPlugin],
+  const appOptions = defineBananaAppOptions({
+    services: {
+      articleModel: asFunction(() => getArticleModel(connection)).singleton(),
+      articleController: asFunction(
+        (cradle: { articleModel: Model<ArticleDoc> }) => new ArticleController(cradle.articleModel),
+      ).singleton(),
+    },
+    plugins: [MongoosePlugin(connection) as BananaPlugin],
     logger: false,
     gracefulShutdown: false,
     rateLimit: false,
     requestId: false,
     security: { helmet: false, cors: false },
   })
+
+  return BananaApp.create([ArticleController as unknown as Constructor], appOptions)
 }

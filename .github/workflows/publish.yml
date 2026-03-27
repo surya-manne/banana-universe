@@ -49,8 +49,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Build & publish plugin-prisma
-        run: npx nx build plugin-prisma && cd packages/plugin-prisma && npm publish --access public
+      - name: Build & publish plugin-mongoose
+        run: npx nx build plugin-mongoose && cd packages/plugin-mongoose && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

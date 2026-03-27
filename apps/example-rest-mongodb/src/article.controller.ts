@@ -1,12 +1,13 @@
 import 'reflect-metadata'
 import type { Request, Response } from 'express'
+import type { Model } from 'mongoose'
 import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
+import type { ArticleDoc } from './article.model.js'
 import { CreateArticleSchema } from './article.schema.js'
-import type { PrismaClient } from '@prisma/client'
 
 @Controller('articles')
 export class ArticleController extends BaseController {
-  constructor(private readonly prisma: PrismaClient) {
+  constructor(private readonly articleModel: Model<ArticleDoc>) {
     super()
   }
 
@@ -20,9 +21,7 @@ export class ArticleController extends BaseController {
   @Body(CreateArticleSchema)
   async create(req: Request, res: Response) {
     const { title, body } = req.body as { title: string; body: string }
-    const created = await this.prisma.article.create({
-      data: { title, body },
-    })
-    return this.ok(res, 'created', { id: created.id, title: created.title })
+    const created = await this.articleModel.create({ title, body })
+    return this.ok(res, 'created', { id: String(created._id), title: created.title })
   }
 }

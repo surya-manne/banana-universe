@@ -20,7 +20,7 @@ Detailed specs live in **`plans/EnterpriseRoadmapV3.md`** and the architect revi
 
 **Goal:** **`@banana-universe/ddd`** as the structural backbone—entities, value objects, aggregates, repository **contracts**, **`FindCriteria`**, **`@DomainService` / `@ApplicationService`**, infrastructure adapters beside pure domain code.
 
-- TypeORM / Prisma adapters remain in **plugin** packages; **domain stays ORM-free**
+- TypeORM / Mongoose adapters remain in **plugin** packages; **domain stays ORM-free**
 - **`bananajs generate module`** scaffolds layered folders with **`--orm`** choice
 - **Unit of Work** interface + adapters (evolving in step with the package)
 

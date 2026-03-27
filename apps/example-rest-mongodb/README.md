@@ -1,16 +1,14 @@
 # example-rest-mongodb
 
-Prisma **MongoDB** connector with core **`@Body(ZodSchema)`** for request bodies.
+**Mongoose** with core **`@Body(ZodSchema)`** for request bodies.
 
-## Prisma MongoDB limitations (read before production)
+## MongoDB notes (read before production)
 
-Document these in any consumer-facing API:
+- **Transactions**: multi-document transactions need a replica set, not a standalone `mongod`. The Mongoose plugin’s `@Transactional()` follows the same rules.
+- **Relations**: modeling differs from SQL (embedded documents vs references); design schemas accordingly.
+- **Migrations**: Mongoose has no Prisma-style migrate CLI — evolve schemas in code and handle indexes explicitly if needed.
 
-- **Transactions**: multi-document transactions require a replica set, not a standalone `mongod`.
-- **Relations**: modeling differs from SQL (embedded documents vs references); plan migrations accordingly.
-- **Filtering**: complex nested filters may differ from SQL `findAll` patterns — keep queries aligned with what the connector supports.
-
-This sample uses **single-document** `create` operations to stay within typical connector capabilities.
+This sample uses **single-document** `create` operations.
 
 ## Prerequisites
 

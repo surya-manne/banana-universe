@@ -34,7 +34,7 @@ features:
     details: 'Roadmap: @banana-universe/ddd with entities, aggregates, repository contracts, domain/application/infrastructure scaffolding—ORM stays at the edge, domain stays pure.'
   - icon: 🔌
     title: Deeply extendable
-    details: 'BananaPlugin lifecycle; official TypeORM, Prisma, OTel, Zod, WebSocket plugins; pluggable auth, ABAC, tenancy, cache stores, metrics—core stays small, power stays opt-in.'
+    details: 'BananaPlugin lifecycle; official TypeORM, Mongoose, OTel, Zod, WebSocket plugins; pluggable auth, ABAC, tenancy, cache stores, metrics—core stays small, power stays opt-in.'
   - icon: 🔐
     title: Enterprise-ready surface
     details: 'Auth & roles, @Can ABAC, multi-tenancy, sanitize & throttle, health, Prometheus, structured logging, request context—production concerns are first-class.'

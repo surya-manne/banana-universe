@@ -12,7 +12,7 @@ Developer productivity is not optional. The **`bananajs`** CLI already ships **A
 
 ## Extendable by design
 
-The core stays lean; **everything heavy is optional**. **Official plugins** (TypeORM, Prisma, OpenTelemetry, Zod, WebSocket) implement the same **`BananaPlugin`** contract as your own code. **Auth, ABAC, tenancy, caching, metrics, uploads, rate limits**—pluggable interfaces, not locked-in implementations. You extend the framework; it does not trap you in a single database or cloud story.
+The core stays lean; **everything heavy is optional**. **Official plugins** (TypeORM, Mongoose, OpenTelemetry, Zod, WebSocket) implement the same **`BananaPlugin`** contract as your own code. **Auth, ABAC, tenancy, caching, metrics, uploads, rate limits**—pluggable interfaces, not locked-in implementations. You extend the framework; it does not trap you in a single database or cloud story.
 
 ## DDD-focused trajectory
 

@@ -13,7 +13,7 @@ Current implementation state. Very brief — references other docs. The only cha
 - **Pagination**: `PaginationQuerySchema` + `z.infer` replaces `PaginationDto`
 - **Routing**: `@Controller('segment')` and `@Get('segment')` — **no leading slash**; `joinRouteSegments` in `route-path.ts`
 - **Controllers**: `BaseController` with `ok` / `error`
-- **Bootstrap**: `createBananaApplication(controllers, { port?, onListening?, ...BananaAppOptions })`
+- **Bootstrap**: `createBananaApplication(controllers, { port?, onListening?, ...BananaAppOptions })`; **`defineBananaAppOptions`**, **`createBananaContainer`** for declarative Awilix registration (`services` + options)
 - **plugin-zod**: deprecated re-export shim; **`plugin-websocket`**: `@WsBody(zodSchema?)`
 
 ### packages/bananajs v0.4.0 [Phase 4 Complete]
@@ -44,7 +44,7 @@ Current implementation state. Very brief — references other docs. The only cha
 
 **Docs:**
 
-- `docs/MULTI-TENANCY.md` — per-tenant DB patterns (TypeORM/Prisma), schema isolation, row-level security
+- `docs/MULTI-TENANCY.md` — per-tenant DB patterns (TypeORM/Mongoose), schema isolation, row-level security
 - `docs/TC39-DECORATORS.md` — execution timeline v2.0.0 + known blockers (parameter decorators)
 
 ### packages/bananajs v0.3.0 [Phase 3 Complete]
@@ -60,7 +60,7 @@ Current implementation state. Very brief — references other docs. The only cha
 **New plugin packages (v0.1.0):**
 
 - `@banana-universe/plugin-typeorm` — `TypeOrmPlugin()`, `@InjectRepository(Entity)`, `@Transactional()` with `AsyncLocalStorage` + awilix repository injection
-- `@banana-universe/plugin-prisma` — `PrismaPlugin(client)`, `@Transactional()` with `prismaClient.$transaction` + `AsyncLocalStorage`
+- `@banana-universe/plugin-mongoose` — `MongoosePlugin(connection)`, `@Transactional()` with MongoDB sessions + `MongooseTransactionContext`
 - `@banana-universe/plugin-otel` — `OpenTelemetryPlugin({ serviceName })`, NodeSDK with HTTP auto-instrumentation, span enrichment middleware (mounts in `register()` pre-route)
 - `@banana-universe/plugin-zod` — `ZodPlugin()` + `@ZodBody/@ZodQuery/@ZodParams(schema)` decorators; coexists with class-validator
 
@@ -68,7 +68,7 @@ Current implementation state. Very brief — references other docs. The only cha
 
 - `bananajs routes` — static AST scan of `src/` for `@Controller` + HTTP method decorators; colored table output
 - `bananajs migrate` — Express → BananaJS route codemod; generates `*.controller.ts` files from Express route patterns
-- `bananajs db --status` — ORM migration checker; async `exec` of `npx typeorm migration:show` / `npx prisma migrate status`
+- `bananajs db --status` — TypeORM migration status via `npx typeorm migration:show`; if `mongoose` is in `package.json`, prints a short note (no migrate CLI)
 - `bananajs openapi export [--out path] [--client typescript]` — exports OpenAPI spec; optionally generates TypeScript types via `openapi-typescript`
 
 ### packages/bananajs v0.2.0 [Phase 2 Complete]
@@ -127,11 +127,12 @@ Current implementation state. Very brief — references other docs. The only cha
 ### Phase 8 — Example recipe apps [Complete]
 
 - **`apps/example-rest-postgresql`** — DDD-style catalog module, TypeORM (PostgreSQL locally, **sql.js** in tests), awilix wiring (`asFunction` for DataSource injection), bearer auth, pagination, optional OTel, Swagger; `docker-compose.yml`, integration tests
-- **`apps/example-rest-mongodb`** — Prisma MongoDB schema, `@ZodBody` + Zod, `docker-compose.yml`; README documents connector limits; tests cover HTTP health with dummy `DATABASE_URL` (no live Mongo in CI)
+- **`apps/example-rest-mongodb`** — Mongoose + MongoDB, `@Body(Zod)` + Zod, `docker-compose.yml`; README documents deployment notes; tests cover HTTP health with dummy `DATABASE_URL` (no live Mongo in CI)
+- **`apps/example-fastify`** — Fastify + `@fastify/express` mounts BananaJS Express app; see app README
 - **`apps/example-websocket-chat`** — `WebSocketPlugin`, `@WsBody` validation, in-memory rooms; HTTP `GET /health` test
 - **`apps/example-multitenant`** — `@Tenant`, `@Can` + demo `AbacGuard`, TypeORM + PostgreSQL (sql.js in tests)
 - **`plugin-websocket`**: **`@WsBody(DtoClass)`** now runs `plainToInstance` + `class-validator` (optional peers `class-transformer` / `class-validator`)
-- **`docs-site/examples/index.md`** — index table + nav **Examples**; **`.github/workflows/ci.yml`** — typecheck steps for all four example apps + Prisma generate for MongoDB app
+- **`docs-site/examples/index.md`** — index table + nav **Examples**; **`.github/workflows/ci.yml`** — typecheck steps for packages + example apps (including `example-fastify`)
 
 ## Key Implemented Features
 
@@ -168,11 +169,11 @@ Current implementation state. Very brief — references other docs. The only cha
 **Plugins:**
 
 - **`@banana-universe/plugin-typeorm`**: **`TypeOrmRepositoryAdapter`**, **`TypeOrmUnitOfWork`** (QueryRunner)
-- **`@banana-universe/plugin-prisma`**: **`PrismaRepositoryAdapter`**, **`PrismaScopedUnitOfWork`**, **`runWithPrismaUnitOfWork`**, **`PrismaTransactionRollback`**
+- **`@banana-universe/plugin-mongoose`**: **`MongooseRepositoryAdapter`**, **`MongooseScopedUnitOfWork`**, **`runWithMongooseUnitOfWork`**, **`MongooseTransactionRollback`**
 
 **CLI (`bananajs-cli` v0.3.0):**
 
-- **`bananajs generate module <name>`** — DDD folder scaffold under **`--out`** (default `./src`); **`--orm typeorm|prisma|none`** (TTY prompt if omitted; default **`typeorm`** when non-interactive)
+- **`bananajs generate module <name>`** — DDD folder scaffold under **`--out`** (default `./src`); **`--orm typeorm|mongoose|none`** (TTY prompt if omitted; default **`typeorm`** when non-interactive)
 
 ### packages/bananajs-cli Phase 7 — LLM module generator [Complete]
 
@@ -200,7 +201,7 @@ Current implementation state. Very brief — references other docs. The only cha
 - Guide: `getting-started.md`, `basic-concepts.md`, `advanced-concepts.md`
 - Reference: `decorators.md`, `bananaapp-options.md`, `error-types.md`, `config-module.md`
 - Migration: `from-express.md`
-- Integrations: `typeorm.md`, `prisma.md`, `opentelemetry.md`, `zod.md`
+- Integrations: `typeorm.md`, `mongoose.md`, `opentelemetry.md`, `zod.md`
 - Plugins: `overview.md`, `websocket.md`, `writing-a-plugin.md`
 - Tooling: `cli.md`, `ai-commands.md`, `benchmarks.md`
 - API: `api/README.md` — TypeDoc placeholder (auto-generated on build)
@@ -211,7 +212,7 @@ Current implementation state. Very brief — references other docs. The only cha
 
 - `.github/workflows/docs.yml` — triggers on push to main (`docs-site/**` + `packages/bananajs/src/**`); runs TypeDoc then VitePress build; deploys to `gh-pages`
 - `.github/workflows/ci.yml` — unified PR gate; `tsc --noEmit` across all 8 packages + build check + benchmark regression job (replaces/extends benchmarks.yml for PRs)
-- `.github/workflows/publish.yml` — triggers on `v*` tags; explicit ordered publishing: bananajs → plugin-typeorm → plugin-prisma → plugin-otel → plugin-zod → plugin-websocket → adapter-fastify → bananajs-cli
+- `.github/workflows/publish.yml` — triggers on `v*` tags; explicit ordered publishing: bananajs → ddd → plugin-typeorm → plugin-mongoose → plugin-otel → plugin-zod → plugin-websocket → adapter-fastify → bananajs-cli
 
 **Other:**
 
@@ -253,19 +254,20 @@ Key architectural decisions from Phase 2:
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                                                                                 |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-03-27 | **bananajs v0.5.0**: Zod-only validation, `BaseController`, slash-free route segments + `joinRouteSegments`, `createBananaApplication`, OpenAPI from Zod, `PaginationQuerySchema`                                                      |
-| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                                                                                    |
-| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                                                                                     |
-| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                                                                   |
-| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan                                                                    |
-| 2026-03-27 | Phase 4 complete: AI CLI (ai generate/doc/review), @Sanitize/@Can/@Throttle security, @Tenant multi-tenancy, lazy controllers, benchmarks app, plugin-websocket, adapter-fastify stub                                                  |
-| 2026-03-27 | Phase 5 scaffold: VitePress docs-site (20 pages), GitHub Actions (docs.yml, ci.yml, publish.yml), ARCHITECTURE.md fix                                                                                                                  |
-| 2026-03-27 | docs-site content rewritten from source + plans/ (not README-only); added guide/roadmap.md, guide/layered-architecture.md                                                                                                              |
-| 2026-03-27 | docs-site positioning: AI-first, DX, extendable, DDD-focused; added guide/philosophy.md; home + roadmap + layered-architecture tone                                                                                                    |
-| 2026-03-27 | docs-site home: hero SVG, Mermaid architecture diagram, custom CSS; vitepress-plugin-mermaid; api/index.md for /api/; removed repo layout from index                                                                                   |
-| 2026-03-27 | docs-site Rosetta-style palette: force-dark, navy #0a1628 + gold #FDB913/#FFB81C + text #A0A9B8; Mermaid + hero SVG aligned                                                                                                            |
-| 2026-03-27 | Phase 6 complete: `@banana-universe/ddd` (Entity/VO/AggregateRoot/Repository/FindCriteria/UoW, @DomainService/@ApplicationService), TypeORM/Prisma adapters + UoW helpers, `bananajs generate module`, CI + publish ordering, docs     |
-| 2026-03-27 | Phase 7 complete: `lib/llm/` (Ollama, llama.cpp, Vercel AI), `.bananarc.json`, `bananajs ai setup`, `ai generate --module` + Zod extraction + `generate-ai-module.ts`, refactored `ai.ts`; `docs-site/tooling/ai-module-generation.md` |
-| 2026-03-27 | Phase 8 complete: `apps/example-rest-postgresql`, `example-rest-mongodb`, `example-websocket-chat`, `example-multitenant`; `@WsBody` validation in `plugin-websocket`; `docs-site/examples/index.md`, CI example-app gates             |
+| Date       | Change                                                                                                                                                                                                                                                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-27 | **Mongoose replaces Prisma**: `@banana-universe/plugin-mongoose`, `example-rest-mongodb` migrated; **`defineBananaAppOptions`** / **`createBananaContainer`**; **`apps/example-fastify`** (Fastify + `@fastify/express`); CLI `--orm mongoose`; docs/CI/publish updated |
+| 2026-03-27 | **bananajs v0.5.0**: Zod-only validation, `BaseController`, slash-free route segments + `joinRouteSegments`, `createBananaApplication`, OpenAPI from Zod, `PaginationQuerySchema`                                                                                       |
+| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                                                                                                                     |
+| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                                                                                                                      |
+| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                                                                                                    |
+| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Mongoose/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan                                                                                                   |
+| 2026-03-27 | Phase 4 complete: AI CLI (ai generate/doc/review), @Sanitize/@Can/@Throttle security, @Tenant multi-tenancy, lazy controllers, benchmarks app, plugin-websocket, adapter-fastify stub                                                                                   |
+| 2026-03-27 | Phase 5 scaffold: VitePress docs-site (20 pages), GitHub Actions (docs.yml, ci.yml, publish.yml), ARCHITECTURE.md fix                                                                                                                                                   |
+| 2026-03-27 | docs-site content rewritten from source + plans/ (not README-only); added guide/roadmap.md, guide/layered-architecture.md                                                                                                                                               |
+| 2026-03-27 | docs-site positioning: AI-first, DX, extendable, DDD-focused; added guide/philosophy.md; home + roadmap + layered-architecture tone                                                                                                                                     |
+| 2026-03-27 | docs-site home: hero SVG, Mermaid architecture diagram, custom CSS; vitepress-plugin-mermaid; api/index.md for /api/; removed repo layout from index                                                                                                                    |
+| 2026-03-27 | docs-site Rosetta-style palette: force-dark, navy #0a1628 + gold #FDB913/#FFB81C + text #A0A9B8; Mermaid + hero SVG aligned                                                                                                                                             |
+| 2026-03-27 | Phase 6 complete: `@banana-universe/ddd` (Entity/VO/AggregateRoot/Repository/FindCriteria/UoW, @DomainService/@ApplicationService), TypeORM/Mongoose adapters + UoW helpers, `bananajs generate module`, CI + publish ordering, docs                                    |
+| 2026-03-27 | Phase 7 complete: `lib/llm/` (Ollama, llama.cpp, Vercel AI), `.bananarc.json`, `bananajs ai setup`, `ai generate --module` + Zod extraction + `generate-ai-module.ts`, refactored `ai.ts`; `docs-site/tooling/ai-module-generation.md`                                  |
+| 2026-03-27 | Phase 8 complete: `apps/example-rest-postgresql`, `example-rest-mongodb`, `example-websocket-chat`, `example-multitenant`; `@WsBody` validation in `plugin-websocket`; `docs-site/examples/index.md`, CI example-app gates                                              |

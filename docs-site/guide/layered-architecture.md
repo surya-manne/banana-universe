@@ -6,11 +6,11 @@ The **`ddd`** package provides **Entity**, **ValueObject**, **AggregateRoot**, *
 
 ## Manual layout
 
-You can structure code as **domain / application / infrastructure** without the package—BananaJS does not force a flat layout. **Plugins** (`TypeOrmPlugin`, `PrismaPlugin`, …) attach **infrastructure** at the edges while **controllers** stay thin.
+You can structure code as **domain / application / infrastructure** without the package—BananaJS does not force a flat layout. **Plugins** (`TypeOrmPlugin`, `MongoosePlugin`, …) attach **infrastructure** at the edges while **controllers** stay thin.
 
 ## Generated module shape
 
-`bananajs generate module <name> [--orm typeorm|prisma|none] [--out ./src]` produces a **bounded context**:
+`bananajs generate module <name> [--orm typeorm|mongoose|none] [--out ./src]` produces a **bounded context**:
 
 ```
 src/<name>/
@@ -22,7 +22,7 @@ src/<name>/
     <Name>.app-service.ts     # @ApplicationService
     <Name>.dto.ts
   infrastructure/
-    typeorm/<Name>.typeorm-repository.ts   # or prisma/ / in-memory
+    typeorm/<Name>.typeorm-repository.ts   # or mongoose/ / in-memory
   <Name>.controller.ts
 ```
 
@@ -30,7 +30,7 @@ src/<name>/
 
 - **Domain** — business rules and model; **no Express**, **no ORM entities** in this layer
 - **Application** — orchestration, use cases, DTOs at the boundary
-- **Infrastructure** — TypeORM / Prisma / messaging / external APIs; **mappers** `toDomain` / `toPersistence` keep persistence honest
+- **Infrastructure** — TypeORM / Mongoose / messaging / external APIs; **mappers** `toDomain` / `toPersistence` keep persistence honest
 
 ## Repository model
 
@@ -38,11 +38,11 @@ The roadmap adopts a **`FindCriteria<T>`**-style API (eq / in / like / gt / lt, 
 
 ## CLI
 
-**`bananajs generate module <name> --orm typeorm|prisma|none`** scaffolds the infrastructure stub; **`typeorm`** is the default when stdin is not a TTY.
+**`bananajs generate module <name> --orm typeorm|mongoose|none`** scaffolds the infrastructure stub; **`typeorm`** is the default when stdin is not a TTY.
 
 ## Transactions
 
-**`UnitOfWork`** plus ORM-specific implementations align application services that touch multiple aggregates; **`@Transactional`** in plugins already exists at the persistence layer for TypeORM and Prisma.
+**`UnitOfWork`** plus ORM-specific implementations align application services that touch multiple aggregates; **`@Transactional`** in plugins already exists at the persistence layer for TypeORM and Mongoose.
 
 ## Learn more
 

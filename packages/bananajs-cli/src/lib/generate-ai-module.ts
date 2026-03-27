@@ -74,12 +74,28 @@ function typeormColumn(field: NormalizedField): string {
   return `@Column()\n  ${field.name}!: string`
 }
 
-function prismaRowFields(fields: NormalizedField[]): string {
-  return fields.map((f) => `  ${f.name}: ${f.ts}`).join('\n')
+function mongooseSchemaFields(fields: NormalizedField[]): string {
+  return fields
+    .map((f) => {
+      if (f.ts === 'number') return `    ${f.name}: { type: Number }`
+      if (f.ts === 'boolean') return `    ${f.name}: { type: Boolean }`
+      if (f.ts === 'Date') return `    ${f.name}: { type: Date }`
+      if (f.ts.endsWith('[]')) return `    ${f.name}: { type: [String] }`
+      return `    ${f.name}: { type: String${f.optional ? '' : ', required: true'} }`
+    })
+    .join(',\n')
+}
+
+function mongooseDocInterface(fields: NormalizedField[]): string {
+  return fields.map((f) => `  ${f.name}${f.optional ? '?' : ''}: ${f.ts}`).join('\n')
 }
 
 function toDomainProps(fields: NormalizedField[]): string {
   return fields.map((f) => `      ${f.name}: orm.${f.name}`).join(',\n')
+}
+
+function toDomainDocProps(fields: NormalizedField[]): string {
+  return fields.map((f) => `      ${f.name}: doc.${f.name}`).join(',\n')
 }
 
 /**
@@ -167,10 +183,15 @@ export type Update${Pascal}Dto = z.infer<typeof Update${Pascal}Schema>
       relativePath: path.join(base, 'infrastructure', 'typeorm', `${kebab}.typeorm-repository.ts`),
       content: buildTypeormRepo(Pascal, kebab, fields),
     })
-  } else if (orm === 'prisma') {
+  } else if (orm === 'mongoose') {
     files.push({
-      relativePath: path.join(base, 'infrastructure', 'prisma', `${kebab}.prisma-repository.ts`),
-      content: buildPrismaRepo(Pascal, kebab, fields),
+      relativePath: path.join(
+        base,
+        'infrastructure',
+        'mongoose',
+        `${kebab}.mongoose-repository.ts`,
+      ),
+      content: buildMongooseRepo(Pascal, kebab, fields),
     })
   } else {
     files.push({
@@ -372,37 +393,48 @@ ${fields.map((f) => `    row.${f.name} = domain.${f.name}`).join('\n')}
 `
 }
 
-function buildPrismaRepo(Pascal: string, kebab: string, fields: NormalizedField[]): string {
-  const modelAccessor = toCamelCase(Pascal)
-  const rowFields = prismaRowFields(fields)
-  return `import type { PrismaClient } from '@prisma/client'
-import { PrismaRepositoryAdapter } from '@banana-universe/plugin-prisma'
+function buildMongooseRepo(Pascal: string, kebab: string, fields: NormalizedField[]): string {
+  const schemaVar = `${toCamelCase(Pascal)}Schema`
+  const docFields = mongooseDocInterface(fields)
+  const schemaBody = mongooseSchemaFields(fields)
+  const td = toDomainDocProps(fields)
+  return `import { Schema, type Connection, type HydratedDocument } from 'mongoose'
+import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
 import { ${Pascal} } from '../../domain/${kebab}.entity.js'
 
-type ${Pascal}Row = {
-  id: string
-${rowFields}
-  createdAt: Date
-  updatedAt: Date
-}
+type ${Pascal}Doc = HydratedDocument<{
+${docFields ? `${docFields}\n` : ''}  createdAt?: Date
+  updatedAt?: Date
+}>
 
-export class ${Pascal}PrismaRepository extends PrismaRepositoryAdapter<${Pascal}, ${Pascal}Row> {
-  constructor(prisma: PrismaClient) {
-    super(prisma.${modelAccessor} as never)
+const ${schemaVar} = new Schema(
+  {
+${schemaBody ? `${schemaBody},\n` : ''}    createdAt: { type: Date },
+    updatedAt: { type: Date },
+  },
+  { collection: '${kebab}s' },
+)
+
+export class ${Pascal}MongooseRepository extends MongooseRepositoryAdapter<${Pascal}, ${Pascal}Doc> {
+  constructor(connection: Connection) {
+    const existing = connection.models['${Pascal}'] as
+      | import('mongoose').Model<${Pascal}Doc>
+      | undefined
+    const model = existing ?? connection.model<${Pascal}Doc>('${Pascal}', ${schemaVar})
+    super(model)
   }
 
-  toDomain(row: ${Pascal}Row): ${Pascal} {
+  toDomain(doc: ${Pascal}Doc): ${Pascal} {
     return new ${Pascal}({
-      id: row.id,
-${fields.map((f) => `      ${f.name}: row.${f.name}`).join(',\n')},
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      id: String(doc._id),
+${td},
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     })
   }
 
-  toPersistence(domain: ${Pascal}): ${Pascal}Row {
+  toPersistence(domain: ${Pascal}): Partial<${Pascal}Doc> {
     return {
-      id: domain.id as string,
 ${fields.map((f) => `      ${f.name}: domain.${f.name}`).join(',\n')},
       createdAt: domain.createdAt,
       updatedAt: domain.updatedAt,

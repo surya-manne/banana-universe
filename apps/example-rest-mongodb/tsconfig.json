@@ -4,7 +4,7 @@
   "include": [],
   "references": [
     { "path": "../../packages/bananajs" },
-    { "path": "../../packages/plugin-prisma" },
+    { "path": "../../packages/plugin-mongoose" },
     { "path": "./tsconfig.app.json" }
   ]
 }
