@@ -1,0 +1,36 @@
+{
+  "name": "@banana-universe/example-rest-postgresql",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Recipe: TypeORM + PostgreSQL, DDD layers, auth, pagination, OTel, Swagger",
+  "scripts": {
+    "build": "tsc -p tsconfig.app.json",
+    "start": "node dist/main.js",
+    "pretest": "cd ../../packages/bananajs && npx tsc -p tsconfig.lib.json && cd ../ddd && npx tsc -p tsconfig.lib.json && cd ../plugin-typeorm && npx tsc -p tsconfig.lib.json && cd ../plugin-otel && npx tsc -p tsconfig.lib.json",
+    "test": "npm run build && NODE_ENV=test node --test dist/__tests__/app.test.js"
+  },
+  "dependencies": {
+    "@banana-universe/bananajs": "*",
+    "@banana-universe/ddd": "*",
+    "@banana-universe/plugin-otel": "*",
+    "@banana-universe/plugin-typeorm": "*",
+    "awilix": "^13.0.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.40.0",
+    "@opentelemetry/sdk-node": "^0.50.0",
+    "@types/node": "~18.16.9",
+    "sql.js": "^1.11.0",
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
+    "typescript": "~5.7.2"
+  }
+}

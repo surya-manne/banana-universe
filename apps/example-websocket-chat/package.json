@@ -1,0 +1,27 @@
+{
+  "name": "@banana-universe/example-websocket-chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Recipe: WebSocket chat rooms with @WsBody validation and HTTP health checks",
+  "scripts": {
+    "build": "tsc -p tsconfig.app.json",
+    "start": "node dist/main.js",
+    "pretest": "cd ../../packages/bananajs && npx tsc -p tsconfig.lib.json && cd ../plugin-websocket && npx tsc -p tsconfig.lib.json",
+    "test": "npm run build && node --test dist/__tests__/app.test.js"
+  },
+  "dependencies": {
+    "@banana-universe/bananajs": "*",
+    "@banana-universe/plugin-websocket": "*",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
+    "typescript": "~5.7.2"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "../../packages/bananajs" },
+    { "path": "../../packages/plugin-websocket" },
+    { "path": "./tsconfig.app.json" }
+  ]
+}

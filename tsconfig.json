@@ -14,6 +14,18 @@
     },
     {
       "path": "./packages/ddd"
+    },
+    {
+      "path": "./apps/example-rest-postgresql"
+    },
+    {
+      "path": "./apps/example-rest-mongodb"
+    },
+    {
+      "path": "./apps/example-websocket-chat"
+    },
+    {
+      "path": "./apps/example-multitenant"
     }
   ]
 }

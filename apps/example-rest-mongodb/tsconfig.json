@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "../../packages/bananajs" },
+    { "path": "../../packages/plugin-prisma" },
+    { "path": "../../packages/plugin-zod" },
+    { "path": "./tsconfig.app.json" }
+  ]
+}

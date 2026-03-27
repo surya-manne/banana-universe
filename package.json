@@ -8,6 +8,7 @@
   },
   "private": true,
   "dependencies": {
+    "@prisma/client": "^6.19.2",
     "axios": "^1.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

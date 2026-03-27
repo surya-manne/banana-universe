@@ -114,6 +114,15 @@ Current implementation state. Very brief — references other docs. The only cha
 - Full working demo using `UserController` with all CRUD endpoints
 - Demonstrates `@Controller`, `@Get/@Post/@Put/@Delete`, `@Body/@Params/@Query`, `SuccessResponse`
 
+### Phase 8 — Example recipe apps [Complete]
+
+- **`apps/example-rest-postgresql`** — DDD-style catalog module, TypeORM (PostgreSQL locally, **sql.js** in tests), awilix wiring (`asFunction` for DataSource injection), bearer auth, pagination, optional OTel, Swagger; `docker-compose.yml`, integration tests
+- **`apps/example-rest-mongodb`** — Prisma MongoDB schema, `@ZodBody` + Zod, `docker-compose.yml`; README documents connector limits; tests cover HTTP health with dummy `DATABASE_URL` (no live Mongo in CI)
+- **`apps/example-websocket-chat`** — `WebSocketPlugin`, `@WsBody` validation, in-memory rooms; HTTP `GET /health` test
+- **`apps/example-multitenant`** — `@Tenant`, `@Can` + demo `AbacGuard`, TypeORM + PostgreSQL (sql.js in tests)
+- **`plugin-websocket`**: **`@WsBody(DtoClass)`** now runs `plainToInstance` + `class-validator` (optional peers `class-transformer` / `class-validator`)
+- **`docs-site/examples/index.md`** — index table + nav **Examples**; **`.github/workflows/ci.yml`** — typecheck steps for all four example apps + Prisma generate for MongoDB app
+
 ## Key Implemented Features
 
 - Decorator-based routing (Controller + HTTP method decorators)
@@ -209,10 +218,11 @@ Current implementation state. Very brief — references other docs. The only cha
 | Phase 5 — Documentation & GitHub Publishing | 🔄 In Progress | —                      |
 | Phase 6 — DDD package & layered codegen     | ✅ Complete    | ddd v0.1.0, CLI v0.3.0 |
 | Phase 7 — LLM DDD module generator          | ✅ Complete    | CLI v0.3.0             |
+| Phase 8 — Example recipe apps               | ✅ Complete    | —                      |
 
 ## Next Session Starting Point
 
-Phase 5 scaffold complete. Remaining for Phase 5 to go live: `npm ci` in `docs-site/`, enable GitHub Pages on repo (source: `gh-pages` branch), push to trigger `docs.yml`. **Phase 6–7 shipped:** `@banana-universe/ddd`, **`bananajs generate module`**, **`llm/`** providers, **`.bananarc.json`**, **`bananajs ai setup`** + **`ai generate --module`**. Next: **Phase 8** (example recipe apps).
+Phase 5 scaffold complete. Remaining for Phase 5 to go live: `npm ci` in `docs-site/`, enable GitHub Pages on repo (source: `gh-pages` branch), push to trigger `docs.yml`. **Phases 6–8 shipped:** `@banana-universe/ddd`, **`bananajs generate module`**, **`llm/`** + **`.bananarc.json`**, **`bananajs ai`**, and **four `apps/example-*` recipes** with CI coverage.
 
 Key architectural decisions from Phase 3:
 
@@ -247,3 +257,4 @@ Key architectural decisions from Phase 2:
 | 2026-03-27 | docs-site Rosetta-style palette: force-dark, navy #0a1628 + gold #FDB913/#FFB81C + text #A0A9B8; Mermaid + hero SVG aligned                                                                                                            |
 | 2026-03-27 | Phase 6 complete: `@banana-universe/ddd` (Entity/VO/AggregateRoot/Repository/FindCriteria/UoW, @DomainService/@ApplicationService), TypeORM/Prisma adapters + UoW helpers, `bananajs generate module`, CI + publish ordering, docs     |
 | 2026-03-27 | Phase 7 complete: `lib/llm/` (Ollama, llama.cpp, Vercel AI), `.bananarc.json`, `bananajs ai setup`, `ai generate --module` + Zod extraction + `generate-ai-module.ts`, refactored `ai.ts`; `docs-site/tooling/ai-module-generation.md` |
+| 2026-03-27 | Phase 8 complete: `apps/example-rest-postgresql`, `example-rest-mongodb`, `example-websocket-chat`, `example-multitenant`; `@WsBody` validation in `plugin-websocket`; `docs-site/examples/index.md`, CI example-app gates             |

@@ -31,6 +31,7 @@ export default withMermaid(
         { text: 'Integrations', link: '/integrations/typeorm', activeMatch: '/integrations/' },
         { text: 'Plugins', link: '/plugins/overview', activeMatch: '/plugins/' },
         { text: 'Tooling', link: '/tooling/cli', activeMatch: '/tooling/' },
+        { text: 'Examples', link: '/examples/', activeMatch: '/examples/' },
         { text: 'API', link: '/api/', activeMatch: '/api/' },
       ],
 

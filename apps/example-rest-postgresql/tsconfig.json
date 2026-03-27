@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "../../packages/bananajs" },
+    { "path": "../../packages/ddd" },
+    { "path": "../../packages/plugin-typeorm" },
+    { "path": "../../packages/plugin-otel" },
+    { "path": "./tsconfig.app.json" }
+  ]
+}

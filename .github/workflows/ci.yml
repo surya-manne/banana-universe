@@ -65,6 +65,26 @@ jobs:
         run: npx tsc -p tsconfig.lib.json --noEmit
         working-directory: packages/adapter-fastify
 
+      - name: Type check — apps/example-rest-postgresql
+        run: npx tsc -p tsconfig.app.json --noEmit
+        working-directory: apps/example-rest-postgresql
+
+      - name: Type check — apps/example-multitenant
+        run: npx tsc -p tsconfig.app.json --noEmit
+        working-directory: apps/example-multitenant
+
+      - name: Type check — apps/example-websocket-chat
+        run: npx tsc -p tsconfig.app.json --noEmit
+        working-directory: apps/example-websocket-chat
+
+      - name: Prisma generate — example-rest-mongodb
+        run: DATABASE_URL=mongodb://127.0.0.1:27017/ci_dummy npx prisma generate
+        working-directory: apps/example-rest-mongodb
+
+      - name: Type check — apps/example-rest-mongodb
+        run: npx tsc -p tsconfig.app.json --noEmit
+        working-directory: apps/example-rest-mongodb
+
       - name: Build check — bananajs
         run: npx nx build bananajs
 

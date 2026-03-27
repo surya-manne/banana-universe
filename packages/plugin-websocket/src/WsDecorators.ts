@@ -39,9 +39,9 @@ export interface WsBodyMeta {
 
 /**
  * Marks a parameter as the WebSocket message body.
- * @param DtoClass - Optional DTO class for future validation support.
- * @note Runtime DTO validation is not yet implemented (v0.1.0). The decorator
- *   stores metadata for future use. The raw `data` from the message is passed as-is.
+ * @param DtoClass - When provided, the message `data` is hydrated with `class-transformer` and
+ *   validated with `class-validator` (same rules as HTTP `@Body`). Requires optional peers
+ *   `class-transformer` and `class-validator`. Without `DtoClass`, raw `data` is passed through.
  */
 export function WsBody(DtoClass?: Constructor): ParameterDecorator {
   return (
