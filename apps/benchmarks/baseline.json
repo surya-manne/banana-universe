@@ -1,0 +1,6 @@
+[
+  { "scenario": "health", "p99": 50, "p95": 30, "mean": 10, "requests": 5000 },
+  { "scenario": "basic-route", "p99": 30, "p95": 20, "mean": 8, "requests": 6000 },
+  { "scenario": "auth-route", "p99": 40, "p95": 25, "mean": 12, "requests": 5500 },
+  { "scenario": "cached-route", "p99": 25, "p95": 15, "mean": 7, "requests": 6500 }
+]

@@ -92,6 +92,26 @@
 
 ---
 
+## Execution Timeline
+
+### Target: v2.0.0 (estimated Q3 2026)
+
+### Execution Checklist (for reference)
+
+- [ ] Remove `experimentalDecorators: true` from all `tsconfig` files
+- [ ] Update `packages/bananajs` to use TC39 stage 3 decorator syntax
+- [ ] Update `packages/plugin-typeorm`, `plugin-prisma`, `plugin-otel`, `plugin-zod`
+- [ ] Update `packages/plugin-websocket` (note: `@WsBody` is a parameter decorator — TC39 stage 3 does NOT support parameter decorators; requires alternative design)
+- [ ] Publish v2.0.0 with migration guide
+- [ ] Deprecate `experimentalDecorators` path with 6-month notice
+
+### Known Blockers
+
+- **Parameter decorators**: TC39 stage 3 decorators (ECMAScript 2023+) do not include parameter decorators. `@WsBody`, `@InjectRepository`, and `@Body/@Params/@Query` use parameter-level patterns. These require alternative designs before TC39 migration can be completed.
+- **`reflect-metadata` replacement**: TC39 decorators do not rely on `reflect-metadata`. A migration to native metadata or explicit registration is needed.
+
+---
+
 ## References
 
 - [TC39 Decorators Proposal](https://github.com/tc39/proposal-decorators)

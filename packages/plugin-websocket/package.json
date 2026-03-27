@@ -1,0 +1,44 @@
+{
+  "name": "@banana-universe/plugin-websocket",
+  "version": "0.1.0",
+  "description": "WebSocket plugin for BananaJS — @WsController, @OnConnect, @OnMessage decorators backed by the ws library.",
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sprakas/banana-universe.git"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "peerDependencies": {
+    "@banana-universe/bananajs": ">=0.4.0",
+    "ws": ">=8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ws": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@banana-universe/bananajs": "*",
+    "@types/ws": "^8.5.14",
+    "awilix": "^13.0.3",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2",
+    "ws": "^8.18.1"
+  }
+}

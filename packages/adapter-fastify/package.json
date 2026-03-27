@@ -1,0 +1,35 @@
+{
+  "name": "@banana-universe/adapter-fastify",
+  "version": "0.0.1",
+  "description": "Fastify adapter exploration stub for BananaJS — implements FrameworkAdapter interface. Not yet functional.",
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sprakas/banana-universe.git"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "peerDependencies": {
+    "@banana-universe/bananajs": ">=0.4.0"
+  },
+  "devDependencies": {
+    "@banana-universe/bananajs": "*",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2"
+  }
+}

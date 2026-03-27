@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/bananajs-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A command-line interface (CLI) tool to create a new Bananajs app with different configurations, such as MongoDB or SQL-based setups. This CLI helps you quickly set up a project with your desired backend configuration.",
   "bin": {
     "bananajs": "./dist/index.js"
@@ -34,7 +34,21 @@
     "inquirer": "^12.5.2",
     "tslib": "^2.3.0"
   },
+  "peerDependencies": {
+    "@ai-sdk/openai": ">=1.0.0",
+    "ai": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/openai": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@ai-sdk/openai": "^1.3.22",
+    "ai": "^4.3.16",
     "openapi-typescript": ">=7.0.0",
     "typescript": "~5.2.2"
   }

@@ -6,6 +6,37 @@ Current implementation state. Very brief — references other docs. The only cha
 
 ## Modules
 
+### packages/bananajs v0.4.0 [Phase 4 Complete]
+
+**Phase 4 additions:**
+
+- **Advanced Security**: `@Sanitize(options?)` decorator (lazy `sanitize-html`, strips HTML from string body fields); `@Can('action', 'resource')` ABAC decorator + `AbacGuard` interface + `BananaAppOptions.abac.guard`; `@Throttle({ windowMs, max, keyBy })` per-user/IP rate limiting via JWT `sub` claim
+- **Secrets rotation**: `BananaConfig()` now returns `BananaConfigInstance<T>` with `.reload()`, `.onSecretRotated(handler)`, `.offSecretRotated(handler)` — backward-compat (direct property access preserved)
+- **Multi-Tenancy**: `@Tenant(options?)` class/method decorator; `TenantContext` (AsyncLocalStorage); `getTenantId()`, `runWithTenant()`; `createTenantMiddleware()` (extracts from `x-tenant-id` header or JWT `tid` claim); cache keys auto-namespaced per tenant; `docs/MULTI-TENANCY.md` guide
+- **Performance**: `BananaAppOptions.lazyControllers?: boolean` — defers controller instantiation to first request; route metadata precomputed at startup (route tree caching, not per-request `Reflect.getMetadata`)
+- **Framework adapter interface**: `FrameworkAdapter` + `RouteDefinition` interfaces for future framework independence
+
+**New packages (Phase 4):**
+
+- `@banana-universe/plugin-websocket` v0.1.0 — `WebSocketPlugin({ path, controllers })`, `@WsController`, `@OnConnect`, `@OnDisconnect`, `@OnMessage(event)`, `@WsBody(DtoClass?)` decorators; `attachToServer(httpServer)` API; backed by `ws` optional peer
+- `@banana-universe/adapter-fastify` v0.0.1 — `FastifyAdapter` exploration stub implementing `FrameworkAdapter`; full implementation deferred to v2.x
+
+**New app:**
+
+- `apps/benchmarks` — autocannon benchmark suite (health, basic-route, auth-route, cached-route scenarios); `report.ts` with 10% p99 regression gate; `baseline.json`; `.github/workflows/benchmarks.yml` CI workflow
+
+**CLI (bananajs-cli v0.2.0):**
+
+- `bananajs ai generate --from-schema <file>` — parses JSON Schema or OpenAPI spec, generates controller+DTO+service (no LLM required)
+- `bananajs ai generate --from-prompt "<text>"` — LLM-driven scaffolding via Vercel `ai` SDK + `@ai-sdk/openai` (optional peers)
+- `bananajs ai doc [--file] [--dry-run]` — adds JSDoc to controller methods via LLM
+- `bananajs ai review --file` — LLM review of controller for best practices
+
+**Docs:**
+
+- `docs/MULTI-TENANCY.md` — per-tenant DB patterns (TypeORM/Prisma), schema isolation, row-level security
+- `docs/TC39-DECORATORS.md` — execution timeline v2.0.0 + known blockers (parameter decorators)
+
 ### packages/bananajs v0.3.0 [Phase 3 Complete]
 
 **Phase 3 additions:**
@@ -114,11 +145,11 @@ Current implementation state. Very brief — references other docs. The only cha
 | Phase 1 — Foundation            | ✅ Complete | v0.1.0  |
 | Phase 2 — Core Enterprise       | ✅ Complete | v0.2.0  |
 | Phase 3 — Advanced Architecture | ✅ Complete | v0.3.0  |
-| Phase 4 — Enterprise & AI-First | ⏳ Pending  | —       |
+| Phase 4 — Enterprise & AI-First | ✅ Complete | v0.4.0  |
 
 ## Next Session Starting Point
 
-**Start Phase 4** per `plans/EnterpriseRoadmapV2.md` (Phase 4 — Enterprise & AI-First).
+All 4 phases complete. For future work: full Fastify adapter (4.6), TC39 migration execution (4.7), Redis cache plugin, `@WsBody` runtime validation in plugin-websocket.
 
 Key architectural decisions from Phase 3:
 
@@ -139,9 +170,10 @@ Key architectural decisions from Phase 2:
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                              |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                 |
-| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                  |
-| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                |
-| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan |
+| Date       | Change                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                                   |
+| 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                                    |
+| 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                  |
+| 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan                   |
+| 2026-03-27 | Phase 4 complete: AI CLI (ai generate/doc/review), @Sanitize/@Can/@Throttle security, @Tenant multi-tenancy, lazy controllers, benchmarks app, plugin-websocket, adapter-fastify stub |

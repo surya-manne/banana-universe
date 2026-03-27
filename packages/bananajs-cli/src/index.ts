@@ -11,6 +11,7 @@ import { listRoutes } from './lib/routes'
 import { migrateCodemod } from './lib/migrate'
 import { dbStatus } from './lib/db'
 import { openapiExport } from './lib/openapi'
+import { aiGenerate, aiDoc, aiReview } from './lib/ai.js'
 
 const MONGO_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-mongo-app-template.git'
 const SQL_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-sql-app-template.git'
@@ -19,7 +20,7 @@ const program = new Command()
 
 program
   .name('bananajs')
-  .version('0.0.10')
+  .version('0.2.0')
   .description('BananaJS CLI — scaffold and generate BananaJS resources')
 
 program
@@ -88,6 +89,45 @@ openapiCmd
   .option('--client <type>', 'Generate client SDK (supported: typescript)')
   .action((opts: { out?: string; client?: string }) => {
     openapiExport(opts).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+const aiCmd = program.command('ai').description('AI-powered code generation, documentation, and review')
+
+aiCmd
+  .command('generate')
+  .description('Generate BananaJS files from a schema or natural language prompt')
+  .option('--from-schema <file>', 'Path to JSON Schema or OpenAPI spec file')
+  .option('--from-prompt <text>', 'Natural language description (requires OPENAI_API_KEY)')
+  .option('--out <dir>', 'Output directory (default: current directory)')
+  .option('--dry-run', 'Print files without writing')
+  .action((opts: { fromSchema?: string; fromPrompt?: string; out?: string; dryRun?: boolean }) => {
+    aiGenerate(opts).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('doc')
+  .description('Generate JSDoc for existing controllers using AI')
+  .option('--file <path>', 'Path to controller file (default: scan src/)')
+  .option('--dry-run', 'Print changes without writing')
+  .action((opts: { file?: string; dryRun?: boolean }) => {
+    aiDoc(opts).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('review')
+  .description('Review a BananaJS controller for best practices')
+  .option('--file <path>', 'Path to controller file to review')
+  .action((opts: { file?: string }) => {
+    aiReview(opts).catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })

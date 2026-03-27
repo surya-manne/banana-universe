@@ -20,4 +20,10 @@ export enum MetadataKeys {
   // Phase 3 — ORM (used by plugin packages)
   TRANSACTIONAL = 'banana:transactional',
   INJECT_REPOSITORY = 'banana:inject_repository',
+  // Phase 4 — Security
+  SANITIZE = 'banana:sanitize',
+  CAN = 'banana:can',
+  THROTTLE = 'banana:throttle',
+  // Phase 4 — Multi-Tenancy
+  TENANT = 'banana:tenant',
 }

@@ -24,6 +24,9 @@ import { CacheManager } from '../Cache/CacheManager.js'
 import type { CacheStore } from '../Cache/CacheManager.js'
 import type { CacheOptions } from '../Cache/Cache.decorator.js'
 import type { CacheEvictOptions } from '../Cache/CacheEvict.decorator.js'
+import type { AbacGuard } from '../Security/AbacGuard.interface.js'
+import type { TenantOptions } from '../Tenant/TenantContext.js'
+import { createTenantMiddleware, getTenantId } from '../Tenant/TenantContext.js'
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T
 
@@ -70,6 +73,12 @@ export interface BananaAppOptions {
     enabled: boolean
     path?: string
   }
+  // Phase 4 additions
+  abac?: {
+    guard: AbacGuard
+  }
+  tenant?: TenantOptions
+  lazyControllers?: boolean
 }
 
 export interface RouteInfo {
@@ -274,11 +283,21 @@ export class BananaApp {
   }
 
   private initializeControllers(controllers: Constructor[], authGuard?: AuthGuard): void {
-    const { auth, rateLimit: globalRateLimit } = this.options
+    const {
+      auth,
+      rateLimit: globalRateLimit,
+      abac,
+      tenant: globalTenant,
+      lazyControllers,
+    } = this.options
     const logger = this.logger
+    // Lazy controller instance cache (only used when lazyControllers: true)
+    const lazyInstanceMap = new Map<string, Record<string, unknown>>()
 
     controllers.forEach((controllerClass) => {
-      const controllerInstance = this.resolveController(controllerClass)
+      // Eager instance (default) or lazy resolver
+      const eagerInstance = lazyControllers ? null : this.resolveController(controllerClass)
+
       const basePath: string = Reflect.getMetadata(
         MetadataKeys.BASE_PATH,
         controllerClass,
@@ -287,8 +306,18 @@ export class BananaApp {
         (Reflect.getMetadata(MetadataKeys.ROUTERS, controllerClass) as IRouter[]) ?? []
       const router = Router()
 
+      // [Phase 4] Route tree caching — read all class-level metadata once per controller
       const isAuthClass = Reflect.getMetadata(MetadataKeys.AUTH, controllerClass) as
         | boolean
+        | undefined
+      const classTenant = Reflect.getMetadata(MetadataKeys.TENANT, controllerClass) as
+        | TenantOptions
+        | undefined
+      const classRateLimit = Reflect.getMetadata(MetadataKeys.RATE_LIMIT, controllerClass) as
+        | { windowMs?: number; max?: number; message?: string }
+        | undefined
+      const classThrottle = Reflect.getMetadata(MetadataKeys.THROTTLE, controllerClass) as
+        | import('../Security/Throttle.decorator.js').ThrottleOptions
         | undefined
 
       routers.forEach(({ method, path, handlerName, middlewares = [] }) => {
@@ -299,9 +328,7 @@ export class BananaApp {
           handler: String(handlerName),
         })
 
-        const routeMiddlewares: RequestHandler[] = []
-
-        // [Phase 2] Auth middleware — injected before other middlewares/handler
+        // [Phase 4] Route tree caching — read all method-level metadata once per route
         const isAuthMethod = Reflect.getMetadata(
           MetadataKeys.AUTH,
           controllerClass,
@@ -310,6 +337,49 @@ export class BananaApp {
         const isPublic = Reflect.getMetadata(MetadataKeys.PUBLIC, controllerClass, handlerName) as
           | boolean
           | undefined
+        const routeRateLimit = Reflect.getMetadata(
+          MetadataKeys.RATE_LIMIT,
+          controllerClass,
+          handlerName,
+        ) as { windowMs?: number; max?: number; message?: string } | undefined
+        const routeThrottle = Reflect.getMetadata(
+          MetadataKeys.THROTTLE,
+          controllerClass,
+          handlerName,
+        ) as import('../Security/Throttle.decorator.js').ThrottleOptions | undefined
+        const uploadConfig = Reflect.getMetadata(
+          MetadataKeys.UPLOAD,
+          controllerClass,
+          handlerName,
+        ) as { fieldName: string; maxSize?: number; allowedMimeTypes?: string[] } | undefined
+        const cacheConfig = Reflect.getMetadata(
+          MetadataKeys.CACHE,
+          controllerClass,
+          handlerName,
+        ) as CacheOptions | undefined
+        const cacheEvictConfig = Reflect.getMetadata(
+          MetadataKeys.CACHE_EVICT,
+          controllerClass,
+          handlerName,
+        ) as CacheEvictOptions | undefined
+        const canConfig = Reflect.getMetadata(MetadataKeys.CAN, controllerClass, handlerName) as
+          | { action: string; resource: string }
+          | undefined
+        const routeTenant = Reflect.getMetadata(
+          MetadataKeys.TENANT,
+          controllerClass,
+          handlerName,
+        ) as TenantOptions | undefined
+
+        const routeMiddlewares: RequestHandler[] = []
+
+        // [Phase 4] Tenant middleware — injected first so tenantId is available to all downstream middleware
+        const tenantConfig = routeTenant ?? classTenant ?? (globalTenant ? globalTenant : undefined)
+        if (tenantConfig !== undefined) {
+          routeMiddlewares.push(createTenantMiddleware(tenantConfig))
+        }
+
+        // [Phase 2] Auth middleware — injected before other middlewares/handler
         if ((isAuthClass || isAuthMethod) && !isPublic) {
           if (authGuard) {
             routeMiddlewares.push(createAuthMiddlewareLazy(authGuard, controllerClass, handlerName))
@@ -322,15 +392,26 @@ export class BananaApp {
           }
         }
 
+        // [Phase 4] ABAC middleware — runs after auth (user is authenticated)
+        if (canConfig !== undefined) {
+          if (abac?.guard) {
+            routeMiddlewares.push(createAbacMiddleware(canConfig, abac.guard, logger))
+          } else {
+            logger?.warn(
+              `@Can applied to ${controllerClass.name}.${String(
+                handlerName,
+              )} but no abac.guard provided in BananaAppOptions`,
+            )
+          }
+        }
+
+        // [Phase 4] Throttle middleware — per-user or per-IP rate limiting
+        const throttleConfig = routeThrottle ?? classThrottle
+        if (throttleConfig) {
+          routeMiddlewares.push(createLazyThrottleMiddleware(throttleConfig, logger))
+        }
+
         // [Phase 2] Rate limit middleware — lazy wrapper, loads express-rate-limit on first request
-        const routeRateLimit = Reflect.getMetadata(
-          MetadataKeys.RATE_LIMIT,
-          controllerClass,
-          handlerName,
-        ) as { windowMs?: number; max?: number; message?: string } | undefined
-        const classRateLimit = Reflect.getMetadata(MetadataKeys.RATE_LIMIT, controllerClass) as
-          | { windowMs?: number; max?: number; message?: string }
-          | undefined
         const rateLimitConfig = routeRateLimit ?? classRateLimit
         if (rateLimitConfig && globalRateLimit !== false) {
           const merged = {
@@ -343,11 +424,6 @@ export class BananaApp {
         }
 
         // [Phase 2] Upload middleware — lazy wrapper, loads multer on first request
-        const uploadConfig = Reflect.getMetadata(
-          MetadataKeys.UPLOAD,
-          controllerClass,
-          handlerName,
-        ) as { fieldName: string; maxSize?: number; allowedMimeTypes?: string[] } | undefined
         if (uploadConfig) {
           routeMiddlewares.push(
             createLazyUploadMiddleware(uploadConfig, controllerClass.name, String(handlerName)),
@@ -355,11 +431,6 @@ export class BananaApp {
         }
 
         // [Phase 3] Cache middleware — check cache before handler, store response after
-        const cacheConfig = Reflect.getMetadata(
-          MetadataKeys.CACHE,
-          controllerClass,
-          handlerName,
-        ) as CacheOptions | undefined
         if (cacheConfig !== undefined && this.cacheManager) {
           routeMiddlewares.push(
             createCacheMiddleware(
@@ -379,11 +450,6 @@ export class BananaApp {
         }
 
         // [Phase 3] CacheEvict middleware — evict matching keys after successful response
-        const cacheEvictConfig = Reflect.getMetadata(
-          MetadataKeys.CACHE_EVICT,
-          controllerClass,
-          handlerName,
-        ) as CacheEvictOptions | undefined
         if (cacheEvictConfig !== undefined && this.cacheManager) {
           routeMiddlewares.push(
             createCacheEvictMiddleware(cacheEvictConfig, this.cacheManager, logger),
@@ -395,12 +461,25 @@ export class BananaApp {
           [...routeMiddlewares, ...(middlewares as RequestHandler[])],
           async (req: Request, res: Response, next: NextFunction) => {
             try {
-              const handler = controllerInstance[String(handlerName)] as (
+              // [Phase 4] Lazy controller loading — instantiate on first request to this controller
+              let instance: Record<string, unknown>
+              if (lazyControllers) {
+                const cached = lazyInstanceMap.get(controllerClass.name)
+                if (cached) {
+                  instance = cached
+                } else {
+                  instance = this.resolveController(controllerClass)
+                  lazyInstanceMap.set(controllerClass.name, instance)
+                }
+              } else {
+                instance = eagerInstance as Record<string, unknown>
+              }
+              const handler = instance[String(handlerName)] as (
                 req: Request,
                 res: Response,
                 next: NextFunction,
               ) => Promise<unknown>
-              return await handler.call(controllerInstance, req, res, next)
+              return await handler.call(instance, req, res, next)
             } catch (error) {
               return next(error)
             }
@@ -559,14 +638,83 @@ function deriveCacheKey(
   controllerName: string,
   handlerName: string,
 ): string {
-  if (typeof keyOption === 'string') return keyOption
-  if (typeof keyOption === 'function') return keyOption(req)
+  const tid = getTenantId()
+  const tenantPrefix = tid ? `tenant:${tid}:` : ''
+  if (typeof keyOption === 'string') return `${tenantPrefix}${keyOption}`
+  if (typeof keyOption === 'function') return `${tenantPrefix}${keyOption(req)}`
   const sortedQuery = Object.fromEntries(
     Object.entries(req.query as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)),
   )
-  return `${controllerName}:${handlerName}:${JSON.stringify(req.params)}:${JSON.stringify(
-    sortedQuery,
-  )}`
+  return `${tenantPrefix}${controllerName}:${handlerName}:${JSON.stringify(
+    req.params,
+  )}:${JSON.stringify(sortedQuery)}`
+}
+
+function createAbacMiddleware(
+  canConfig: { action: string; resource: string },
+  guard: AbacGuard,
+  logger?: Logger,
+): RequestHandler {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const allowed = await guard.can(canConfig.action, canConfig.resource, req)
+      if (!allowed) {
+        const { ForbiddenError } = await import('../Response/ApiError.js')
+        return next(new ForbiddenError('Access denied'))
+      }
+      return next()
+    } catch (err) {
+      logger?.warn(`ABAC check error: ${String(err)}`)
+      return next(err)
+    }
+  }
+}
+
+function createLazyThrottleMiddleware(
+  config: import('../Security/Throttle.decorator.js').ThrottleOptions,
+  logger?: Logger,
+): RequestHandler {
+  let cachedMiddleware: RequestHandler | undefined
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!cachedMiddleware) {
+      try {
+        const { default: rateLimit } = await import('express-rate-limit')
+        const keyGenerator = (r: Request): string => {
+          if (config.keyBy === 'userId') {
+            // Extract userId from RequestContext or JWT sub claim
+            const authHeader = r.headers['authorization']
+            if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+              const token = authHeader.slice(7)
+              const parts = token.split('.')
+              if (parts.length === 3) {
+                try {
+                  const payload = parts[1]
+                  const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4)
+                  const decoded = JSON.parse(
+                    Buffer.from(padded, 'base64url').toString('utf-8'),
+                  ) as Record<string, unknown>
+                  if (typeof decoded['sub'] === 'string') return decoded['sub']
+                } catch {
+                  // fallback to ip
+                }
+              }
+            }
+          }
+          return r.ip ?? 'unknown'
+        }
+        cachedMiddleware = rateLimit({
+          windowMs: config.windowMs,
+          max: config.max,
+          message: config.message ?? 'Too Many Requests',
+          keyGenerator,
+        }) as unknown as RequestHandler
+      } catch {
+        logger?.warn('express-rate-limit is not installed. @Throttle decorator has no effect.')
+        cachedMiddleware = (_r: Request, _s: Response, n: NextFunction): void => n()
+      }
+    }
+    return cachedMiddleware(req, res, next)
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

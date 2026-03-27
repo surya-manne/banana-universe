@@ -1,0 +1,45 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/bananajs/**'
+      - 'apps/benchmarks/**'
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build bananajs
+        run: npx tsc -p packages/bananajs/tsconfig.lib.json
+
+      - name: Run benchmarks
+        working-directory: apps/benchmarks
+        run: node --loader ts-node/esm src/benchmark.ts
+
+      - name: Compare to baseline
+        working-directory: apps/benchmarks
+        run: node --loader ts-node/esm src/report.ts
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: apps/benchmarks/results.json
