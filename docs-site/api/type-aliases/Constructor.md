@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / Constructor
+[@banana-universe/bananajs](../index.md) / Constructor
 
 # Type Alias: Constructor\<T\>
 

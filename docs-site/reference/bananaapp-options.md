@@ -58,4 +58,4 @@ The interface is defined in **`packages/bananajs/src/lib/Core/App.ts`**. Below i
 ## Related
 
 - [Advanced concepts](/guide/advanced-concepts)
-- [TypeDoc: `BananaApp`](/api/classes/BananaApp.md), [`BananaAppOptions`](/api/interfaces/BananaAppOptions.md)
+- [TypeDoc: `BananaApp`](/api/classes/BananaApp), [`BananaAppOptions`](/api/interfaces/BananaAppOptions)

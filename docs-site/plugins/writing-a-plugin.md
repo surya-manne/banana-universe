@@ -38,4 +38,4 @@ Declare optional integrations as **`peerDependencies`** with **`peerDependencies
 ## Related
 
 - [Plugins overview](/plugins/overview)
-- [TypeDoc: `BananaPlugin`](/api/interfaces/BananaPlugin.md)
+- [TypeDoc: `BananaPlugin`](/api/interfaces/BananaPlugin)

@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / ConfigSchema
+[@banana-universe/bananajs](../index.md) / ConfigSchema
 
 # Type Alias: ConfigSchema
 

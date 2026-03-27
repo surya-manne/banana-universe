@@ -5,6 +5,7 @@
   "entryPointStrategy": "expand",
   "out": "api",
   "plugin": ["typedoc-plugin-markdown"],
+  "entryFileName": "index",
   "readme": "none",
   "excludePrivate": true,
   "excludeInternal": true,

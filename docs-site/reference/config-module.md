@@ -40,4 +40,4 @@ If required variables are missing or types do not parse, **`BananaConfig`** thro
 
 ## Related
 
-- [TypeDoc: `BananaConfig`](/api/functions/BananaConfig.md)
+- [TypeDoc: `BananaConfig`](/api/functions/BananaConfig)

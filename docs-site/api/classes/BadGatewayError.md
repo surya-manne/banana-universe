@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / BadGatewayError
+[@banana-universe/bananajs](../index.md) / BadGatewayError
 
 # Class: BadGatewayError
 

@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / Tenant
+[@banana-universe/bananajs](../index.md) / Tenant
 
 # Function: Tenant()
 

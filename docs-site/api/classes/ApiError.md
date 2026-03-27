@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / ApiError
+[@banana-universe/bananajs](../index.md) / ApiError
 
 # Abstract Class: ApiError
 

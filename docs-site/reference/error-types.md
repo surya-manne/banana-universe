@@ -28,5 +28,5 @@ For **`InternalError`**, user-facing messages may be replaced in **production** 
 
 ## Related
 
-- [TypeDoc: `ApiError`](/api/classes/ApiError.md)
+- [TypeDoc: `ApiError`](/api/classes/ApiError)
 - [Basic concepts](/guide/basic-concepts)

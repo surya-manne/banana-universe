@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / ApiTags
+[@banana-universe/bananajs](../index.md) / ApiTags
 
 # Function: ApiTags()
 

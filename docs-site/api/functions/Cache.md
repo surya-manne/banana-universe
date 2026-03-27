@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / Cache
+[@banana-universe/bananajs](../index.md) / Cache
 
 # Function: Cache()
 

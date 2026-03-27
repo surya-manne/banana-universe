@@ -1,6 +1,6 @@
 # Decorators & public API
 
-Hand-written overview; generated signatures live under [**/api/**](/api/) (TypeDoc from `packages/bananajs/src/index.ts`).
+Hand-written overview; generated signatures live under [**TypeDoc API**](/api/) (from `packages/bananajs/src/index.ts`).
 
 ## Routing
 

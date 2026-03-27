@@ -1,8 +1,8 @@
-[**@banana-universe/bananajs**](../README.md)
+[**@banana-universe/bananajs**](../index.md)
 
 ***
 
-[@banana-universe/bananajs](../README.md) / Injectable
+[@banana-universe/bananajs](../index.md) / Injectable
 
 # Function: Injectable()
 
