@@ -1,29 +1,69 @@
 #!/usr/bin/env node
 
+import { Command } from 'commander'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import chalk from 'chalk'
 import { spawn } from 'child_process'
 import inquirer from 'inquirer'
+import { generateController, generateDto, generateMiddleware } from './lib/generate'
 
 const MONGO_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-mongo-app-template.git'
 const SQL_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-sql-app-template.git'
 
-async function createApp() {
-  const { appName, templateType } = await inquirer.prompt([
-    {
+const program = new Command()
+
+program
+  .name('bananajs')
+  .version('0.0.10')
+  .description('BananaJS CLI — scaffold and generate BananaJS resources')
+
+program
+  .command('new [appName]')
+  .description('Scaffold a new BananaJS application')
+  .action((appName?: string) => {
+    createApp(appName).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+program
+  .command('generate <type> <name>')
+  .alias('g')
+  .description('Generate a BananaJS resource (controller | dto | middleware)')
+  .option('--dry-run', 'Print files that would be created without writing them')
+  .action((type: string, name: string, options: { dryRun?: boolean }) => {
+    generateResource(type, name, options.dryRun ?? false).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+program.parse(process.argv)
+
+async function createApp(appNameArg?: string): Promise<void> {
+  const prompts: { type: string; name: string; message: string; default?: string; choices?: string[] }[] = []
+
+  if (!appNameArg) {
+    prompts.push({
       type: 'input',
       name: 'appName',
       message: 'What is the name of your app?',
       default: 'my-bananajs-app',
-    },
-    {
-      type: 'list',
-      name: 'templateType',
-      message: 'Which app configuration do you want?',
-      choices: ['MongoDB', 'SQL'],
-    },
-  ])
+    })
+  }
+
+  prompts.push({
+    type: 'list',
+    name: 'templateType',
+    message: 'Which app configuration do you want?',
+    choices: ['MongoDB', 'SQL'],
+  })
+
+  const answers = await inquirer.prompt(prompts)
+  const appName = appNameArg ?? (answers['appName'] as string)
+  const templateType = answers['templateType'] as string
 
   const appDir = path.join(process.cwd(), appName)
 
@@ -31,9 +71,8 @@ async function createApp() {
     await fs.stat(appDir)
     console.log(chalk.red(`An app with the name "${appName}" already exists.`))
     process.exit(1)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    if (error.code !== 'ENOENT') {
+  } catch (error: unknown) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
       console.error('Error checking if app exists:', error)
       process.exit(1)
     }
@@ -42,61 +81,72 @@ async function createApp() {
   await fs.mkdir(appDir)
 
   try {
-    if (templateType === 'MongoDB') {
-      await setupAppConfiguration(appDir, appName, MONGO_TEMPLATE_REPO)
-    } else {
-      await setupAppConfiguration(appDir, appName, SQL_TEMPLATE_REPO)
-    }
+    const repo = templateType === 'MongoDB' ? MONGO_TEMPLATE_REPO : SQL_TEMPLATE_REPO
+    await setupAppConfiguration(appDir, appName, repo)
   } catch (error) {
     console.error('Error creating app:', error)
-    console.log(chalk.yellow(`Make sure to available git on your cli before running the command.`))
-    await fs.rmdir(appDir, { recursive: true })
-
+    console.log(chalk.yellow('Make sure git is available on your CLI before running this command.'))
+    await fs.rm(appDir, { recursive: true, force: true })
     process.exit(1)
   }
 }
 
-async function setupAppConfiguration(appDir: string, appName: string, repo: string) {
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const gitSetup = spawn('git', ['clone', '--depth', '1', '--progress', repo, appDir])
+async function setupAppConfiguration(appDir: string, appName: string, repo: string): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const gitSetup = spawn('git', ['clone', '--depth', '1', '--progress', repo, appDir])
 
-      gitSetup.stderr.on('data', (data) => {
-        const output = data.toString()
-        if (output.includes('Cloning into')) {
-          return
-        }
+    gitSetup.stderr.on('data', (data: Buffer) => {
+      const output = data.toString()
+      if (!output.includes('Cloning into')) {
         console.log(chalk.gray(output))
-      })
-
-      gitSetup.on('close', (code) => {
-        if (code === 0) {
-          console.log(chalk.green(`App "${appName}" created successfully!`))
-
-          // Delete the .git folder to remove the git history of the template repo
-          const gitFolderPath = path.join(appDir, '.git')
-          fs.rm(gitFolderPath, { recursive: true, force: true })
-
-          resolve()
-        } else {
-          console.log(chalk.red(`Failed to create the app with exit code ${code}.`))
-          reject()
-        }
-      })
+      }
     })
-  } catch (error) {
-    console.error('Error during app setup:', error)
-    throw error
+
+    gitSetup.on('close', (code: number | null) => {
+      if (code === 0) {
+        console.log(chalk.green(`App "${appName}" created successfully!`))
+        const gitFolderPath = path.join(appDir, '.git')
+        fs.rm(gitFolderPath, { recursive: true, force: true })
+          .then(() => resolve())
+          .catch(reject)
+      } else {
+        console.log(chalk.red(`Failed to create the app with exit code ${code}.`))
+        reject(new Error(`git clone failed with exit code ${code}`))
+      }
+    })
+  })
+}
+
+async function generateResource(type: string, name: string, dryRun: boolean): Promise<void> {
+  const validTypes = ['controller', 'dto', 'middleware']
+  if (!validTypes.includes(type)) {
+    console.log(chalk.red(`Unknown type: "${type}". Valid types: ${validTypes.join(', ')}`))
+    process.exit(1)
   }
-}
 
-const command = process.argv[2]
+  let fileName: string
+  let content: string
 
-if (command !== 'new') {
-  console.log(chalk.red(`Unknown command: ${command}`))
-  process.exit(1)
-}
+  if (type === 'controller') {
+    fileName = `${name}.controller.ts`
+    content = generateController(name)
+  } else if (type === 'dto') {
+    fileName = `${name}.dto.ts`
+    content = generateDto(name)
+  } else {
+    fileName = `${name}.middleware.ts`
+    content = generateMiddleware(name)
+  }
 
-if (command === 'new') {
-  createApp()
+  const outputPath = path.join(process.cwd(), fileName)
+
+  if (dryRun) {
+    console.log(chalk.cyan(`[dry-run] Would create: ${outputPath}`))
+    console.log(chalk.gray('---'))
+    console.log(chalk.gray(content))
+    return
+  }
+
+  await fs.writeFile(outputPath, content, 'utf-8')
+  console.log(chalk.green(`Created: ${outputPath}`))
 }

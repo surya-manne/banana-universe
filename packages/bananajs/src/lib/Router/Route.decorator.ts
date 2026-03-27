@@ -1,6 +1,6 @@
 import 'reflect-metadata'
+import { RequestHandler } from 'express'
 import { MetadataKeys } from './MetaData.constants'
-import 'reflect-metadata'
 
 export enum HTTPMethod {
   GET = 'get',
@@ -14,11 +14,11 @@ export interface IRouter {
   method: HTTPMethod
   path: string
   handlerName: string | symbol
-  middlewares?: any[]
+  middlewares?: RequestHandler[]
 }
 
 export const methodDecoratorFactory = (method: HTTPMethod) => {
-  return (path: string, middlewares?: any[]): MethodDecorator => {
+  return (path: string, middlewares?: RequestHandler[]): MethodDecorator => {
     return (target, propertyKey, descriptor: PropertyDescriptor) => {
       const controllerClass = target.constructor
       const routers: IRouter[] = Reflect.hasMetadata(MetadataKeys.ROUTERS, controllerClass)
