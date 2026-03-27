@@ -14,6 +14,7 @@ export interface InjectConfig {
 
 export class BananaTestApp {
   private readonly app: BananaApp
+  private persistentHeaders: Record<string, string> = {}
 
   private constructor(app: BananaApp) {
     this.app = app
@@ -23,11 +24,27 @@ export class BananaTestApp {
     const mergedOptions: BananaAppOptions = {
       logger: false,
       gracefulShutdown: false,
+      rateLimit: false,
       requestId: false,
       ...options,
       security: { helmet: false, cors: false, ...options.security },
     }
     return new BananaTestApp(new BananaApp(controllers, mergedOptions))
+  }
+
+  withAuth(token: string): this {
+    this.persistentHeaders['Authorization'] = `Bearer ${token}`
+    return this
+  }
+
+  withHeaders(headers: Record<string, string>): this {
+    Object.assign(this.persistentHeaders, headers)
+    return this
+  }
+
+  clearHeaders(): this {
+    this.persistentHeaders = {}
+    return this
   }
 
   get agent(): ReturnType<typeof request> {
@@ -38,7 +55,8 @@ export class BananaTestApp {
     const { method, url, body, headers = {} } = config
     const methodKey = method.toLowerCase() as Lowercase<HttpMethod>
     const req = this.agent[methodKey](url)
-    Object.entries(headers).forEach(([key, value]) => req.set(key, value))
+    const merged = { ...this.persistentHeaders, ...headers }
+    Object.entries(merged).forEach(([key, value]) => req.set(key, value))
     if (body !== undefined) {
       req.send(body)
     }
