@@ -26,4 +26,4 @@ const app = await BananaApp.create([ArticleController], {
 - **`@Transactional()`** — runs the method inside **`startSession` → `withTransaction`**; use **`MongooseTransactionContext.getSession()`** to pass `{ session }` to model operations inside the transaction
 - Standalone `mongod` does **not** support transactions; use a replica set for **`@Transactional`**
 
-Phase **6** — **`MongooseRepositoryAdapter`** + mappers — see [Layered architecture](/guide/layered-architecture).
+For domain-style repositories, **`MongooseRepositoryAdapter`** and mappers are available—see [Layered architecture](/guide/layered-architecture).

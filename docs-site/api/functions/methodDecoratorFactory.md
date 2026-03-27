@@ -8,7 +8,7 @@
 
 > **methodDecoratorFactory**(`method`): (`path`, `middlewares?`) => `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:20
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:21
 
 ## Parameters
 

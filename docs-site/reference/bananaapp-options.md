@@ -45,7 +45,7 @@ The interface is defined in **`packages/bananajs/src/lib/Core/App.ts`**. Below i
 - **`plugins`** — `BananaPlugin[]`; register in order; async work in `register()` requires **`BananaApp.create`**
 - **`cache`** — `{ store?: 'memory' \| CacheStore }` for `@Cache` / `@CacheEvict`
 
-### Phase 4 enterprise
+### Security, tenancy, and performance
 
 - **`abac`** — `{ guard: AbacGuard }` for `@Can`
 - **`tenant`** — tenant resolution options (see `TenantOptions` in TypeDoc)

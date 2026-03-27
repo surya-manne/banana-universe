@@ -6,7 +6,7 @@
 
 # Enumeration: ValidationSource
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:6
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:5
 
 ## Enumeration Members
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:6
 
 > **BODY**: `"body"`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:7
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:6
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:7
 
 > **HEADER**: `"headers"`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:8
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:7
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:8
 
 > **PARAM**: `"params"`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:10
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:9
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:10
 
 > **QUERY**: `"query"`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:9
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:8

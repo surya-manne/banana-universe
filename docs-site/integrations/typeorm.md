@@ -43,6 +43,6 @@ await BananaApp.create([UserController], {
 - **`typeorm`** — required at runtime
 - **`awilix`** — optional; repository injection skipped if absent
 
-## Roadmap
+## Domain repositories
 
-Phase **6** will add a formal **`TypeOrmRepositoryAdapter`** bridging domain repositories — see [Layered architecture](/guide/layered-architecture).
+**`TypeOrmRepositoryAdapter`** and **`TypeOrmUnitOfWork`** bridge **`@banana-universe/ddd`** repository contracts to TypeORM—see [Layered architecture](/guide/layered-architecture) and `packages/plugin-typeorm`.

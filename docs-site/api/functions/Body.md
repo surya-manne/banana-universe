@@ -6,29 +6,18 @@
 
 # Function: Body()
 
-> **Body**(`dto`, `skipMissingProperties?`): (`target`, `propertyName`, `descriptor`) => `void`
+> **Body**(`schema`): (`target`, `propertyName`, `descriptor`) => `void`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:64
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:42
 
-Decorator for validating the body of a request.
-Utilizes a specified DTO class and validation rules.
+Validates the request body using a Zod schema.
 
 ## Parameters
 
-### dto
+### schema
 
-(...`args`) => `unknown`
-
-The data transfer object class to validate against.
-
-### skipMissingProperties?
-
-`boolean` = `false`
-
-Whether to skip validation for missing properties.
+`ZodType`
 
 ## Returns
-
-A method decorator that performs validation on the body of the request.
 
 (`target`, `propertyName`, `descriptor`) => `void`

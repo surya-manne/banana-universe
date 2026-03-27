@@ -68,7 +68,7 @@ A message providing additional information about the response.
 
 > `readonly` **meta**: [`PaginationMeta`](../interfaces/PaginationMeta.md)
 
-Defined in: packages/bananajs/src/lib/Pagination/Pagination.ts:16
+Defined in: packages/bananajs/src/lib/Pagination/Pagination.ts:13
 
 ***
 
@@ -154,7 +154,7 @@ Defined in: packages/bananajs/src/lib/Response/ApiResponse.ts:38
 
 > **send**(`res`, `headers?`): `Response`
 
-Defined in: packages/bananajs/src/lib/Pagination/Pagination.ts:21
+Defined in: packages/bananajs/src/lib/Pagination/Pagination.ts:17
 
 #### Parameters
 

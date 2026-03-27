@@ -2,15 +2,17 @@
 
 ***
 
-[@banana-universe/bananajs](../README.md) / BananaAppOptions
+[@banana-universe/bananajs](../README.md) / CreateBananaApplicationOptions
 
-# Interface: BananaAppOptions
+# Interface: CreateBananaApplicationOptions
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:34
+Defined in: packages/bananajs/src/lib/Core/App.ts:531
 
-## Extended by
+Options for [createBananaApplication](../functions/createBananaApplication.md) — extends [BananaAppOptions](BananaAppOptions.md) with optional listen helpers.
 
-- [`CreateBananaApplicationOptions`](CreateBananaApplicationOptions.md)
+## Extends
+
+- [`BananaAppOptions`](BananaAppOptions.md)
 
 ## Properties
 
@@ -24,6 +26,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:78
 
 > **guard**: [`AbacGuard`](AbacGuard.md)
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`abac`](BananaAppOptions.md#abac)
+
 ***
 
 ### auth?
@@ -35,6 +41,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:45
 #### guard
 
 > **guard**: [`AuthGuard`](AuthGuard.md)
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`auth`](BananaAppOptions.md#auth)
 
 ***
 
@@ -48,6 +58,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:69
 
 > `optional` **store?**: `"memory"` \| [`CacheStore`](CacheStore.md)
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`cache`](BananaAppOptions.md#cache)
+
 ***
 
 ### container?
@@ -55,6 +69,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:69
 > `optional` **container?**: `AwilixContainer`\<\{ \}\>
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:42
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`container`](BananaAppOptions.md#container)
 
 ***
 
@@ -64,6 +82,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:42
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:72
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`devTools`](BananaAppOptions.md#devtools)
+
 ***
 
 ### gracefulShutdown?
@@ -71,6 +93,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:72
 > `optional` **gracefulShutdown?**: `boolean`
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:43
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`gracefulShutdown`](BananaAppOptions.md#gracefulshutdown)
 
 ***
 
@@ -92,6 +118,18 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:62
 
 > `optional` **path?**: `string`
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`health`](BananaAppOptions.md#health)
+
+***
+
+### hostname?
+
+> `optional` **hostname?**: `string`
+
+Defined in: packages/bananajs/src/lib/Core/App.ts:534
+
 ***
 
 ### lazyControllers?
@@ -100,6 +138,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:62
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:82
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`lazyControllers`](BananaAppOptions.md#lazycontrollers)
+
 ***
 
 ### logger?
@@ -107,6 +149,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:82
 > `optional` **logger?**: `false` \| [`Logger`](Logger.md)
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:41
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`logger`](BananaAppOptions.md#logger)
 
 ***
 
@@ -124,6 +170,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:73
 
 > `optional` **path?**: `string`
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`metrics`](BananaAppOptions.md#metrics)
+
 ***
 
 ### middlewares?
@@ -131,6 +181,34 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:73
 > `optional` **middlewares?**: `RequestHandler`\<`ParamsDictionary`, `any`, `any`, `ParsedQs`, `Record`\<`string`, `any`\>\>[]
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:35
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`middlewares`](BananaAppOptions.md#middlewares)
+
+***
+
+### onListening?
+
+> `optional` **onListening?**: (`info`) => `void`
+
+Defined in: packages/bananajs/src/lib/Core/App.ts:535
+
+#### Parameters
+
+##### info
+
+###### hostname?
+
+`string`
+
+###### port
+
+`number`
+
+#### Returns
+
+`void`
 
 ***
 
@@ -140,6 +218,20 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:35
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:68
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`plugins`](BananaAppOptions.md#plugins)
+
+***
+
+### port?
+
+> `optional` **port?**: `number`
+
+Defined in: packages/bananajs/src/lib/Core/App.ts:533
+
+When set, calls `Application.listen` after the app is created.
+
 ***
 
 ### rateLimit?
@@ -148,6 +240,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:68
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:55
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`rateLimit`](BananaAppOptions.md#ratelimit)
+
 ***
 
 ### requestId?
@@ -155,6 +251,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:55
 > `optional` **requestId?**: `boolean`
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:40
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`requestId`](BananaAppOptions.md#requestid)
 
 ***
 
@@ -171,6 +271,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:36
 #### helmet?
 
 > `optional` **helmet?**: `boolean` \| `Readonly`\<`HelmetOptions`\>
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`security`](BananaAppOptions.md#security)
 
 ***
 
@@ -200,6 +304,10 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:48
 
 > `optional` **version?**: `string`
 
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`swagger`](BananaAppOptions.md#swagger)
+
 ***
 
 ### tenant?
@@ -207,3 +315,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:48
 > `optional` **tenant?**: [`TenantOptions`](TenantOptions.md)
 
 Defined in: packages/bananajs/src/lib/Core/App.ts:81
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`tenant`](BananaAppOptions.md#tenant)

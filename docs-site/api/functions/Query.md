@@ -6,29 +6,18 @@
 
 # Function: Query()
 
-> **Query**(`dto`, `skipMissingProperties?`): (`target`, `propertyName`, `descriptor`) => `void`
+> **Query**(`schema`): (`target`, `propertyName`, `descriptor`) => `void`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:54
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:37
 
-Decorator for validating query parameters of a request.
-Utilizes a specified DTO class and validation rules.
+Validates the request query using a Zod schema.
 
 ## Parameters
 
-### dto
+### schema
 
-(...`args`) => `unknown`
-
-The data transfer object class to validate against.
-
-### skipMissingProperties?
-
-`boolean` = `false`
-
-Whether to skip validation for missing properties.
+`ZodType`
 
 ## Returns
-
-A method decorator that performs validation on the query parameters.
 
 (`target`, `propertyName`, `descriptor`) => `void`

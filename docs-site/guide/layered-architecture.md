@@ -1,7 +1,7 @@
 # Layered architecture & DDD
 
 ::: info `@banana-universe/ddd`
-The **`ddd`** package provides **Entity**, **ValueObject**, **AggregateRoot**, **Repository** / **FindCriteria**, **UnitOfWork**, and **@DomainService** / **@ApplicationService** (layer metadata + `Injectable`). Use **`bananajs generate module <name>`** for a full layered scaffold.
+The **`ddd`** package provides **Entity**, **ValueObject**, **AggregateRoot**, **Repository** / **FindCriteria**, **UnitOfWork**, and **@DomainService** / **@ApplicationService** (layer metadata + `Injectable`). Use **`bananajs generate module <name>`** for a full layered scaffold, or **`bananajs ai generate --module`** for LLM-assisted generation.
 :::
 
 ## Manual layout
@@ -34,7 +34,7 @@ src/<name>/
 
 ## Repository model
 
-The roadmap adopts a **`FindCriteria<T>`**-style API (eq / in / like / gt / lt, sorting, paging)—not a vague `Partial<T>`—so queries stay **explicit and testable**.
+**`FindCriteria<T>`** (eq / in / like / gt / lt, sorting, paging) keeps queries **explicit and testable**—not a vague `Partial<T>`.
 
 ## CLI
 
@@ -42,10 +42,10 @@ The roadmap adopts a **`FindCriteria<T>`**-style API (eq / in / like / gt / lt, 
 
 ## Transactions
 
-**`UnitOfWork`** plus ORM-specific implementations align application services that touch multiple aggregates; **`@Transactional`** in plugins already exists at the persistence layer for TypeORM and Mongoose.
+**`UnitOfWork`** plus ORM-specific implementations align application services that touch multiple aggregates; **`@Transactional`** in plugins exists at the persistence layer for TypeORM and Mongoose.
 
 ## Learn more
 
-- [Roadmap](/guide/roadmap) — Phases 6–8
-- [Philosophy](/guide/philosophy) — DDD as a product direction
-- **`plans/EnterpriseRoadmapV3.md`** — full technical specification
+- [Philosophy](/guide/philosophy) — DDD and product direction
+- [AI module generation](/tooling/ai-module-generation) — LLM-driven `ai generate --module`
+- [TypeORM integration](/integrations/typeorm) — plugins and repository adapters

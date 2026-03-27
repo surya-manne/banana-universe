@@ -4,9 +4,9 @@
   "author": "Surya Prakash Manne",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sprakas/banana-universe.git"
+    "url": "https://github.com/surya-manne/banana-universe.git"
   },
-  "homepage": "https://github.com/sprakas/banana-universe/tree/main/packages/bananajs",
+  "homepage": "https://github.com/surya-manne/banana-universe/tree/main/packages/bananajs",
   "license": "MIT",
   "version": "0.5.0",
   "main": "./dist/index.js",

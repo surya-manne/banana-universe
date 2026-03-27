@@ -1,6 +1,6 @@
 # Advanced Concepts
 
-BananaJS **v0.4.x** already ships a **wide** enterprise surface—auth, OpenAPI, plugins, cache, metrics, multi-tenancy, ABAC, security decorators—not a “basic” framework with a few extras. This page maps the major **implemented** options; for signatures, use [TypeDoc](/api/).
+BananaJS ships a **wide** enterprise surface—auth, OpenAPI, plugins, cache, metrics, multi-tenancy, ABAC, security decorators—not a “basic” framework with a few extras. This page maps the major **implemented** options; for signatures, use [TypeDoc](/api/).
 
 ## `BananaAppOptions`
 
@@ -85,4 +85,5 @@ Real-time features use **`@banana-universe/plugin-websocket`** (see [WebSocket p
 ## Next
 
 - [Plugins overview](/plugins/overview)
-- [Enterprise roadmap](/guide/roadmap) — DDD package, LLM generator, example apps
+- [Layered architecture & DDD](/guide/layered-architecture)
+- [Recipes](/recipes/)

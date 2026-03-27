@@ -6,7 +6,7 @@
 
 # Interface: ApiResponseOptions
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:16
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:17
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:16
 
 > **description**: `string`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:18
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:19
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:18
 
 > **status**: `number`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:17
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:18
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:17
 
 > `optional` **type?**: (...`args`) => `unknown`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:19
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:20
 
 #### Parameters
 

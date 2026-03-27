@@ -25,4 +25,4 @@ Tune thresholds and scenarios in **`apps/benchmarks`** sources — not in this d
 
 ## Related
 
-- [Roadmap](/guide/roadmap) — Phase 5 CI unification notes
+- [CLI reference](/tooling/cli) — local development and workspace commands

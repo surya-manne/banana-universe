@@ -8,15 +8,15 @@
 
 > `const` **Post**: (`path`, `middlewares?`) => `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:52
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:53
 
 Method decorator for HTTP POST requests.
 
 ## Parameters
 
-### path
+### path?
 
-`string`
+`string` = `''`
 
 The endpoint path.
 

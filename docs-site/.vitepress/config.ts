@@ -1,10 +1,8 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
-// Versioning strategy note:
-// Version dropdown (tied to git tags, e.g. v0.4, v0.5) is deferred until after Phase 6 ships,
-// when the second publishable package (@banana-universe/ddd) exists and versioning across
-// multiple packages needs coordinating. Implement with vitepress-plugin-versions post-Phase 6.
+// Versioning strategy note: a docs version dropdown (tied to git tags) can be added when
+// multi-package doc versioning needs coordinating (e.g. vitepress-plugin-versions).
 
 export default withMermaid(
   defineConfig({
@@ -26,12 +24,11 @@ export default withMermaid(
       nav: [
         { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },
         { text: 'Philosophy', link: '/guide/philosophy' },
-        { text: 'Roadmap', link: '/guide/roadmap' },
+        { text: 'Recipes', link: '/recipes/', activeMatch: '/recipes/' },
         { text: 'Reference', link: '/reference/decorators', activeMatch: '/reference/' },
         { text: 'Integrations', link: '/integrations/typeorm', activeMatch: '/integrations/' },
         { text: 'Plugins', link: '/plugins/overview', activeMatch: '/plugins/' },
         { text: 'Tooling', link: '/tooling/cli', activeMatch: '/tooling/' },
-        { text: 'Examples', link: '/examples/', activeMatch: '/examples/' },
         { text: 'API', link: '/api/', activeMatch: '/api/' },
       ],
 
@@ -44,14 +41,13 @@ export default withMermaid(
               { text: 'Philosophy', link: '/guide/philosophy' },
               { text: 'Basic Concepts', link: '/guide/basic-concepts' },
               { text: 'Advanced Concepts', link: '/guide/advanced-concepts' },
-              { text: 'Roadmap (Phases 5–8)', link: '/guide/roadmap' },
             ],
           },
           {
             text: 'Architecture',
             items: [
               {
-                text: 'Layered Architecture (Phase 6)',
+                text: 'Layered Architecture & DDD',
                 link: '/guide/layered-architecture',
               },
             ],
@@ -113,23 +109,23 @@ export default withMermaid(
           },
         ],
 
-        '/examples/': [
+        '/recipes/': [
           {
-            text: 'Example Apps',
-            items: [{ text: 'Overview', link: '/examples/index' }],
+            text: 'Recipes',
+            items: [{ text: 'Overview', link: '/recipes/index' }],
           },
         ],
       },
 
-      socialLinks: [{ icon: 'github', link: 'https://github.com/sprakas/banana-universe' }],
+      socialLinks: [{ icon: 'github', link: 'https://github.com/surya-manne/banana-universe' }],
 
       footer: {
         message: 'Released under the MIT License.',
-        copyright: 'Copyright © 2024-present Surya Prakash Manne',
+        copyright: 'Copyright © 2026',
       },
 
       editLink: {
-        pattern: 'https://github.com/sprakas/banana-universe/edit/main/docs-site/:path',
+        pattern: 'https://github.com/surya-manne/banana-universe/edit/main/docs-site/:path',
         text: 'Edit this page on GitHub',
       },
 

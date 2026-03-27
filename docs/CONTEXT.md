@@ -33,5 +33,4 @@ BananaJS is an opinionated Node.js framework built for developers who want the p
 
 - Published to npm as `@banana-universe/bananajs`.
 - Local registry (Verdaccio) available for pre-publish testing.
-- Author: Surya Prakash Manne.
-- GitHub: [https://github.com/sprakas/banana-universe](https://github.com/sprakas/banana-universe).
+- GitHub: [https://github.com/surya-manne/banana-universe](https://github.com/surya-manne/banana-universe).

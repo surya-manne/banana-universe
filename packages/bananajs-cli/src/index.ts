@@ -16,8 +16,8 @@ import { aiGenerate, aiDoc, aiReview } from './lib/ai.js'
 import { aiGenerateModule } from './lib/ai-module.js'
 import { aiSetup } from './lib/ai-setup.js'
 
-const MONGO_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-mongo-app-template.git'
-const SQL_TEMPLATE_REPO = 'https://github.com/sprakas/bananajs-sql-app-template.git'
+const MONGO_TEMPLATE_REPO = 'https://github.com/surya-manne/bananajs-mongo-app-template.git'
+const SQL_TEMPLATE_REPO = 'https://github.com/surya-manne/bananajs-sql-app-template.git'
 
 const program = new Command()
 

@@ -36,7 +36,7 @@ Exported from the package (see `packages/plugin-websocket/src`):
 
 - **`@WsController`** — marks a WebSocket controller class
 - **`@OnConnect`**, **`@OnDisconnect`**, **`@OnMessage(event)`** — lifecycle and message routing
-- **`@WsBody`** — optional DTO validation (see roadmap — full parity with HTTP `@Body` is a tracked improvement)
+- **`@WsBody`** — optional DTO validation (full parity with HTTP **`@Body`** behavior is an incremental improvement area)
 
 ## Shutdown
 

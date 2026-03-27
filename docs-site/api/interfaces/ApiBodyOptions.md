@@ -6,7 +6,7 @@
 
 # Interface: ApiBodyOptions
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:10
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:11
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:10
 
 > `optional` **description?**: `string`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:12
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:13
 
 ***
 
@@ -22,22 +22,12 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:12
 
 > `optional` **required?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:13
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:14
 
 ***
 
-### type
+### schema
 
-> **type**: (...`args`) => `unknown`
+> **schema**: `ZodType`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:11
-
-#### Parameters
-
-##### args
-
-...`unknown`[]
-
-#### Returns
-
-`unknown`
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:12

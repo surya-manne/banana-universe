@@ -2,7 +2,7 @@
 
 Mongoose integration for BananaJS: **`MongoosePlugin`**, **`@Transactional()`** (MongoDB sessions), **`MongooseRepositoryAdapter`**, and unit-of-work helpers.
 
-See the docs site: [Mongoose integration](https://github.com/sprakas/banana-universe/blob/main/docs-site/integrations/mongoose.md).
+See the docs site: [Mongoose integration](https://github.com/surya-manne/banana-universe/blob/main/docs-site/integrations/mongoose.md).
 
 ## Peer dependencies
 

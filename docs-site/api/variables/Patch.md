@@ -8,15 +8,15 @@
 
 > `const` **Patch**: (`path`, `middlewares?`) => `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:68
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:69
 
 Method decorator for HTTP PATCH requests.
 
 ## Parameters
 
-### path
+### path?
 
-`string`
+`string` = `''`
 
 The endpoint path.
 

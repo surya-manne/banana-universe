@@ -1,6 +1,6 @@
 # Zod
 
-**BananaJS 0.5+** ships **Zod** as the **default** validation path: use **`@Body`**, **`@Query`**, **`@Params`**, and **`@Headers`** with a **`z.ZodType`** schema.
+**BananaJS** uses **Zod** as the **default** validation path: use **`@Body`**, **`@Query`**, **`@Params`**, and **`@Headers`** with a **`z.ZodType`** schema.
 
 ## Install
 

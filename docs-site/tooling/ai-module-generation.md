@@ -1,4 +1,4 @@
-# AI module generation (Phase 7)
+# AI module generation
 
 This guide covers **`bananajs ai setup`**, **`.bananarc.json`**, and **`bananajs ai generate --module`** — offline-first LLM providers (Ollama default) plus optional cloud models, and a two-step pipeline: **LLM → JSON (validated with Zod) → DDD templates**.
 
@@ -57,7 +57,7 @@ The CLI:
 
 1. Calls the configured LLM with a **strict JSON extraction** prompt (entity name + fields).
 2. Parses and validates the response with **Zod** (`EntityExtractionSchema`); on failure it **retries once** (then exits with a clear error; use **`--debug`** to print raw LLM output).
-3. Fills **embedded templates** for the Phase 6 DDD layout: `domain/`, `application/`, `infrastructure/`, and controller.
+3. Fills **embedded templates** for the standard DDD layout: `domain/`, `application/`, `infrastructure/`, and controller.
 
 ### From JSON Schema or OpenAPI
 

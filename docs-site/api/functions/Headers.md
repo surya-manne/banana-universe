@@ -6,19 +6,17 @@
 
 # Function: Headers()
 
-> **Headers**(`dto`, `skipMissingProperties?`): (`target`, `propertyName`, `descriptor`) => `void`
+> **Headers**(`schema`): (`target`, `propertyName`, `descriptor`) => `void`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:78
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:52
+
+Validates headers using a Zod schema.
 
 ## Parameters
 
-### dto
+### schema
 
-(...`args`) => `unknown`
-
-### skipMissingProperties?
-
-`boolean` = `false`
+`ZodType`
 
 ## Returns
 

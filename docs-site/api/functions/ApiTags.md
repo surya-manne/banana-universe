@@ -8,7 +8,7 @@
 
 > **ApiTags**(...`tags`): `ClassDecorator`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:22
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:23
 
 ## Parameters
 

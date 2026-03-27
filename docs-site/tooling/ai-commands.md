@@ -1,6 +1,6 @@
 # AI commands
 
-AI is a **primary axis** for BananaJS—not a gimmick. Today: **generate** from schema or prompt, **doc**, **review**. Roadmap: **`.bananarc`**, **`ai setup`**, **`llm/`** providers, and **full DDD module** generation ([Philosophy](/guide/philosophy)).
+AI is a **primary axis** for BananaJS—not a gimmick. Capabilities include **generate** from schema or prompt, **`ai generate --module`** for DDD layouts (with **`.bananarc.json`** and **`ai setup`**), **`doc`**, and **`review`** ([Philosophy](/guide/philosophy)).
 
 Commands live under **`bananajs ai`** (`packages/bananajs-cli/src/lib/ai.ts` and related modules).
 
@@ -10,6 +10,7 @@ Commands live under **`bananajs ai`** (`packages/bananajs-cli/src/lib/ai.ts` and
 | -------------------------- | ----------------------------------------------------------------------------------------------------- |
 | **`--from-schema <file>`** | JSON Schema or OpenAPI file — deterministic codegen (no LLM required for basic flows)                 |
 | **`--from-prompt <text>`** | Natural language — uses the LLM from **`.bananarc.json`** (Ollama offline by default; cloud optional) |
+| **`--module`**             | With **`--from-prompt`** or **`--from-schema`**, generates the **layered DDD** tree (see below)       |
 | **`--out <dir>`**          | Output directory (default: current working directory)                                                 |
 | **`--dry-run`**            | Print generated files without writing                                                                 |
 
@@ -28,8 +29,10 @@ Reviews a controller for BananaJS best practices.
 
 - **`--file <path>`** — required target file
 
-## DDD module generation (Phase 7)
+## `bananajs ai setup`
 
-Shipped: **`bananajs ai setup`**, **`.bananarc.json`**, **`bananajs ai generate --module`**, offline **Ollama** default, Zod-validated extraction, and the **`llm/`** provider layer. Full walkthrough: **[AI module generation](/tooling/ai-module-generation)**.
+Interactive wizard that writes **`.bananarc.json`** (LLM provider, defaults for **`ai generate --module`**). See **[AI module generation](/tooling/ai-module-generation)** for the full walkthrough.
 
-See [Roadmap](/guide/roadmap).
+## DDD module generation
+
+**`bananajs ai generate --module`** uses the **`llm/`** provider layer, Zod-validated extraction, and embedded templates for domain / application / infrastructure folders. Full walkthrough: **[AI module generation](/tooling/ai-module-generation)**.

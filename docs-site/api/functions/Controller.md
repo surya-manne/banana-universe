@@ -8,19 +8,20 @@
 
 > **Controller**(`basePath?`): `ClassDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Controller.decorator.ts:10
+Defined in: packages/bananajs/src/lib/Router/Controller.decorator.ts:12
 
 A Class Decorator that marks a class as a controller.
 
-It takes `basePath` parameter which will be used to construct the route path.
+`basePath` is a route segment without leading or trailing slashes (e.g. `'articles'`, `''` for root).
+The framework joins segments when mounting routes.
 
 ## Parameters
 
 ### basePath?
 
-`string`
+`string` = `''`
 
-The base path of the controller.
+The base path segment of the controller.
 
 ## Returns
 

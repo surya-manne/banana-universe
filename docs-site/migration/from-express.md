@@ -2,7 +2,7 @@
 
 BananaJS runs on **Express** — middleware, `Request`/`Response`, and ecosystem packages still work. For a **step-by-step** migration strategy, the repository includes **`docs/MIGRATION.md`** (incremental adoption, `BananaRouter`, testing).
 
-**Full guide (repo):** [MIGRATION.md](https://github.com/sprakas/banana-universe/blob/main/docs/MIGRATION.md)
+**Full guide (repo):** [MIGRATION.md](https://github.com/surya-manne/banana-universe/blob/main/docs/MIGRATION.md)
 
 ## Incremental mount with `BananaRouter`
 

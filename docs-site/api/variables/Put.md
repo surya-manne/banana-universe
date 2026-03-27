@@ -8,15 +8,15 @@
 
 > `const` **Put**: (`path`, `middlewares?`) => `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:60
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:61
 
 Method decorator for HTTP PUT requests.
 
 ## Parameters
 
-### path
+### path?
 
-`string`
+`string` = `''`
 
 The endpoint path.
 

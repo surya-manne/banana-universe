@@ -6,7 +6,7 @@
 
 # Interface: RouteInfo
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:84
+Defined in: packages/bananajs/src/lib/Core/App.ts:85
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:84
 
 > **controller**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:87
+Defined in: packages/bananajs/src/lib/Core/App.ts:88
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:87
 
 > **handler**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:88
+Defined in: packages/bananajs/src/lib/Core/App.ts:89
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:88
 
 > **method**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:85
+Defined in: packages/bananajs/src/lib/Core/App.ts:86
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:85
 
 > **path**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:86
+Defined in: packages/bananajs/src/lib/Core/App.ts:87

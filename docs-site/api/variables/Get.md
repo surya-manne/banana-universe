@@ -8,15 +8,15 @@
 
 > `const` **Get**: (`path`, `middlewares?`) => `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:44
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:45
 
 Method decorator for HTTP GET requests.
 
 ## Parameters
 
-### path
+### path?
 
-`string`
+`string` = `''`
 
 The endpoint path.
 

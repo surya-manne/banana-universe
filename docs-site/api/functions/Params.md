@@ -6,29 +6,18 @@
 
 # Function: Params()
 
-> **Params**(`dto`, `skipMissingProperties?`): (`target`, `propertyName`, `descriptor`) => `void`
+> **Params**(`schema`): (`target`, `propertyName`, `descriptor`) => `void`
 
-Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:75
+Defined in: packages/bananajs/src/lib/Validator/Validator.decorator.ts:47
 
-Decorator for validating the parameters of a request.
-Utilizes a specified DTO class and validation rules.
+Validates route params using a Zod schema.
 
 ## Parameters
 
-### dto
+### schema
 
-(...`args`) => `unknown`
-
-The data transfer object class to validate against.
-
-### skipMissingProperties?
-
-`boolean` = `false`
-
-Whether to skip validation for missing properties.
+`ZodType`
 
 ## Returns
-
-A method decorator that performs validation on the parameters of the request.
 
 (`target`, `propertyName`, `descriptor`) => `void`

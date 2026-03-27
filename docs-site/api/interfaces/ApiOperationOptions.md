@@ -6,7 +6,7 @@
 
 # Interface: ApiOperationOptions
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:4
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:5
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:4
 
 > `optional` **deprecated?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:7
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:8
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:7
 
 > `optional` **description?**: `string`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:6
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:7
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:6
 
 > `optional` **summary?**: `string`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:5
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:6

@@ -1,6 +1,6 @@
 # BananaConfig
 
-**`BananaConfig`** validates **environment variables** against a **schema** you define. It returns a **frozen** config object plus **reload** and **secret rotation** hooks (v0.4+).
+**`BananaConfig`** validates **environment variables** against a **schema** you define. It returns a **frozen** config object plus **reload** and **secret rotation** hooks.
 
 ## Define a schema
 

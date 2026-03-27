@@ -6,7 +6,7 @@
 
 # Enumeration: HTTPMethod
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:5
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:6
 
 ## Enumeration Members
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:5
 
 > **DELETE**: `"delete"`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:10
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:11
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:10
 
 > **GET**: `"get"`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:6
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:7
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:6
 
 > **PATCH**: `"patch"`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:9
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:10
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:9
 
 > **POST**: `"post"`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:7
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:8
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:7
 
 > **PUT**: `"put"`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:8
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:9

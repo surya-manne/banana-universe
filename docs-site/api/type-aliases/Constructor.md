@@ -8,7 +8,7 @@
 
 > **Constructor**\<`T`\> = (...`args`) => `T`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:31
+Defined in: packages/bananajs/src/lib/Core/App.ts:32
 
 ## Type Parameters
 

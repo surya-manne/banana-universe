@@ -68,7 +68,7 @@ The combination of simplified routing, validation, and standardized responses/er
 
 ## Usage
 
-Example: [https://github.com/sprakas/banana-universe/tree/main/apps/bananajs-demo](https://github.com/sprakas/banana-universe/tree/main/apps/bananajs-demo)
+Example: [https://github.com/surya-manne/banana-universe/tree/main/apps/bananajs-demo](https://github.com/surya-manne/banana-universe/tree/main/apps/bananajs-demo)
 
 ### Setting Up the Application
 

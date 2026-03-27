@@ -8,15 +8,15 @@
 
 > `const` **Delete**: (`path`, `middlewares?`) => `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:76
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:77
 
 Method decorator for HTTP DELETE requests.
 
 ## Parameters
 
-### path
+### path?
 
-`string`
+`string` = `''`
 
 The endpoint path.
 

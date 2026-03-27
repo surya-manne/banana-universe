@@ -1,8 +1,8 @@
 # CLI reference
 
-The **`bananajs`** CLI is a **first-class product surface**: scaffolding, codegen, static analysis, DB/OpenAPI tooling, and **AI** flows—built to scale with the **LLM and DDD roadmap** ([Philosophy](/guide/philosophy), [Roadmap](/guide/roadmap)).
+The **`bananajs`** CLI is a **first-class product surface**: scaffolding, codegen, static analysis, DB/OpenAPI tooling, and **AI** flows—including **`.bananarc.json`**, **`ai setup`**, and **`ai generate --module`** for DDD layouts ([Philosophy](/guide/philosophy), [AI module generation](/tooling/ai-module-generation)).
 
-Package: **`@banana-universe/bananajs-cli`** · Entry: **`bananajs`**. Source: **`packages/bananajs-cli/src/index.ts`** (Commander.js). Version **0.3.0** at time of writing.
+Package: **`@banana-universe/bananajs-cli`** · Entry: **`bananajs`**. Source: **`packages/bananajs-cli/src/index.ts`** (Commander.js).
 
 ## Global
 
@@ -60,11 +60,12 @@ Subcommands:
 
 Shared: **`--out <dir>`**, **`--dry-run`** where applicable.
 
-::: info Phase 7
-**`bananajs ai setup`**, **`.bananarc.json`**, and **`ai generate --module`** (LLM-driven DDD module) are on the [roadmap](/guide/roadmap). Use **`bananajs generate module`** today for scaffolded modules without an LLM.
+::: info DDD modules
+**`bananajs ai setup`**, **`.bananarc.json`**, and **`ai generate --module`** drive LLM-assisted DDD module generation. For deterministic scaffolding **without** an LLM, use **`bananajs generate module`**.
 :::
 
 ## Related
 
 - [AI commands](/tooling/ai-commands)
+- [AI module generation](/tooling/ai-module-generation)
 - [Benchmarks](/tooling/benchmarks)

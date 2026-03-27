@@ -6,7 +6,7 @@
 
 # Interface: IRouter
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:13
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:14
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:13
 
 > **handlerName**: `string` \| `symbol`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:16
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:17
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:16
 
 > **method**: [`HTTPMethod`](../enumerations/HTTPMethod.md)
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:14
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:15
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:14
 
 > `optional` **middlewares?**: `RequestHandler`\<`ParamsDictionary`, `any`, `any`, `ParsedQs`, `Record`\<`string`, `any`\>\>[]
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:17
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:18
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:17
 
 > **path**: `string`
 
-Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:15
+Defined in: packages/bananajs/src/lib/Router/Route.decorator.ts:16
