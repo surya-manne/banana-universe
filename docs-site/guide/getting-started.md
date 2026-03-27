@@ -1,13 +1,13 @@
 # Getting Started
 
-BananaJS (**`@banana-universe/bananajs`**, **v0.4.0**) is a **TypeScript framework on Express** positioned as **AI-first**, **DX-forward**, **deeply extendable**, and **moving decisively toward first-class DDD** (see [Philosophy](/guide/philosophy) and [Roadmap](/guide/roadmap)).
+BananaJS (**`@banana-universe/bananajs`**, **v0.5.0**) is a **TypeScript framework on Express** positioned as **AI-first**, **DX-forward**, **deeply extendable**, and **moving decisively toward first-class DDD** (see [Philosophy](/guide/philosophy) and [Roadmap](/guide/roadmap)).
 
-It uses **decorators** for routing and **class-validator** for request validation. Metadata uses **`Reflect.defineMetadata`** — enable **`experimentalDecorators`**; **`emitDecoratorMetadata`** is not required (and is not used in this workspace).
+It uses **decorators** for routing and **Zod** for request validation. Metadata uses **`Reflect.defineMetadata`** — enable **`experimentalDecorators`**; **`emitDecoratorMetadata`** is not required (and is not used in this workspace).
 
 ## Install
 
 ```bash
-npm install @banana-universe/bananajs reflect-metadata express class-validator class-transformer
+npm install @banana-universe/bananajs reflect-metadata express zod
 npm install -D typescript @types/node @types/express
 ```
 

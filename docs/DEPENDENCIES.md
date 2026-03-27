@@ -6,13 +6,12 @@ This file lists all dependencies for each module in the banana-universe monorepo
 
 ### Runtime Dependencies
 
-| Package           | Version | Purpose                                |
-| ----------------- | ------- | -------------------------------------- |
-| axios             | ^1.6.0  | HTTP client (shared/demo use)          |
-| class-transformer | ^0.5.1  | Object serialization/deserialization   |
-| class-validator   | ^0.14.1 | Decorator-based validation             |
-| express           | ^4.21.2 | HTTP server framework                  |
-| reflect-metadata  | ^0.2.2  | Decorator metadata reflection polyfill |
+| Package          | Version | Purpose                                |
+| ---------------- | ------- | -------------------------------------- |
+| axios            | ^1.6.0  | HTTP client (shared/demo use)          |
+| express          | ^4.21.2 | HTTP server framework                  |
+| reflect-metadata | ^0.2.2  | Decorator metadata reflection polyfill |
+| zod              | ^3.24.0 | Schema validation (shared with apps)   |
 
 ### Dev Dependencies
 
@@ -42,18 +41,20 @@ This file lists all dependencies for each module in the banana-universe monorepo
 
 ### Runtime Dependencies
 
-| Package           | Version | Purpose                     |
-| ----------------- | ------- | --------------------------- |
-| class-transformer | ^0.5.1  | Object serialization        |
-| reflect-metadata  | ^0.2.2  | Decorator metadata polyfill |
-| tslib             | ^2.3.0  | TypeScript helpers          |
+| Package            | Version | Purpose                      |
+| ------------------ | ------- | ---------------------------- |
+| cors               | ^2.8.5  | CORS middleware              |
+| helmet             | ^8.1.0  | Security headers             |
+| reflect-metadata   | ^0.2.2  | Decorator metadata polyfill  |
+| tslib              | ^2.3.0  | TypeScript helpers           |
+| zod                | ^3.24.0 | Request validation schemas   |
+| zod-to-json-schema | ^3.24.0 | OpenAPI JSON Schema from Zod |
 
 ### Peer Dependencies (required by consumers)
 
-| Package         | Version | Purpose                         |
-| --------------- | ------- | ------------------------------- |
-| express         | ^4.21.2 | HTTP server (peer, not bundled) |
-| class-validator | ^0.14.1 | Validation (peer, not bundled)  |
+| Package | Version | Purpose                         |
+| ------- | ------- | ------------------------------- |
+| express | ^4.21.2 | HTTP server (peer, not bundled) |
 
 ---
 
@@ -73,6 +74,6 @@ This file lists all dependencies for each module in the banana-universe monorepo
 | ------------------------- | ------------------------- |
 | @banana-universe/bananajs | Local framework package   |
 | express                   | HTTP server               |
-| class-validator           | Request validation        |
+| zod                       | Request validation        |
 | reflect-metadata          | Decorator support         |
 | webpack                   | Bundler (via @nx/webpack) |

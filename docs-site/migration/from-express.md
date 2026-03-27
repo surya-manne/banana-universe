@@ -31,8 +31,8 @@ app.listen(3000)
 | Express habit                       | BananaJS pattern                                  |
 | ----------------------------------- | ------------------------------------------------- |
 | Manual `router.get/post`            | `@Controller` + `@Get`/`@Post` on class methods   |
-| Manual body/query validation        | `@Body(Dto)` / `@Query(Dto)` with class-validator |
-| Ad-hoc `res.status().json()`        | `new SuccessResponse(msg, data).send(res)`        |
+| Manual body/query validation        | `@Body(schema)` / `@Query(schema)` with Zod       |
+| Ad-hoc `res.status().json()`        | `BaseController.ok` or `SuccessResponse` + `send` |
 | Central `if (err)` in every handler | Throw `ApiError` subclasses + `ErrorMiddleware`   |
 
 ## Codemod

@@ -1,18 +1,14 @@
-import { IsString, MaxLength, MinLength } from 'class-validator'
+import { z } from 'zod'
 
-export class CreateCatalogItemDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(200)
-  name!: string
+export const CreateCatalogItemSchema = z.object({
+  name: z.string().min(1).max(200),
+  sku: z.string().min(1).max(64),
+})
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(64)
-  sku!: string
-}
+export type CreateCatalogItem = z.infer<typeof CreateCatalogItemSchema>
 
-export class CatalogItemIdParams {
-  @IsString()
-  id!: string
-}
+export const CatalogItemIdParamsSchema = z.object({
+  id: z.string().min(1),
+})
+
+export type CatalogItemIdParams = z.infer<typeof CatalogItemIdParamsSchema>

@@ -8,16 +8,13 @@
     "prebuild": "DATABASE_URL=${DATABASE_URL:-mongodb://127.0.0.1:27017/ci_dummy} prisma generate",
     "build": "tsc -p tsconfig.app.json",
     "start": "node dist/main.js",
-    "pretest": "cd ../../packages/bananajs && npx tsc -p tsconfig.lib.json && cd ../plugin-prisma && npx tsc -p tsconfig.lib.json && cd ../plugin-zod && npx tsc -p tsconfig.lib.json && cd ../../apps/example-rest-mongodb && DATABASE_URL=${DATABASE_URL:-mongodb://127.0.0.1:27017/ci_dummy} npx prisma generate",
+    "pretest": "cd ../../packages/bananajs && npx tsc -p tsconfig.lib.json && cd ../plugin-prisma && npx tsc -p tsconfig.lib.json && cd ../../apps/example-rest-mongodb && DATABASE_URL=${DATABASE_URL:-mongodb://127.0.0.1:27017/ci_dummy} npx prisma generate",
     "test": "DATABASE_URL=${DATABASE_URL:-mongodb://127.0.0.1:27017/ci_dummy} npm run build && DATABASE_URL=${DATABASE_URL:-mongodb://127.0.0.1:27017/ci_dummy} node --test dist/__tests__/app.test.js"
   },
   "dependencies": {
     "@banana-universe/bananajs": "*",
     "@banana-universe/plugin-prisma": "*",
-    "@banana-universe/plugin-zod": "*",
     "@prisma/client": "^6.19.2",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
     "express": "^4.21.2",
     "prisma": "^6.0.0",
     "reflect-metadata": "^0.2.2",

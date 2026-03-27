@@ -1,6 +1,6 @@
 # example-rest-mongodb
 
-Prisma **MongoDB** connector with **`@banana-universe/plugin-zod`** (`@ZodBody`) for request bodies.
+Prisma **MongoDB** connector with core **`@Body(ZodSchema)`** for request bodies.
 
 ## Prisma MongoDB limitations (read before production)
 

@@ -1,6 +1,8 @@
 import type { Application, RequestHandler } from 'express'
+import type { ZodType } from 'zod'
 import type { RouteInfo, Constructor, BananaAppOptions } from '../Core/App'
 import { MetadataKeys } from '../Router/MetaData.constants'
+import { ValidationSource } from '../Validator/Validator.decorator.js'
 import { extractJsonSchema } from './schema.extractor'
 import type { ApiOperationOptions, ApiBodyOptions, ApiResponseOptions } from './ApiDoc.decorators'
 
@@ -67,9 +69,19 @@ export function buildOpenApiSpec(
       controllerClass,
       route.handler,
     ) as ApiOperationOptions | undefined
-    const body = Reflect.getMetadata(MetadataKeys.API_BODY, controllerClass, route.handler) as
+    let body = Reflect.getMetadata(MetadataKeys.API_BODY, controllerClass, route.handler) as
       | ApiBodyOptions
       | undefined
+    if (!body) {
+      const zodBody = Reflect.getMetadata(
+        ValidationSource.BODY,
+        controllerClass.prototype,
+        route.handler,
+      ) as ZodType | undefined
+      if (zodBody) {
+        body = { schema: zodBody }
+      }
+    }
     const responses = Reflect.getMetadata(
       MetadataKeys.API_RESPONSE,
       controllerClass,
@@ -98,7 +110,7 @@ export function buildOpenApiSpec(
     }
 
     if (body) {
-      const schema = extractJsonSchema(body.type)
+      const schema = extractJsonSchema(body.schema)
       op.requestBody = {
         required: body.required !== false,
         description: body.description,

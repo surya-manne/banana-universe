@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import type { ZodType } from 'zod'
 import { WsMetadataKeys } from './WsMetadata.js'
 
 export type Constructor<T = unknown> = new (...args: unknown[]) => T
@@ -34,16 +35,14 @@ export function OnMessage(event: string): MethodDecorator {
 
 export interface WsBodyMeta {
   paramIndex: number
-  DtoClass?: Constructor
+  schema?: ZodType
 }
 
 /**
  * Marks a parameter as the WebSocket message body.
- * @param DtoClass - When provided, the message `data` is hydrated with `class-transformer` and
- *   validated with `class-validator` (same rules as HTTP `@Body`). Requires optional peers
- *   `class-transformer` and `class-validator`. Without `DtoClass`, raw `data` is passed through.
+ * @param schema - When provided, `data` is validated with Zod (same idea as HTTP `@Body`).
  */
-export function WsBody(DtoClass?: Constructor): ParameterDecorator {
+export function WsBody(schema?: ZodType): ParameterDecorator {
   return (
     target: object,
     propertyKey: string | symbol | undefined,
@@ -54,7 +53,7 @@ export function WsBody(DtoClass?: Constructor): ParameterDecorator {
       (Reflect.getMetadata(WsMetadataKeys.WS_BODY, target, propertyKey) as
         | WsBodyMeta[]
         | undefined) ?? []
-    existing.push({ paramIndex: parameterIndex, DtoClass })
+    existing.push({ paramIndex: parameterIndex, schema })
     Reflect.defineMetadata(WsMetadataKeys.WS_BODY, existing, target, propertyKey)
   }
 }

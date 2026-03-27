@@ -1,18 +1,9 @@
-import { Type } from 'class-transformer'
-import { IsInt, IsOptional, Max, Min } from 'class-validator'
+import { z } from 'zod'
 
-/** Query DTO with numeric coercion for `page` / `limit` (strings from HTTP query). */
-export class CatalogListQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1
+/** Query validation for `page` / `limit` (coerced from strings). */
+export const CatalogListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+})
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20
-}
+export type CatalogListQuery = z.infer<typeof CatalogListQuerySchema>

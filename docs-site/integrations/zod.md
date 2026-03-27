@@ -1,24 +1,21 @@
-# Zod (`@banana-universe/plugin-zod`)
+# Zod
 
-Provides **`ZodPlugin()`** plus **`ZodBody`**, **`ZodQuery`**, and **`ZodParams`** decorators that accept any **Zod-like** schema implementing **`safeParse`**.
+**BananaJS 0.5+** ships **Zod** as the **default** validation path: use **`@Body`**, **`@Query`**, **`@Params`**, and **`@Headers`** with a **`z.ZodType`** schema.
 
 ## Install
 
 ```bash
-npm install @banana-universe/plugin-zod zod
+npm install zod
 ```
 
-## Behavior
+`zod` is a **dependency** of `@banana-universe/bananajs` — your app should list **`zod`** for direct schema imports.
 
-- On **`register`**, verifies **`zod`** is installed (throws if not)
-- Each decorator wraps the handler: runs **`schema.safeParse`** on `body` / `query` / `params`
-- On failure — calls **`next(new BadRequestError(...))`** using **`@banana-universe/bananajs`** when available
-- On success — replaces the relevant segment on `req` with parsed output and invokes the handler
+## `@banana-universe/plugin-zod`
 
-## Coexistence
+The plugin is a **deprecated shim** that re-exports **`ZodBody` → `Body`**, **`ZodQuery` → `Query`**, **`ZodParams` → `Params`** from the core package. Prefer importing from **`@banana-universe/bananajs`**.
 
-You can use **Zod** decorators alongside **class-validator** **`@Body`** DTOs in different controllers; pick one style per route.
+**`ZodPlugin()`** is a no-op retained for backward compatibility.
 
-## Plugin stub
+## OpenAPI
 
-**`ZodPlugin()`** currently performs the **`zod`** availability check at startup. Validation is implemented in the **`ZodBody` / `ZodQuery` / `ZodParams`** decorators.
+Request body documentation is generated from Zod via **`zod-to-json-schema`** (and from explicit **`@ApiBody({ schema })`** when provided).

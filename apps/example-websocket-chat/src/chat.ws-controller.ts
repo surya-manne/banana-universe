@@ -6,7 +6,7 @@ import {
   WsBody,
   type Constructor,
 } from '@banana-universe/plugin-websocket'
-import { JoinRoomDto, SendChatMessageDto } from './chat.dto.js'
+import { JoinRoomSchema, SendChatMessageSchema } from './chat.dto.js'
 
 export type WsLike = {
   send(data: string): void
@@ -25,14 +25,14 @@ export class ChatWsController {
   }
 
   @OnMessage('join')
-  onJoin(socket: WsLike, @WsBody(JoinRoomDto) body: JoinRoomDto): void {
+  onJoin(socket: WsLike, @WsBody(JoinRoomSchema) body: { roomId: string }): void {
     this.currentRoom = body.roomId
     if (!rooms.has(body.roomId)) rooms.set(body.roomId, [])
     socket.send(JSON.stringify({ event: 'joined', data: { roomId: body.roomId } }))
   }
 
   @OnMessage('message')
-  onMessage(socket: WsLike, @WsBody(SendChatMessageDto) body: SendChatMessageDto): void {
+  onMessage(socket: WsLike, @WsBody(SendChatMessageSchema) body: { text: string }): void {
     const list = rooms.get(this.currentRoom) ?? []
     list.push(body.text)
     rooms.set(this.currentRoom, list)

@@ -24,20 +24,23 @@ new BananaApp([UserController, ProductController], [authMiddleware]).getInstance
 
 **Pattern:** Decorators write to `reflect-metadata` at class/method level; `BananaApp` reads metadata at startup to wire Express.
 
-1. `@Controller(basePath)` — stores `BASE_PATH` on the class.
-2. `@Get/@Post/@Put/@Patch/@Delete(path, middlewares?)` — appends `IRouter` entry to `ROUTERS` metadata array on the class.
+1. `@Controller(baseSegment)` — stores a **slash-free** base segment (e.g. `'users'`, `''` for root) in `BASE_PATH`.
+2. `@Get/@Post/@Put/@Patch/@Delete(path, middlewares?)` — stores a **slash-free** route segment; `joinRouteSegments` composes full Express paths and the route table.
 3. `BananaApp.initializeControllers()` reads both, creates an Express `Router`, registers each route handler.
 
-**Key constants:** `MetadataKeys.BASE_PATH`, `MetadataKeys.ROUTERS` (in `MetaData.constants.ts`)
+**Key constants:** `MetadataKeys.BASE_PATH`, `MetadataKeys.ROUTERS` (in `MetaData.constants.ts`). Path joining lives in `lib/Router/route-path.ts`.
 
 ### Validation Middleware Injection
 
-`@Body/@Params/@Query(DtoClass)` replaces the handler method in `descriptor.value` with a wrapper that:
+`@Body/@Params/@Query/@Headers(schema)` wraps the handler and runs **`schema.safeParse`** on the matching request slice (`zod`). On failure it throws `BadRequestError`; on success it assigns **`result.data`** back to `req[source]` and calls the original handler.
 
-1. Hydrates DTO via `plainToInstance` (class-transformer)
-2. Validates via `validate` (class-validator) with `whitelist: true`, `forbidNonWhitelisted: true`
-3. On failure: responds immediately with `{ status: 400, message: <error list> }`
-4. On success: calls original handler via `method.apply(this, arguments)`
+### Controllers
+
+HTTP controllers should extend **`BaseController`** for `ok` / `error` helpers over `SuccessResponse` and `ApiError`.
+
+### App bootstrap
+
+Use **`BananaApp.create`** when plugins need async lifecycle. Optional one-shot **`createBananaApplication(controllers, { ...options, port?, hostname?, onListening? })`** wraps `BananaApp.create` and calls **`listen`** when `port` is set.
 
 ### Response Architecture
 
@@ -69,10 +72,10 @@ All error responses extend `ApiResponse` directly (no data payload).
 
 ## Module Boundaries
 
-| Module               | Public API                                                                                                                                | Internal Only                                                                          |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `packages/bananajs`  | `BananaApp`, `@Controller`, `@Get/Post/...`, `@Body/Params/Query`, `SuccessResponse`, `ApiError` + subclasses, all error response classes | `initializeControllers`, `validationFactory`, `methodDecoratorFactory`, `MetadataKeys` |
-| `apps/bananajs-demo` | N/A (application)                                                                                                                         | All                                                                                    |
+| Module               | Public API                                                                                                                                                                                           | Internal Only                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `packages/bananajs`  | `BananaApp`, `createBananaApplication`, `BaseController`, `@Controller`, `@Get/Post/...`, `@Body/Params/Query/Headers` (Zod), `SuccessResponse`, `ApiError` + subclasses, all error response classes | `initializeControllers`, `joinRouteSegments`, `MetadataKeys` |
+| `apps/bananajs-demo` | N/A (application)                                                                                                                                                                                    | All                                                          |
 
 ## Build System
 

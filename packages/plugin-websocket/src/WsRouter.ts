@@ -1,6 +1,4 @@
 import type { AwilixContainer } from 'awilix'
-import { plainToInstance } from 'class-transformer'
-import { validate, type ValidationError } from 'class-validator'
 import { WsMetadataKeys } from './WsMetadata.js'
 import type { Constructor, WsBodyMeta } from './WsDecorators.js'
 
@@ -80,20 +78,14 @@ async function handleWsMessage(
 
     let body: unknown = msg.data
     const bodyMeta = wsBodyMetas?.find((m) => m.paramIndex === 1)
-    if (bodyMeta?.DtoClass) {
-      const dto = plainToInstance(bodyMeta.DtoClass, msg.data as object)
-      const errors = await validate(dto as object, {
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      })
-      if (errors.length > 0) {
-        const message = errors
-          .map((e: ValidationError) => Object.values(e.constraints ?? {}))
-          .join(', ')
+    if (bodyMeta?.schema) {
+      const result = bodyMeta.schema.safeParse(msg.data)
+      if (!result.success) {
+        const message = result.error.issues.map((i) => i.message).join(', ')
         socket.send(JSON.stringify({ event: 'error', data: { message } }))
         return
       }
-      body = dto
+      body = result.data
     }
 
     await Promise.resolve(

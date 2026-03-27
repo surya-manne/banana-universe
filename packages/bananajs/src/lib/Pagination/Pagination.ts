@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, Max, Min } from 'class-validator'
+import { z } from 'zod'
 import type { Response } from 'express'
 import { SuccessResponse } from '../Response/ApiResponse'
 
@@ -10,11 +10,7 @@ export interface PaginationMeta {
 }
 
 export class PaginatedResponse<T> extends SuccessResponse<T[]> {
-  constructor(
-    message: string,
-    data: T[],
-    public readonly meta: PaginationMeta,
-  ) {
+  constructor(message: string, data: T[], public readonly meta: PaginationMeta) {
     super(message, data)
   }
 
@@ -30,15 +26,10 @@ export class PaginatedResponse<T> extends SuccessResponse<T[]> {
   }
 }
 
-export class PaginationDto {
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  page?: number = 1
+/** Default Zod schema for `page` / `limit` query validation with `@Query`. */
+export const PaginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+})
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20
-}
+export type PaginationQuery = z.infer<typeof PaginationQuerySchema>

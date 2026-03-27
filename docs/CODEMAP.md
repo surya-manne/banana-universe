@@ -69,7 +69,7 @@ banana-universe/
 
 - `@Controller(path)` — sets base path on controller class via metadata
 - `@Get/@Post/@Put/@Patch/@Delete(path, middlewares?)` — registers routes via metadata
-- `@Body/@Params/@Query(DtoClass)` — validates request segments using class-validator
+- `@Body/@Params/@Query/Headers(zodSchema)` — validates request segments with Zod `safeParse`
 
 ### Response System
 

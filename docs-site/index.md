@@ -28,7 +28,7 @@ features:
     details: 'Schema and prompt-driven generation today; full LLM provider layer, project config, and end-to-end DDD module generation on the roadmap. AI doc and review in the box.'
   - icon: ✨
     title: Developer experience
-    details: 'Decorators, class-validator, typed SuccessResponse and ApiError, OpenAPI from decorators, DevTools route table, BananaTestApp, sane defaults—fast iteration without losing structure.'
+    details: 'Decorators, Zod validation, BaseController, typed SuccessResponse and ApiError, OpenAPI from decorators, DevTools route table, BananaTestApp, sane defaults—fast iteration without losing structure.'
   - icon: 🧱
     title: DDD as a destination
     details: 'Roadmap: @banana-universe/ddd with entities, aggregates, repository contracts, domain/application/infrastructure scaffolding—ORM stays at the edge, domain stays pure.'

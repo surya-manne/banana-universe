@@ -25,42 +25,24 @@ function safeIdentifier(name: string): string {
   return base || 'field'
 }
 
-function validatorDecorators(ts: string, required: boolean): string {
-  if (ts === 'number') {
-    return required ? '  @IsNumber()\n' : '  @IsOptional()\n  @IsNumber()\n'
-  }
-  if (ts === 'boolean') {
-    return required ? '  @IsBoolean()\n' : '  @IsOptional()\n  @IsBoolean()\n'
-  }
-  if (ts === 'Date') {
-    return required ? '  @IsDate()\n' : '  @IsOptional()\n  @IsDate()\n'
-  }
-  if (ts.endsWith('[]')) {
-    return (
-      (required ? '  @IsArray()\n' : '  @IsOptional()\n  @IsArray()\n') +
-      '  @IsString({ each: true })\n'
-    )
-  }
-  return required ? '  @IsNotEmpty()\n  @IsString()\n' : '  @IsOptional()\n  @IsString()\n'
+function zodSchemaField(f: NormalizedField, forUpdate: boolean): string {
+  let inner: string
+  if (f.ts === 'number') inner = 'z.number()'
+  else if (f.ts === 'boolean') inner = 'z.boolean()'
+  else if (f.ts === 'Date') inner = 'z.coerce.date()'
+  else if (f.ts.endsWith('[]')) inner = 'z.array(z.string())'
+  else inner = 'z.string().min(1)'
+  if (forUpdate) return `  ${f.name}: ${inner}.optional()`
+  if (f.optional) return `  ${f.name}: ${inner}.optional()`
+  return `  ${f.name}: ${inner}`
 }
 
-function createDtoFields(fields: NormalizedField[]): string {
-  return fields
-    .map((f) => {
-      const dec = validatorDecorators(f.ts, !f.optional)
-      const opt = f.optional ? '?' : ''
-      return `${dec}  ${f.name}${opt}: ${f.ts}`
-    })
-    .join('\n\n')
+function createZodFields(fields: NormalizedField[]): string {
+  return fields.map((f) => zodSchemaField(f, false)).join(',\n')
 }
 
-function updateDtoFields(fields: NormalizedField[]): string {
-  return fields
-    .map((f) => {
-      const dec = validatorDecorators(f.ts, false)
-      return `${dec}  ${f.name}?: ${f.ts}`
-    })
-    .join('\n\n')
+function updateZodFields(fields: NormalizedField[]): string {
+  return fields.map((f) => zodSchemaField(f, true)).join(',\n')
 }
 
 function entityPropsInterface(Pascal: string, fields: NormalizedField[]): string {
@@ -146,15 +128,19 @@ export class ${Pascal}DomainService {
 }
 `
 
-  const appDto = `import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+  const appDto = `import { z } from 'zod'
 
-export class Create${Pascal}Dto {
-${createDtoFields(fields) || '  @IsNotEmpty()\n  @IsString()\n  placeholder!: string'}
-}
+export const Create${Pascal}Schema = z.object({
+${createZodFields(fields) || `  placeholder: z.string().min(1)`}
+})
 
-export class Update${Pascal}Dto {
-${updateDtoFields(fields) || '  @IsOptional()\n  @IsString()\n  placeholder?: string'}
-}
+export type Create${Pascal}Dto = z.infer<typeof Create${Pascal}Schema>
+
+export const Update${Pascal}Schema = z.object({
+${updateZodFields(fields) || `  placeholder: z.string().optional()`}
+})
+
+export type Update${Pascal}Dto = z.infer<typeof Update${Pascal}Schema>
 `
 
   const files: ModuleFile[] = [
@@ -260,52 +246,74 @@ export class ${Pascal}AppService {
 }
 
 function buildController(Pascal: string, kebab: string): string {
-  return `import { Body, Controller, Delete, Get, Injectable, Param, Post, Put } from '@banana-universe/bananajs'
-import { ApiTags } from '@banana-universe/bananajs'
+  return `import {
+  ApiTags,
+  BaseController,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Injectable,
+  Params,
+  Post,
+  Put,
+} from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
-import { SuccessResponse } from '@banana-universe/bananajs'
+import { z } from 'zod'
 import { ${Pascal}AppService } from './application/${kebab}.app-service.js'
-import type { Create${Pascal}Dto, Update${Pascal}Dto } from './application/${kebab}.dto.js'
+import {
+  Create${Pascal}Schema,
+  Update${Pascal}Schema,
+  type Create${Pascal}Dto,
+  type Update${Pascal}Dto,
+} from './application/${kebab}.dto.js'
+
+const ${kebab}IdParams = z.object({ id: z.string().min(1) })
 
 @Injectable()
 @ApiTags('${kebab}')
-@Controller('/${kebab}')
-export class ${Pascal}Controller {
-  constructor(private readonly app: ${Pascal}AppService) {}
+@Controller('${kebab}')
+export class ${Pascal}Controller extends BaseController {
+  constructor(private readonly app: ${Pascal}AppService) {
+    super()
+  }
 
-  @Get('/')
+  @Get('')
   async list(_req: Request, res: Response): Promise<void> {
     const data = await this.app.findAll()
-    new SuccessResponse(data).send(res)
+    this.ok(res, 'ok', data)
   }
 
-  @Get('/:id')
-  async one(@Param('id') id: string, _req: Request, res: Response): Promise<void> {
+  @Get(':id')
+  @Params(${kebab}IdParams)
+  async one(req: Request, res: Response): Promise<void> {
+    const { id } = req.params as { id: string }
     const data = await this.app.findOne(id)
-    new SuccessResponse(data).send(res)
+    this.ok(res, 'ok', data)
   }
 
-  @Post('/')
-  async create(@Body() dto: Create${Pascal}Dto, _req: Request, res: Response): Promise<void> {
-    const data = await this.app.create(dto)
-    new SuccessResponse(data).send(res)
+  @Post('')
+  @Body(Create${Pascal}Schema)
+  async create(req: Request, res: Response): Promise<void> {
+    const data = await this.app.create(req.body as Create${Pascal}Dto)
+    this.ok(res, 'created', data)
   }
 
-  @Put('/:id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: Update${Pascal}Dto,
-    _req: Request,
-    res: Response,
-  ): Promise<void> {
-    const data = await this.app.update(id, dto)
-    new SuccessResponse(data).send(res)
+  @Put(':id')
+  @Params(${kebab}IdParams)
+  @Body(Update${Pascal}Schema)
+  async update(req: Request, res: Response): Promise<void> {
+    const { id } = req.params as { id: string }
+    const data = await this.app.update(id, req.body as Update${Pascal}Dto)
+    this.ok(res, 'ok', data)
   }
 
-  @Delete('/:id')
-  async remove(@Param('id') id: string, _req: Request, res: Response): Promise<void> {
+  @Delete(':id')
+  @Params(${kebab}IdParams)
+  async remove(req: Request, res: Response): Promise<void> {
+    const { id } = req.params as { id: string }
     await this.app.remove(id)
-    new SuccessResponse({ ok: true }).send(res)
+    this.ok(res, 'ok', { ok: true })
   }
 }
 `

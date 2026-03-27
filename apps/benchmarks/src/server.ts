@@ -1,28 +1,30 @@
 import BananaApp from '@banana-universe/bananajs'
-import { Controller, Get } from '@banana-universe/bananajs'
-import { SuccessResponse } from '@banana-universe/bananajs'
+import { BaseController, Controller, Get } from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
 import { createServer as createHttpServer } from 'http'
 
-@Controller('/benchmark')
-class BenchmarkController {
-  @Get('/basic')
+@Controller('benchmark')
+class BenchmarkController extends BaseController {
+  @Get('basic')
   async basic(_req: Request, res: Response): Promise<void> {
-    new SuccessResponse(200, 'OK', { ok: true }).send(res)
+    this.ok(res, 'OK', { ok: true })
   }
 
-  @Get('/auth')
+  @Get('auth')
   async auth(_req: Request, res: Response): Promise<void> {
-    new SuccessResponse(200, 'OK', { ok: true }).send(res)
+    this.ok(res, 'OK', { ok: true })
   }
 
-  @Get('/cached')
+  @Get('cached')
   async cached(_req: Request, res: Response): Promise<void> {
-    new SuccessResponse(200, 'OK', { data: 'cached', timestamp: Date.now() }).send(res)
+    this.ok(res, 'OK', { data: 'cached', timestamp: Date.now() })
   }
 }
 
-export async function createServer(): Promise<{ server: ReturnType<typeof createHttpServer>; baseUrl: string }> {
+export async function createServer(): Promise<{
+  server: ReturnType<typeof createHttpServer>
+  baseUrl: string
+}> {
   const app = await BananaApp.create([BenchmarkController], {
     health: { enabled: true, path: '/health' },
     logger: false,

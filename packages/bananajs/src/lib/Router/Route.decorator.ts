@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { RequestHandler } from 'express'
 import { MetadataKeys } from './MetaData.constants'
+import { normalizeRouteToken } from './route-path.js'
 
 export enum HTTPMethod {
   GET = 'get',
@@ -18,7 +19,7 @@ export interface IRouter {
 }
 
 export const methodDecoratorFactory = (method: HTTPMethod) => {
-  return (path: string, middlewares?: RequestHandler[]): MethodDecorator => {
+  return (path = '', middlewares?: RequestHandler[]): MethodDecorator => {
     return (target, propertyKey, descriptor: PropertyDescriptor) => {
       const controllerClass = target.constructor
       const routers: IRouter[] = Reflect.hasMetadata(MetadataKeys.ROUTERS, controllerClass)
@@ -26,7 +27,7 @@ export const methodDecoratorFactory = (method: HTTPMethod) => {
         : []
       routers.push({
         method,
-        path,
+        path: normalizeRouteToken(path),
         middlewares,
         handlerName: propertyKey,
       })

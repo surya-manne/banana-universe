@@ -49,18 +49,18 @@ export class ${Pascal}DomainService {
 }
 `
 
-  const appDto = `import { IsNotEmpty, IsString } from 'class-validator'
+  const appDto = `import { z } from 'zod'
 
-export class Create${Pascal}Dto {
-  @IsNotEmpty()
-  @IsString()
-  name!: string
-}
+export const Create${Pascal}Schema = z.object({
+  name: z.string().min(1),
+})
 
-export class Update${Pascal}Dto {
-  @IsString()
-  name?: string
-}
+export const Update${Pascal}Schema = z.object({
+  name: z.string().min(1).optional(),
+})
+
+export type Create${Pascal}Dto = z.infer<typeof Create${Pascal}Schema>
+export type Update${Pascal}Dto = z.infer<typeof Update${Pascal}Schema>
 `
 
   const files: ModuleFile[] = [
@@ -155,50 +155,69 @@ export class ${Pascal}AppService {
 }
 
 function simplifyController(Pascal: string, kebab: string): string {
-  return `import { Body, Controller, Delete, Get, Injectable, Param, Post, Put } from '@banana-universe/bananajs'
+  return `import {
+  BaseController,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Injectable,
+  Params,
+  Post,
+  Put,
+} from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
-import { SuccessResponse } from '@banana-universe/bananajs'
+import { z } from 'zod'
 import { ${Pascal}AppService } from './application/${kebab}.app-service.js'
-import type { Create${Pascal}Dto, Update${Pascal}Dto } from './application/${kebab}.dto.js'
+import { Create${Pascal}Schema, Update${Pascal}Schema } from './application/${kebab}.dto.js'
+
+const ${kebab}IdParams = z.object({ id: z.string().min(1) })
 
 @Injectable()
-@Controller('/${kebab}')
-export class ${Pascal}Controller {
-  constructor(private readonly app: ${Pascal}AppService) {}
+@Controller('${kebab}')
+export class ${Pascal}Controller extends BaseController {
+  constructor(private readonly app: ${Pascal}AppService) {
+    super()
+  }
 
-  @Get('/')
+  @Get('')
   async list(_req: Request, res: Response): Promise<void> {
     const data = await this.app.findAll()
-    new SuccessResponse(data).send(res)
+    this.ok(res, 'ok', data)
   }
 
-  @Get('/:id')
-  async one(@Param('id') id: string, _req: Request, res: Response): Promise<void> {
+  @Get(':id')
+  @Params(${kebab}IdParams)
+  async one(req: Request, res: Response): Promise<void> {
+    const { id } = req.params as { id: string }
     const data = await this.app.findOne(id)
-    new SuccessResponse(data).send(res)
+    this.ok(res, 'ok', data)
   }
 
-  @Post('/')
-  async create(@Body() dto: Create${Pascal}Dto, _req: Request, res: Response): Promise<void> {
+  @Post('')
+  @Body(Create${Pascal}Schema)
+  async create(req: Request, res: Response): Promise<void> {
+    const dto = req.body as { name: string }
     const data = await this.app.create(dto)
-    new SuccessResponse(data).send(res)
+    this.ok(res, 'created', data)
   }
 
-  @Put('/:id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: Update${Pascal}Dto,
-    _req: Request,
-    res: Response,
-  ): Promise<void> {
+  @Put(':id')
+  @Params(${kebab}IdParams)
+  @Body(Update${Pascal}Schema)
+  async update(req: Request, res: Response): Promise<void> {
+    const { id } = req.params as { id: string }
+    const dto = req.body as { name?: string }
     const data = await this.app.update(id, dto)
-    new SuccessResponse(data).send(res)
+    this.ok(res, 'ok', data)
   }
 
-  @Delete('/:id')
-  async remove(@Param('id') id: string, _req: Request, res: Response): Promise<void> {
+  @Delete(':id')
+  @Params(${kebab}IdParams)
+  async remove(req: Request, res: Response): Promise<void> {
+    const { id } = req.params as { id: string }
     await this.app.remove(id)
-    new SuccessResponse({ ok: true }).send(res)
+    this.ok(res, 'ok', { ok: true })
   }
 }
 `

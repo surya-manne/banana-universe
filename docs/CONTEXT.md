@@ -18,7 +18,7 @@ BananaJS is an opinionated Node.js framework built for developers who want the p
 ## Key Capabilities
 
 - **Routing with decorators** — define endpoints as class methods with `@Controller`, `@Get`, `@Post`, etc.
-- **Automatic request validation** — attach `@Body`, `@Params`, or `@Query` with a DTO class; invalid requests are rejected automatically.
+- **Automatic request validation** — attach `@Body`, `@Params`, `@Query`, or `@Headers` with a Zod schema; invalid requests are rejected automatically.
 - **Standardized responses** — all success responses use `SuccessResponse`; all errors use typed `ApiError` subclasses.
 - **Centralized error handling** — a single `ErrorMiddleware` handles all unhandled errors consistently.
 - **Extensible middlewares** — custom Express middlewares can be injected at app or route level.

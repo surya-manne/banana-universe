@@ -1,6 +1,6 @@
 # example-websocket-chat
 
-Demonstrates **`@banana-universe/plugin-websocket`**: JSON messages `{ event, data }`, `@OnMessage`, and **`@WsBody(DtoClass)`** runtime validation (class-validator).
+Demonstrates **`@banana-universe/plugin-websocket`**: JSON messages `{ event, data }`, `@OnMessage`, and **`@WsBody(zodSchema)`** runtime validation.
 
 ## Run
 

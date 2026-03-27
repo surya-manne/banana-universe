@@ -5,7 +5,6 @@ import request from 'supertest'
 import { BananaApp } from '@banana-universe/bananajs'
 import { createContainer, asFunction } from 'awilix'
 import { PrismaPlugin } from '@banana-universe/plugin-prisma'
-import { ZodPlugin } from '@banana-universe/plugin-zod'
 import { PrismaClient } from '@prisma/client'
 import { ArticleController } from '../article.controller.js'
 
@@ -21,7 +20,7 @@ test('health without MongoDB (CI default)', async () => {
 
   const banana = await BananaApp.create([ArticleController as never], {
     container,
-    plugins: [PrismaPlugin(prisma) as never, ZodPlugin() as never],
+    plugins: [PrismaPlugin(prisma) as never],
     logger: false,
     gracefulShutdown: false,
     rateLimit: false,

@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { plainToInstance } from 'class-transformer'
-import { validate, ValidationError } from 'class-validator'
+import type { ZodType } from 'zod'
 import { BadRequestError } from '../Response/ApiError'
 
 export enum ValidationSource {
@@ -10,32 +9,21 @@ export enum ValidationSource {
   PARAM = 'params',
 }
 
-function validationFactory<T>(
-  model: new (...args: unknown[]) => T,
-  skipMissingProperties = false,
-  source: ValidationSource,
-) {
+function validationFactory(schema: ZodType, source: ValidationSource) {
   return function (target: object, propertyName: string, descriptor: PropertyDescriptor) {
-    Reflect.defineMetadata(source, model, target, propertyName)
+    Reflect.defineMetadata(source, schema, target, propertyName)
 
     const method = descriptor.value
     descriptor.value = async function (request: Request, response: Response, next: NextFunction) {
-      const model = Reflect.getOwnMetadata(source, target, propertyName)
+      const zodSchema = Reflect.getMetadata(source, target, propertyName) as ZodType
+      const raw = request[source]
+      const result = zodSchema.safeParse(raw)
 
-      const dto = plainToInstance(model, request[source])
-      const errors = await validate(dto, {
-        skipMissingProperties,
-        stopAtFirstError: true,
-        whitelist: true, // will throws error when unknown fields passed
-        forbidNonWhitelisted: true,
-      })
-
-      if (errors.length > 0) {
-        const message = errors
-          .map((error: ValidationError) => Object.values(error.constraints ?? {}))
-          .join(', ')
+      if (!result.success) {
+        const message = result.error.issues.map((i) => i.message).join(', ')
         throw new BadRequestError(message)
       }
+      ;(request as unknown as Record<string, unknown>)[source] = result.data
 
       // eslint-disable-next-line prefer-rest-params
       return method?.apply(this, arguments)
@@ -44,36 +32,21 @@ function validationFactory<T>(
 }
 
 /**
- * Decorator for validating query parameters of a request.
- * Utilizes a specified DTO class and validation rules.
- *
- * @param {any} dto - The data transfer object class to validate against.
- * @param {boolean} [skipMissingProperties=false] - Whether to skip validation for missing properties.
- * @returns A method decorator that performs validation on the query parameters.
+ * Validates the request query using a Zod schema.
  */
-export const Query = (dto: new (...args: unknown[]) => unknown, skipMissingProperties = false) =>
-  validationFactory(dto, skipMissingProperties, ValidationSource.QUERY)
-/**
- * Decorator for validating the body of a request.
- * Utilizes a specified DTO class and validation rules.
- *
- * @param dto - The data transfer object class to validate against.
- * @param {boolean} [skipMissingProperties=false] - Whether to skip validation for missing properties.
- * @returns A method decorator that performs validation on the body of the request.
- */
-export const Body = (dto: new (...args: unknown[]) => unknown, skipMissingProperties = false) =>
-  validationFactory(dto, skipMissingProperties, ValidationSource.BODY)
+export const Query = (schema: ZodType) => validationFactory(schema, ValidationSource.QUERY)
 
 /**
- * Decorator for validating the parameters of a request.
- * Utilizes a specified DTO class and validation rules.
- *
- * @param dto - The data transfer object class to validate against.
- * @param {boolean} [skipMissingProperties=false] - Whether to skip validation for missing properties.
- * @returns A method decorator that performs validation on the parameters of the request.
+ * Validates the request body using a Zod schema.
  */
-export const Params = (dto: new (...args: unknown[]) => unknown, skipMissingProperties = false) =>
-  validationFactory(dto, skipMissingProperties, ValidationSource.PARAM)
+export const Body = (schema: ZodType) => validationFactory(schema, ValidationSource.BODY)
 
-export const Headers = (dto: new (...args: unknown[]) => unknown, skipMissingProperties = false) =>
-  validationFactory(dto, skipMissingProperties, ValidationSource.HEADER)
+/**
+ * Validates route params using a Zod schema.
+ */
+export const Params = (schema: ZodType) => validationFactory(schema, ValidationSource.PARAM)
+
+/**
+ * Validates headers using a Zod schema.
+ */
+export const Headers = (schema: ZodType) => validationFactory(schema, ValidationSource.HEADER)

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 
 import {
+  BaseController,
   Controller,
   Post,
   Get,
@@ -9,37 +10,36 @@ import {
   Body,
   Params,
   Query,
-  SuccessResponse,
 } from '@banana-universe/bananajs'
-import { CreateUserDto, GetUserByIdDto, GetUserListDto } from './User.dto'
+import { CreateUserSchema, GetUserByIdSchema, GetUserListSchema } from './User.dto'
 
-@Controller('/users')
-export class UserController {
-  @Post('/')
-  @Body(CreateUserDto)
+@Controller('users')
+export class UserController extends BaseController {
+  @Post('')
+  @Body(CreateUserSchema)
   async crete(req: Request, res: Response) {
-    return new SuccessResponse('User created successfully!', req.body).send(res)
+    return this.ok(res, 'User created successfully!', req.body)
   }
 
-  @Get('/list')
-  @Query(GetUserListDto)
+  @Get('list')
+  @Query(GetUserListSchema)
   async list(req: Request, res: Response) {
-    return new SuccessResponse('sucess', req.query).send(res)
+    return this.ok(res, 'sucess', req.query)
   }
 
-  @Get('/:id')
-  @Params(GetUserByIdDto)
+  @Get(':id')
+  @Params(GetUserByIdSchema)
   async get(req: Request, res: Response) {
-    return new SuccessResponse('sucess', req.params).send(res)
+    return this.ok(res, 'sucess', req.params)
   }
 
-  @Put('/')
+  @Put('')
   async update(req: Request, res: Response) {
-    return new SuccessResponse('User updated successfully!', {}).send(res)
+    return this.ok(res, 'User updated successfully!', {})
   }
 
-  @Delete('/')
+  @Delete('')
   async delete(req: Request, res: Response) {
-    return new SuccessResponse('User deleted successfully!', {}).send(res)
+    return this.ok(res, 'User deleted successfully!', {})
   }
 }

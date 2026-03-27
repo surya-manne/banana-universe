@@ -59,7 +59,9 @@ export async function migrateCodemod(): Promise<void> {
     await fs.writeFile(outputPath, generated, 'utf-8')
 
     console.log(chalk.green(`Generated: ${outputPath}`))
-    console.log(chalk.gray(`  → ${routes.length} route(s) extracted from ${path.basename(filePath)}`))
+    console.log(
+      chalk.gray(`  → ${routes.length} route(s) extracted from ${path.basename(filePath)}`),
+    )
     totalGenerated++
   }
 
@@ -76,20 +78,25 @@ function generateControllerClass(
   controllerName: string,
   routes: Array<{ method: string; routePath: string }>,
 ): string {
-  const basePath = routes[0]?.routePath.split('/').slice(0, 2).join('/') ?? '/'
+  const baseSegment = routes[0]?.routePath.split('/').filter(Boolean)[0] ?? ''
   const methodImports = [
     ...new Set(routes.map((r) => r.method.charAt(0) + r.method.slice(1).toLowerCase())),
   ]
-  const imports = `import { Controller, ${methodImports.join(', ')}, SuccessResponse } from '@banana-universe/bananajs'`
+  const imports = `import { Controller, ${methodImports.join(
+    ', ',
+  )}, SuccessResponse } from '@banana-universe/bananajs'`
   const handlerMethods = routes
     .map((route, i) => {
       const handlerName = `handler${i + 1}`
-      const decorator = `@${route.method.charAt(0) + route.method.slice(1).toLowerCase()}('${route.routePath}')`
+      const pathToken = route.routePath.replace(/^\/+/, '')
+      const decorator = `@${
+        route.method.charAt(0) + route.method.slice(1).toLowerCase()
+      }('${pathToken}')`
       return `  ${decorator}\n  async ${handlerName}(req: Request, res: Response): Promise<void> {\n    new SuccessResponse('OK', {}).send(res)\n  }`
     })
     .join('\n\n')
 
-  return `import { Request, Response } from 'express'\n${imports}\n\n@Controller('${basePath}')\nexport class ${controllerName} {\n${handlerMethods}\n}\n`
+  return `import { Request, Response } from 'express'\n${imports}\n\n@Controller('${baseSegment}')\nexport class ${controllerName} {\n${handlerMethods}\n}\n`
 }
 
 function toPascalCase(str: string): string {

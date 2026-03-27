@@ -1,27 +1,22 @@
-import { IsEmail, IsString, Length } from 'class-validator'
+import { z } from 'zod'
 
-export class CreateUserDto {
-  @Length(3, 20)
-  @IsString()
-  name!: string
+export const CreateUserSchema = z.object({
+  name: z.string().min(3).max(20),
+  email: z.string().email().max(50),
+  password: z.string().min(1),
+})
 
-  @IsEmail()
-  @Length(0, 50)
-  email!: string
+export type CreateUser = z.infer<typeof CreateUserSchema>
 
-  @IsString()
-  password!: string
-}
+export const GetUserByIdSchema = z.object({
+  id: z.string().min(1),
+})
 
-export class GetUserByIdDto {
-  @IsString()
-  id!: string
-}
+export type GetUserByIdParams = z.infer<typeof GetUserByIdSchema>
 
-export class GetUserListDto {
-  @IsString()
-  page!: string
+export const GetUserListSchema = z.object({
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
+})
 
-  @IsString()
-  limit!: string
-}
+export type GetUserListQuery = z.infer<typeof GetUserListSchema>

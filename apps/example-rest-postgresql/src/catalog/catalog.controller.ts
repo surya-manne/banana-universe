@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import {
   Auth,
+  BaseController,
   Body,
   Controller,
   Get,
@@ -9,40 +10,41 @@ import {
   Post,
   Public,
   Query,
-  SuccessResponse,
   PaginatedResponse,
 } from '@banana-universe/bananajs'
 import { CatalogAppService } from './application/catalog.app-service.js'
-import { CreateCatalogItemDto, CatalogItemIdParams } from './catalog.dto.js'
-import { CatalogListQueryDto } from './catalog-list-query.dto.js'
+import { CatalogItemIdParamsSchema, CreateCatalogItemSchema } from './catalog.dto.js'
+import { CatalogListQuerySchema, type CatalogListQuery } from './catalog-list-query.dto.js'
 
-@Controller('/catalog')
+@Controller('catalog')
 @Auth()
-export class CatalogController {
-  constructor(private readonly catalogAppService: CatalogAppService) {}
-
-  @Get('/healthz')
-  @Public()
-  async health(_req: Request, res: Response) {
-    return new SuccessResponse('ok', { status: 'up' }).send(res)
+export class CatalogController extends BaseController {
+  constructor(private readonly catalogAppService: CatalogAppService) {
+    super()
   }
 
-  @Post('/items')
-  @Body(CreateCatalogItemDto)
+  @Get('healthz')
+  @Public()
+  async health(_req: Request, res: Response) {
+    return this.ok(res, 'ok', { status: 'up' })
+  }
+
+  @Post('items')
+  @Body(CreateCatalogItemSchema)
   async create(req: Request, res: Response) {
-    const dto = req.body as CreateCatalogItemDto
+    const dto = req.body as { name: string; sku: string }
     const item = await this.catalogAppService.create(dto.name, dto.sku)
-    return new SuccessResponse('created', {
+    return this.ok(res, 'created', {
       id: item.id,
       name: item.name,
       sku: item.sku,
-    }).send(res)
+    })
   }
 
-  @Get('/items')
-  @Query(CatalogListQueryDto)
+  @Get('items')
+  @Query(CatalogListQuerySchema)
   async list(req: Request, res: Response) {
-    const q = req.query as unknown as CatalogListQueryDto
+    const q = req.query as unknown as CatalogListQuery
     const page = q.page ?? 1
     const limit = q.limit ?? 20
     const { items, total } = await this.catalogAppService.listPaged(page, limit)
@@ -54,18 +56,18 @@ export class CatalogController {
     ).send(res)
   }
 
-  @Get('/items/:id')
-  @Params(CatalogItemIdParams)
+  @Get('items/:id')
+  @Params(CatalogItemIdParamsSchema)
   async getById(req: Request, res: Response) {
-    const { id } = req.params as unknown as CatalogItemIdParams
+    const { id } = req.params as { id: string }
     const item = await this.catalogAppService.findById(id)
     if (!item) {
       throw new NotFoundError('Catalog item not found')
     }
-    return new SuccessResponse('ok', {
+    return this.ok(res, 'ok', {
       id: item.id,
       name: item.name,
       sku: item.sku,
-    }).send(res)
+    })
   }
 }

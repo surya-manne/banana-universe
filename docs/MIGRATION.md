@@ -42,7 +42,7 @@ legacyApp.listen(3000)
 ## Step 1: Install BananaJS
 
 ```bash
-npm install bananajs reflect-metadata class-validator class-transformer
+npm install bananajs reflect-metadata zod
 ```
 
 Add to the top of your entry point (once):
@@ -132,24 +132,27 @@ router.post(
 )
 ```
 
-**After — BananaJS `@Body` with DTO:**
+**After — BananaJS `@Body` with Zod:**
 
 ```typescript
-// dto/CreateUserDto.ts
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator'
+// dto/create-user.schema.ts
+import { z } from 'zod'
 
-export class CreateUserDto {
-  @IsEmail()
-  email!: string
-
-  @IsNotEmpty()
-  @IsString()
-  name!: string
-}
+export const CreateUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+})
 
 // UserController.ts
-@Post('/')
-async create(@Body() body: CreateUserDto, req: Request, res: Response) {
+import { z } from 'zod'
+import { Body, Post, SuccessResponse } from '@banana-universe/bananajs'
+import type { Request, Response } from 'express'
+import { CreateUserSchema } from './dto/create-user.schema.js'
+
+@Post('')
+@Body(CreateUserSchema)
+async create(req: Request, res: Response) {
+  const body = req.body as z.infer<typeof CreateUserSchema>
   const user = await this.userService.create(body)
   return new SuccessResponse('User created', user).send(res)
 }
@@ -295,9 +298,7 @@ test('GET /users returns list', async () => {
 })
 
 test('authenticated endpoint', async () => {
-  const res = await testApp
-    .withAuth('my-jwt-token')
-    .inject({ method: 'GET', url: '/users/me' })
+  const res = await testApp.withAuth('my-jwt-token').inject({ method: 'GET', url: '/users/me' })
   expect(res.status).toBe(200)
 })
 ```

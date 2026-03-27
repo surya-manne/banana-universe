@@ -1,7 +1,7 @@
 {
   "name": "@banana-universe/plugin-zod",
   "version": "0.1.0",
-  "description": "Zod validation plugin for BananaJS — @ZodBody, @ZodQuery, @ZodParams decorators as an alternative to class-validator.",
+  "description": "Deprecated shim: re-exports core Zod decorators from @banana-universe/bananajs (BananaJS 0.5+).",
   "author": "Surya Prakash Manne",
   "license": "MIT",
   "repository": {
@@ -25,7 +25,7 @@
     "!**/*.tsbuildinfo"
   ],
   "peerDependencies": {
-    "@banana-universe/bananajs": ">=0.3.0",
+    "@banana-universe/bananajs": ">=0.5.0",
     "zod": ">=3.0.0"
   },
   "devDependencies": {

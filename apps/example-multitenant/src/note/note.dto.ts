@@ -1,13 +1,13 @@
-import { IsString, MaxLength, MinLength } from 'class-validator'
+import { z } from 'zod'
 
-export class CreateNoteDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(200)
-  title!: string
-}
+export const CreateNoteSchema = z.object({
+  title: z.string().min(1).max(200),
+})
 
-export class NoteIdParams {
-  @IsString()
-  id!: string
-}
+export type CreateNote = z.infer<typeof CreateNoteSchema>
+
+export const NoteIdParamsSchema = z.object({
+  id: z.string().min(1),
+})
+
+export type NoteIdParams = z.infer<typeof NoteIdParamsSchema>

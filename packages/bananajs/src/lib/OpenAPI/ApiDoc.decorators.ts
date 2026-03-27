@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import type { ZodType } from 'zod'
 import { MetadataKeys } from '../Router/MetaData.constants'
 
 export interface ApiOperationOptions {
@@ -8,7 +9,7 @@ export interface ApiOperationOptions {
 }
 
 export interface ApiBodyOptions {
-  type: new (...args: unknown[]) => unknown
+  schema: ZodType
   description?: string
   required?: boolean
 }

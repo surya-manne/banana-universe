@@ -4,22 +4,23 @@ Hand-written overview; generated signatures live under [**/api/**](/api/) (TypeD
 
 ## Routing
 
-| Export                                  | Role                                                   |
-| --------------------------------------- | ------------------------------------------------------ |
-| `Controller`                            | Class — base path                                      |
-| `Get`, `Post`, `Put`, `Patch`, `Delete` | Method — HTTP verb + path + optional route middlewares |
+| Export                                  | Role                                                               |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `Controller`                            | Class — base **segment** (no leading `/`; joined by the framework) |
+| `Get`, `Post`, `Put`, `Patch`, `Delete` | Method — path segment + optional route middlewares                 |
 
 ## Request validation
 
-| Export                               | Role                                          |
-| ------------------------------------ | --------------------------------------------- |
-| `Body`, `Params`, `Query`, `Headers` | class-validator DTOs for each request segment |
+| Export                               | Role                                    |
+| ------------------------------------ | --------------------------------------- |
+| `Body`, `Params`, `Query`, `Headers` | **Zod** schemas (`z.ZodType`) per slice |
 
 ## Responses (success)
 
-| Export                                                  | Role                 |
-| ------------------------------------------------------- | -------------------- |
-| `SuccessResponse`, `PaginatedResponse`, `PaginationDto` | Typed JSON responses |
+| Export                                                          | Role                           |
+| --------------------------------------------------------------- | ------------------------------ |
+| `BaseController`                                                | `ok` / `error` helpers         |
+| `SuccessResponse`, `PaginatedResponse`, `PaginationQuerySchema` | Typed JSON / list query schema |
 
 ## Errors
 

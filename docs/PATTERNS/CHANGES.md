@@ -10,7 +10,7 @@
 - decorator-http-method.md
 - decorator-validation.md
 - decorator-factory.md
-- dto-class-validator.md
+- dto-zod.md (replaces dto-class-validator.md)
 - success-response.md
 - api-error-typed.md
 - express-error-middleware.md

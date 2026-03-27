@@ -13,6 +13,7 @@ import type { CorsOptions } from 'cors'
 import type { AwilixContainer } from 'awilix'
 import { IRouter } from '../Router/Route.decorator'
 import { MetadataKeys } from '../Router/MetaData.constants'
+import { joinRouteSegments } from '../Router/route-path.js'
 import { createErrorMiddleware } from '../../Middleware/Error.middleware'
 import type { Logger } from '../Logger/Logger.interface'
 import { PinoLogger } from '../Logger/PinoLogger'
@@ -298,10 +299,11 @@ export class BananaApp {
       // Eager instance (default) or lazy resolver
       const eagerInstance = lazyControllers ? null : this.resolveController(controllerClass)
 
-      const basePath: string = Reflect.getMetadata(
+      const baseToken: string = Reflect.getMetadata(
         MetadataKeys.BASE_PATH,
         controllerClass,
       ) as string
+      const mountPath = joinRouteSegments(baseToken)
       const routers: IRouter[] =
         (Reflect.getMetadata(MetadataKeys.ROUTERS, controllerClass) as IRouter[]) ?? []
       const router = Router()
@@ -320,10 +322,12 @@ export class BananaApp {
         | import('../Security/Throttle.decorator.js').ThrottleOptions
         | undefined
 
-      routers.forEach(({ method, path, handlerName, middlewares = [] }) => {
+      routers.forEach(({ method, path: pathToken, handlerName, middlewares = [] }) => {
+        const expressPath = joinRouteSegments(pathToken)
+        const fullPath = joinRouteSegments(baseToken, pathToken)
         this.routeTable.push({
           method: method.toUpperCase(),
-          path: `${basePath}${path}`,
+          path: fullPath,
           controller: controllerClass.name,
           handler: String(handlerName),
         })
@@ -457,7 +461,7 @@ export class BananaApp {
         }
 
         router[method](
-          path,
+          expressPath,
           [...routeMiddlewares, ...(middlewares as RequestHandler[])],
           async (req: Request, res: Response, next: NextFunction) => {
             try {
@@ -487,7 +491,7 @@ export class BananaApp {
         )
       })
 
-      this.app.use(basePath, router)
+      this.app.use(mountPath, router)
     })
   }
 
@@ -521,6 +525,38 @@ export class BananaApp {
       void handleShutdown('SIGINT')
     })
   }
+}
+
+/** Options for {@link createBananaApplication} — extends {@link BananaAppOptions} with optional listen helpers. */
+export interface CreateBananaApplicationOptions extends BananaAppOptions {
+  /** When set, calls `Application.listen` after the app is created. */
+  port?: number
+  hostname?: string
+  onListening?: (info: { port: number; hostname?: string }) => void
+}
+
+/**
+ * Async factory: `BananaApp.create` plus optional `listen` in one call for declarative bootstrap.
+ */
+export async function createBananaApplication(
+  controllers: Constructor[],
+  options: CreateBananaApplicationOptions = {},
+): Promise<BananaApp> {
+  const { port, hostname, onListening, ...rest } = options
+  const banana = await BananaApp.create(controllers, rest)
+  if (port !== undefined) {
+    const inst = banana.getInstance()
+    if (hostname !== undefined) {
+      inst.listen(port, hostname, () => {
+        onListening?.({ port, hostname })
+      })
+    } else {
+      inst.listen(port, () => {
+        onListening?.({ port })
+      })
+    }
+  }
+  return banana
 }
 
 // ─── Module-level lazy middleware helpers ────────────────────────────────────
@@ -732,14 +768,16 @@ export function BananaRouter(
         )
       : (new controllerClass() as Record<string, unknown>)
 
-    const basePath: string = Reflect.getMetadata(MetadataKeys.BASE_PATH, controllerClass) as string
+    const baseToken: string = Reflect.getMetadata(MetadataKeys.BASE_PATH, controllerClass) as string
+    const mountPath = joinRouteSegments(baseToken)
     const routers: IRouter[] =
       (Reflect.getMetadata(MetadataKeys.ROUTERS, controllerClass) as IRouter[]) ?? []
     const subrouter = Router()
 
-    routers.forEach(({ method, path, handlerName, middlewares = [] }) => {
+    routers.forEach(({ method, path: pathToken, handlerName, middlewares = [] }) => {
+      const expressPath = joinRouteSegments(pathToken)
       subrouter[method](
-        path,
+        expressPath,
         middlewares as RequestHandler[],
         async (req: Request, res: Response, next: NextFunction) => {
           try {
@@ -756,7 +794,7 @@ export function BananaRouter(
       )
     })
 
-    router.use(basePath, subrouter)
+    router.use(mountPath, subrouter)
   })
 
   return router

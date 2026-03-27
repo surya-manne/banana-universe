@@ -18,11 +18,10 @@ This file describes the technology stack used across all modules in the banana-u
 | Language            | TypeScript                | ~5.7.2  |
 | HTTP framework      | Express                   | ^4.21.2 |
 | Metadata/Decorators | reflect-metadata          | ^0.2.2  |
-| Validation          | class-validator           | ^0.14.1 |
-| Serialization       | class-transformer         | ^0.5.1  |
+| Validation          | zod                       | ^3.24.0 |
 | Bundler             | Nx JS (SWC)               | —       |
 | Build output        | CommonJS + ESM dual       | —       |
-| Published as        | @banana-universe/bananajs | 0.0.7   |
+| Published as        | @banana-universe/bananajs | 0.5.0   |
 
 ## packages/bananajs-cli — CLI Package
 
@@ -39,7 +38,7 @@ This file describes the technology stack used across all modules in the banana-u
 | Language   | TypeScript                          | ~5.7.2  |
 | Framework  | @banana-universe/bananajs (Express) | local   |
 | Bundler    | Webpack (via @nx/webpack)           | —       |
-| Validation | class-validator                     | ^0.14.1 |
+| Validation | zod                                 | ^3.24.0 |
 
 ## Shared Tooling
 

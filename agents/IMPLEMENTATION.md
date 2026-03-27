@@ -6,6 +6,16 @@ Current implementation state. Very brief — references other docs. The only cha
 
 ## Modules
 
+### packages/bananajs v0.5.0 [Breaking — Zod, BaseController, routes, bootstrap]
+
+- **Validation**: `@Body` / `@Query` / `@Params` / `@Headers` accept **Zod** schemas only; removed `class-validator` / `class-transformer` from core
+- **OpenAPI**: `ApiBody({ schema: ZodType })`; JSON Schema via `zod-to-json-schema`; inferred body from `@Body` when `@ApiBody` omitted
+- **Pagination**: `PaginationQuerySchema` + `z.infer` replaces `PaginationDto`
+- **Routing**: `@Controller('segment')` and `@Get('segment')` — **no leading slash**; `joinRouteSegments` in `route-path.ts`
+- **Controllers**: `BaseController` with `ok` / `error`
+- **Bootstrap**: `createBananaApplication(controllers, { port?, onListening?, ...BananaAppOptions })`
+- **plugin-zod**: deprecated re-export shim; **`plugin-websocket`**: `@WsBody(zodSchema?)`
+
 ### packages/bananajs v0.4.0 [Phase 4 Complete]
 
 **Phase 4 additions:**
@@ -238,13 +248,14 @@ Key architectural decisions from Phase 2:
 - Auth is interface-only in framework (`AuthGuard`) — JWT strategy is user-injected
 - Rate-limit and upload middlewares are lazy-loaded (optional peer deps)
 - `ApiResponse` decorator renamed to `ApiResponseDoc` to avoid conflict with base class
-- Schema extractor reads `class-validator` metadata via `getMetadataStorage()` (no `emitDecoratorMetadata`)
+- Schema extractor uses **Zod** (`zod-to-json-schema`) for OpenAPI request bodies (no `emitDecoratorMetadata`)
 - `BananaTestApp` now has fluent auth/header API and disables rate-limit by default
 
 ## Change Log
 
 | Date       | Change                                                                                                                                                                                                                                 |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-27 | **bananajs v0.5.0**: Zod-only validation, `BaseController`, slash-free route segments + `joinRouteSegments`, `createBananaApplication`, OpenAPI from Zod, `PaginationQuerySchema`                                                      |
 | 2026-03-27 | Rosetta workspace initialized; Rosetta docs and shell files created                                                                                                                                                                    |
 | 2026-03-27 | Phase 1 complete: bug fixes, security baseline, logging, DI, context, CLI overhaul                                                                                                                                                     |
 | 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                                                                   |

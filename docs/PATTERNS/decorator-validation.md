@@ -2,46 +2,44 @@
 
 ## Description
 
-Method-level decorators (`@Body`, `@Params`, `@Query`) that wrap the handler method with validation logic. They use `class-transformer` to hydrate the DTO and `class-validator` to validate it, throwing a 400 response on failure.
+Method-level decorators (`@Body`, `@Params`, `@Query`, `@Headers`) wrap the handler and run **`schema.safeParse`** on the corresponding `req` slice. On failure they throw `BadRequestError`; on success they assign parsed **`data`** back onto `req`.
 
 ## When to Use
 
-Apply to any controller method that receives validated input from body, path params, or query string.
+Apply to any controller method that should reject invalid body, path params, query, or headers before business logic runs.
 
 ## Template
 
 ```typescript
-import { Body, Params, Query } from '@banana-universe/bananajs'
-import { CreateItemDto, GetItemByIdDto, ListItemsDto } from './Item.dto'
+import { z } from 'zod'
+import { Body, Params, Query, Controller, Post, Get } from '@banana-universe/bananajs'
 
-@Controller('/items')
-export class ItemController {
-  @Post('/')
-  @Body(CreateItemDto)
+const CreateItemSchema = z.object({ name: z.string().min(1) })
+const ItemIdParams = z.object({ id: z.string().min(1) })
+const ListQuery = z.object({ page: z.coerce.number().optional() })
+
+@Controller('items')
+export class ItemController extends BaseController {
+  @Post('')
+  @Body(CreateItemSchema)
   async create(req: Request, res: Response) {
-    // req.body is validated and typed as CreateItemDto
+    const body = req.body as z.infer<typeof CreateItemSchema>
   }
 
-  @Get('/:id')
-  @Params(GetItemByIdDto)
-  async getById(req: Request, res: Response) {
-    // req.params is validated
-  }
+  @Get(':id')
+  @Params(ItemIdParams)
+  async getById(req: Request, res: Response) {}
 
-  @Get('/')
-  @Query(ListItemsDto)
-  async list(req: Request, res: Response) {
-    // req.query is validated
-  }
+  @Get('')
+  @Query(ListQuery)
+  async list(req: Request, res: Response) {}
 }
 ```
 
 ## Extension Points
 
-- Second argument `skipMissingProperties: boolean` defaults to `false`
-- DTO class must use `class-validator` decorators (see `dto-class-validator` pattern)
+- OpenAPI: `@ApiBody({ schema })` or rely on inferred Zod metadata from `@Body` when generating specs.
 
 ## Found In
 
-- `apps/bananajs-demo/src/App/User/User.controller.ts`
 - `packages/bananajs/src/lib/Validator/Validator.decorator.ts`

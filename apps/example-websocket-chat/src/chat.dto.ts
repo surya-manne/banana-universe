@@ -1,15 +1,9 @@
-import { IsString, MaxLength, MinLength } from 'class-validator'
+import { z } from 'zod'
 
-export class SendChatMessageDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(2000)
-  text!: string
-}
+export const SendChatMessageSchema = z.object({
+  text: z.string().min(1).max(2000),
+})
 
-export class JoinRoomDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(64)
-  roomId!: string
-}
+export const JoinRoomSchema = z.object({
+  roomId: z.string().min(1).max(64),
+})
