@@ -1,0 +1,191 @@
+/**
+ * BananaJS docs — Rosetta-inspired palette
+ * Navy charcoal #0a1628 · Gold #FDB913 / #FFB81C · Body #A0A9B8 · Accents white + muted teal
+ */
+
+.dark {
+  /* Surfaces */
+  --vp-c-bg: #0a1628;
+  --vp-c-bg-alt: #0c1a2e;
+  --vp-c-bg-elv: #0f2440;
+  --vp-c-bg-soft: #132a45;
+
+  /* Lines */
+  --vp-c-border: rgba(160, 169, 184, 0.28);
+  --vp-c-divider: rgba(160, 169, 184, 0.14);
+  --vp-c-gutter: #060d18;
+
+  /* Text */
+  --vp-c-text-1: #f8fafc;
+  --vp-c-text-2: #a0a9b8;
+  --vp-c-text-3: #7d8a9e;
+
+  /* Brand — golden amber */
+  --vp-c-brand-1: #fdb913;
+  --vp-c-brand-2: #ffb81c;
+  --vp-c-brand-3: #e6a010;
+  --vp-c-brand-soft: rgba(253, 185, 19, 0.14);
+
+  /* Yellow scale maps to gold for any legacy refs */
+  --vp-c-yellow-1: #fdb913;
+  --vp-c-yellow-2: #ffb81c;
+  --vp-c-yellow-3: #e6a010;
+  --vp-c-yellow-soft: rgba(253, 185, 19, 0.16);
+
+  /* Gray scale — cooler, blue-tinted */
+  --vp-c-gray-1: #a0a9b8;
+  --vp-c-gray-2: #7d8a9e;
+  --vp-c-gray-3: #5c6b7a;
+  --vp-c-gray-soft: rgba(160, 169, 184, 0.12);
+
+  /* Default / subtle UI */
+  --vp-c-default-1: var(--vp-c-gray-1);
+  --vp-c-default-2: var(--vp-c-gray-2);
+  --vp-c-default-3: var(--vp-c-gray-3);
+  --vp-c-default-soft: rgba(160, 169, 184, 0.1);
+
+  /* Primary CTA: gold fill, navy text */
+  --vp-button-brand-text: #0a1628;
+  --vp-button-brand-bg: var(--vp-c-brand-3);
+  --vp-button-brand-hover-text: #0a1628;
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-text: #0a1628;
+  --vp-button-brand-active-bg: var(--vp-c-brand-1);
+
+  /* Secondary: outline + muted teal-gray (Rosetta “See it in action”) */
+  --vp-button-alt-border: rgba(253, 185, 19, 0.4);
+  --vp-button-alt-text: #8ec5d4;
+  --vp-button-alt-bg: rgba(10, 22, 40, 0.65);
+  --vp-button-alt-hover-border: #fdb913;
+  --vp-button-alt-hover-text: #fdb913;
+  --vp-button-alt-hover-bg: rgba(253, 185, 19, 0.08);
+  --vp-button-alt-active-border: #ffb81c;
+  --vp-button-alt-active-text: #ffb81c;
+  --vp-button-alt-active-bg: rgba(253, 185, 19, 0.12);
+
+  /* Code blocks */
+  --vp-code-block-bg: #0c1a2e;
+  --vp-code-block-divider-color: rgba(160, 169, 184, 0.12);
+
+  /* Local search highlight — gold chip, navy text */
+  --vp-local-search-highlight-bg: var(--vp-c-brand-1);
+  --vp-local-search-highlight-text: #0a1628;
+}
+
+/* Hero: soft gold radial glow */
+.dark .VPHero {
+  background: radial-gradient(
+    ellipse 90% 70% at 50% -10%,
+    rgba(253, 185, 19, 0.12) 0%,
+    transparent 55%
+  );
+}
+
+.dark .VPNav {
+  background: color-mix(in srgb, var(--vp-c-bg) 92%, #000 8%);
+  border-bottom: 1px solid rgba(160, 169, 184, 0.1);
+}
+
+.dark .VPNavBarTitle .title {
+  color: var(--vp-c-text-1);
+}
+
+/* Home page polish */
+.vp-doc .home-hero-section {
+  text-align: center;
+  padding: 0 1rem 2.5rem;
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.vp-doc .home-hero-section .tagline-rich {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: var(--vp-c-text-2);
+  margin: 0;
+}
+
+.vp-doc .home-hero-section .gradient-text {
+  background: linear-gradient(105deg, #fdb913 0%, #ffb81c 45%, #ffe08a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+.vp-doc .home-architecture {
+  margin: 0 auto 3rem;
+  padding: 2rem 1.25rem 2.5rem;
+  max-width: min(960px, 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(253, 185, 19, 0.22);
+  background: linear-gradient(155deg, rgba(19, 42, 69, 0.95) 0%, rgba(10, 22, 40, 0.98) 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.vp-doc .home-architecture h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  text-align: center;
+  border: none;
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc .home-architecture .sub {
+  text-align: center;
+  color: var(--vp-c-text-2);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem;
+}
+
+.vp-doc .home-architecture .mermaid {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.vp-doc .home-why {
+  max-width: 48rem;
+  margin: 0 auto 3rem;
+  padding: 1.75rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(160, 169, 184, 0.18);
+  background: rgba(15, 36, 64, 0.55);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.vp-doc .home-why h2 {
+  margin-top: 0;
+  font-size: 1.35rem;
+  border: none;
+  color: var(--vp-c-text-1);
+}
+
+/* Feature grid — subtle lift */
+.dark .VPFeatures .item {
+  background: rgba(15, 36, 64, 0.4);
+  border: 1px solid rgba(160, 169, 184, 0.12);
+  border-radius: 12px;
+}
+
+.dark .VPFeatures .item .title {
+  color: var(--vp-c-brand-1);
+}
+
+/* Hero image */
+@media (min-width: 960px) {
+  .VPHero .image[src$='banana-hero.svg'] {
+    animation: home-float 5s ease-in-out infinite;
+  }
+}
+
+@keyframes home-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}

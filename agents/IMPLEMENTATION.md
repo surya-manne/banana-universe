@@ -138,18 +138,48 @@ Current implementation state. Very brief — references other docs. The only cha
 - `PaginatedResponse<T>` + `PaginationDto` pagination utilities (Phase 2)
 - `BananaTestApp.withAuth()/.withHeaders()/.clearHeaders()` fluent API (Phase 2)
 
+### Phase 5 — Documentation & GitHub Publishing [In Progress]
+
+**docs-site/ (VitePress):**
+
+- `docs-site/package.json` — VitePress + TypeDoc + typedoc-plugin-markdown
+- `docs-site/typedoc.json` — TypeDoc config targeting `packages/bananajs/src/index.ts`
+- `docs-site/.vitepress/config.ts` — full nav/sidebar, GitHub Pages base `/banana-universe/`, local search, edit links
+- `docs-site/.vitepress/theme/index.ts` — re-exports DefaultTheme
+- `docs-site/index.md` — home page with hero + features
+- Guide: `getting-started.md`, `basic-concepts.md`, `advanced-concepts.md`
+- Reference: `decorators.md`, `bananaapp-options.md`, `error-types.md`, `config-module.md`
+- Migration: `from-express.md`
+- Integrations: `typeorm.md`, `prisma.md`, `opentelemetry.md`, `zod.md`
+- Plugins: `overview.md`, `websocket.md`, `writing-a-plugin.md`
+- Tooling: `cli.md`, `ai-commands.md`, `benchmarks.md`
+- API: `api/README.md` — TypeDoc placeholder (auto-generated on build)
+- Versioning: deferred post-Phase 6 (noted in config.ts comments)
+- Content aligned to **`packages/bananajs` exports**, plugin packages, CLI source, and **`plans/EnterpriseRoadmapV3.md`** (not root README-only); **`guide/philosophy.md`** states AI-first, DX, extendability, DDD positioning
+
+**GitHub Actions:**
+
+- `.github/workflows/docs.yml` — triggers on push to main (`docs-site/**` + `packages/bananajs/src/**`); runs TypeDoc then VitePress build; deploys to `gh-pages`
+- `.github/workflows/ci.yml` — unified PR gate; `tsc --noEmit` across all 8 packages + build check + benchmark regression job (replaces/extends benchmarks.yml for PRs)
+- `.github/workflows/publish.yml` — triggers on `v*` tags; explicit ordered publishing: bananajs → plugin-typeorm → plugin-prisma → plugin-otel → plugin-zod → plugin-websocket → adapter-fastify → bananajs-cli
+
+**Other:**
+
+- `docs/ARCHITECTURE.md` — fixed stale `emitDecoratorMetadata: true` claim (decorator metadata uses explicit `Reflect.defineMetadata`)
+
 ## Phase Status
 
-| Phase                           | Status      | Version |
-| ------------------------------- | ----------- | ------- |
-| Phase 1 — Foundation            | ✅ Complete | v0.1.0  |
-| Phase 2 — Core Enterprise       | ✅ Complete | v0.2.0  |
-| Phase 3 — Advanced Architecture | ✅ Complete | v0.3.0  |
-| Phase 4 — Enterprise & AI-First | ✅ Complete | v0.4.0  |
+| Phase                                       | Status         | Version |
+| ------------------------------------------- | -------------- | ------- |
+| Phase 1 — Foundation                        | ✅ Complete    | v0.1.0  |
+| Phase 2 — Core Enterprise                   | ✅ Complete    | v0.2.0  |
+| Phase 3 — Advanced Architecture             | ✅ Complete    | v0.3.0  |
+| Phase 4 — Enterprise & AI-First             | ✅ Complete    | v0.4.0  |
+| Phase 5 — Documentation & GitHub Publishing | 🔄 In Progress | —       |
 
 ## Next Session Starting Point
 
-All 4 phases complete. For future work: full Fastify adapter (4.6), TC39 migration execution (4.7), Redis cache plugin, `@WsBody` runtime validation in plugin-websocket.
+Phase 5 scaffold complete. Remaining for Phase 5 to go live: `npm ci` in `docs-site/`, enable GitHub Pages on repo (source: `gh-pages` branch), push to trigger `docs.yml`. Then Phase 6: `@banana-universe/ddd` package.
 
 Key architectural decisions from Phase 3:
 
@@ -177,3 +207,8 @@ Key architectural decisions from Phase 2:
 | 2026-03-27 | Phase 2 complete: auth decorators, OpenAPI, config module, rate limit, upload, health check, pagination, BananaTestApp enhancements, migration guide                                  |
 | 2026-03-27 | Phase 3 complete: plugin architecture, TypeORM/Prisma/OTel/Zod plugins, cache layer, Prometheus metrics, DevTools endpoint, 4 new CLI commands, TC39 migration plan                   |
 | 2026-03-27 | Phase 4 complete: AI CLI (ai generate/doc/review), @Sanitize/@Can/@Throttle security, @Tenant multi-tenancy, lazy controllers, benchmarks app, plugin-websocket, adapter-fastify stub |
+| 2026-03-27 | Phase 5 scaffold: VitePress docs-site (20 pages), GitHub Actions (docs.yml, ci.yml, publish.yml), ARCHITECTURE.md fix                                                                 |
+| 2026-03-27 | docs-site content rewritten from source + plans/ (not README-only); added guide/roadmap.md, guide/layered-architecture.md                                                             |
+| 2026-03-27 | docs-site positioning: AI-first, DX, extendable, DDD-focused; added guide/philosophy.md; home + roadmap + layered-architecture tone                                                   |
+| 2026-03-27 | docs-site home: hero SVG, Mermaid architecture diagram, custom CSS; vitepress-plugin-mermaid; api/index.md for /api/; removed repo layout from index                                  |
+| 2026-03-27 | docs-site Rosetta-style palette: force-dark, navy #0a1628 + gold #FDB913/#FFB81C + text #A0A9B8; Mermaid + hero SVG aligned                                                           |

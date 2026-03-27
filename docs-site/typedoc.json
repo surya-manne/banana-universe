@@ -1,0 +1,12 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "tsconfig": "../packages/bananajs/tsconfig.lib.json",
+  "entryPoints": ["../packages/bananajs/src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "skipErrorChecking": true
+}

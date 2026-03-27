@@ -79,7 +79,7 @@ All error responses extend `ApiResponse` directly (no data payload).
 - **Nx** orchestrates builds, enforces module boundaries, and provides `@nx/js:verdaccio` for local registry.
 - **SWC** (`@swc-node/register`, `@swc/core`) for fast TypeScript transpilation.
 - **Webpack** for `bananajs-demo` app bundling.
-- TypeScript `experimentalDecorators: true` and `emitDecoratorMetadata: true` required for decorators.
+- TypeScript `experimentalDecorators: true` required for decorators. `emitDecoratorMetadata` is **not** enabled workspace-wide — all decorators use explicit `Reflect.defineMetadata` calls instead of relying on emitted metadata.
 
 ## Testing Architecture
 

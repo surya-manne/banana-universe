@@ -1,0 +1,21 @@
+[**@banana-universe/bananajs**](../README.md)
+
+***
+
+[@banana-universe/bananajs](../README.md) / Throttle
+
+# Function: Throttle()
+
+> **Throttle**(`options`): `MethodDecorator` & `ClassDecorator`
+
+Defined in: packages/bananajs/src/lib/Security/Throttle.decorator.ts:11
+
+## Parameters
+
+### options
+
+[`ThrottleOptions`](../interfaces/ThrottleOptions.md)
+
+## Returns
+
+`MethodDecorator` & `ClassDecorator`
