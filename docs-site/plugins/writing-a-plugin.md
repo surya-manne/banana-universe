@@ -29,7 +29,7 @@ Use **`async register`** for dynamic imports or network checks — consumers mus
 
 ## Container integration
 
-If **`ctx.container`** (awilix) exists, register singletons with **`asValue`** / **`asClass`** so controllers resolved from the container receive dependencies.
+If **`ctx.container`** (tsyringe) exists, register shared singletons with **`registerInstance(token, value)`** or **`register(token, { useClass })`** so controllers resolved from the container receive dependencies.
 
 ## Peer dependencies
 

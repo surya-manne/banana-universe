@@ -16,8 +16,8 @@ Use **`BananaApp.create({ ... })`** when you need **async plugin registration** 
 ## Declarative bootstrap (optional)
 
 - **`defineBananaControllers(...controllers)`** — returns the controller list for the **`controllers`** property
-- **`defineBananaAppOptions({ controllers: defineBananaControllers(...), services, ... })`** — merges **`services`** (Awilix resolvers) into a container and returns a **`BananaApp.create`**-ready input
-- **`createBananaContainer(registrations)`** — `createContainer()` + `register()` in one call
+- **`defineBananaAppOptions({ controllers: defineBananaControllers(...), providers, ... })`** — merges **`providers`** (tsyringe-style registrations: classes and `{ token, useClass | useFactory | useValue }`) into a container and returns a **`BananaApp.create`**-ready input
+- **`createBananaProviderContainer(providers)`** — isolated child container + registrations in one call (see **`bananaBootstrap.ts`**)
 
 See **`packages/bananajs/src/lib/DI/bananaBootstrap.ts`**.
 
@@ -31,7 +31,9 @@ The interface is defined in **`packages/bananajs/src/lib/Core/App.ts`**. Below i
 - **`security`** — `{ helmet?: boolean \| HelmetOptions; cors?: CorsOptions \| false }` — helmet and CORS are applied by default unless disabled
 - **`requestId`** — boolean, default `true`; enables `X-Request-ID` handling
 - **`logger`** — `Logger` instance or `false` to disable built-in logging
-- **`container`** — **awilix** `AwilixContainer` for `@Injectable` controllers/services
+- **`container`** — **tsyringe** `DependencyContainer` (optional; created when using `providers` / `modules`)
+- **`apiPrefix`** — optional segment prepended to all controller base paths (e.g. `v1` for `/v1/...`)
+- **`testOverrides`** — extra registrations merged onto the **root** container after modules (for tests / fakes)
 - **`gracefulShutdown`** — register signal handlers for clean process exit
 
 ### Auth & docs

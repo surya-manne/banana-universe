@@ -3,7 +3,8 @@
   "version": "0.3.0",
   "description": "A command-line interface (CLI) tool to create a new Bananajs app with different configurations, such as MongoDB or SQL-based setups. This CLI helps you quickly set up a project with your desired backend configuration.",
   "bin": {
-    "bananajs": "./dist/index.js"
+    "bananajs": "./dist/index.js",
+    "bjs": "./dist/index.js"
   },
   "author": "Surya Prakash Manne",
   "license": "MIT",

@@ -1,11 +1,15 @@
 import type { Application } from 'express'
-import type { AwilixContainer } from 'awilix'
+import type { DependencyContainer } from 'tsyringe'
+import type { Constructor } from '../Core/App.js'
 import type { Logger } from '../Logger/Logger.interface.js'
 
 export interface AppContext {
   app: Application
   logger?: Logger
-  container?: AwilixContainer
+  /** Root tsyringe container — plugins register shared infrastructure here; per-module providers use child containers. */
+  container?: DependencyContainer
+  /** Classes registered as HTTP controllers (from `controllers` or `modules`) for plugins that scan constructors. */
+  controllerClasses?: Constructor[]
 }
 
 export interface BananaPlugin {

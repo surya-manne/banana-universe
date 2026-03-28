@@ -1,6 +1,4 @@
 import 'reflect-metadata'
-import type { DataSource } from 'typeorm'
-import { asFunction } from 'awilix'
 import {
   BananaApp,
   type BananaPlugin,
@@ -13,6 +11,7 @@ import { BearerAuthGuard } from './lib/bearer-auth-guard.js'
 import { CatalogController } from './catalog/catalog.controller.js'
 import { CatalogAppService } from './catalog/application/catalog.app-service.js'
 import { CatalogItemTypeOrmRepository } from './catalog/infrastructure/catalog-item.typeorm-repository.js'
+import { CatalogItemRepositoryToken } from './catalog/domain/catalog-item.repository.js'
 import { CatalogItemOrmEntity } from './catalog/infrastructure/catalog-item.orm-entity.js'
 
 export { CatalogItemOrmEntity }
@@ -33,20 +32,11 @@ export async function createExampleApp(options: {
   return BananaApp.create(
     defineBananaAppOptions({
       controllers: defineBananaControllers(CatalogController),
-      services: {
-        catalogItemRepository: asFunction(
-          (cradle: { dataSource: DataSource }) =>
-            new CatalogItemTypeOrmRepository(cradle.dataSource),
-        ).singleton(),
-        catalogAppService: asFunction(
-          (cradle: { catalogItemRepository: CatalogItemTypeOrmRepository }) =>
-            new CatalogAppService(cradle.catalogItemRepository),
-        ).singleton(),
-        catalogController: asFunction(
-          (cradle: { catalogAppService: CatalogAppService }) =>
-            new CatalogController(cradle.catalogAppService),
-        ).singleton(),
-      },
+      providers: [
+        { token: CatalogItemRepositoryToken, useClass: CatalogItemTypeOrmRepository },
+        CatalogAppService,
+        CatalogController,
+      ],
       plugins,
       auth: { guard: new BearerAuthGuard() },
       swagger: { enabled: true },

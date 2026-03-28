@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import type { Request, Response } from 'express'
+import { inject, injectable } from 'tsyringe'
 import {
   Auth,
   BaseController,
@@ -18,11 +19,12 @@ import { getTenantId } from '@banana-universe/bananajs'
 import { NoteAppService } from './note.app-service.js'
 import { CreateNoteSchema, NoteIdParamsSchema } from './note.dto.js'
 
+@injectable()
 @Controller('notes')
 @Tenant()
 @Auth()
 export class NoteController extends BaseController {
-  constructor(private readonly noteAppService: NoteAppService) {
+  constructor(@inject(NoteAppService) private readonly noteAppService: NoteAppService) {
     super()
   }
 

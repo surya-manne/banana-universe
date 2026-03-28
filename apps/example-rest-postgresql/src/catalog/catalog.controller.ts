@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { inject, injectable } from 'tsyringe'
 import {
   Auth,
   BaseController,
@@ -16,10 +17,11 @@ import { CatalogAppService } from './application/catalog.app-service.js'
 import { CatalogItemIdParamsSchema, CreateCatalogItemSchema } from './catalog.dto.js'
 import { CatalogListQuerySchema, type CatalogListQuery } from './catalog-list-query.dto.js'
 
+@injectable()
 @Controller('catalog')
 @Auth()
 export class CatalogController extends BaseController {
-  constructor(private readonly catalogAppService: CatalogAppService) {
+  constructor(@inject(CatalogAppService) private readonly catalogAppService: CatalogAppService) {
     super()
   }
 

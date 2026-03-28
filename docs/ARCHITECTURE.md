@@ -2,6 +2,8 @@
 
 Technical architecture and design decisions for banana-universe. See CONTEXT.md for business context. See CODEMAP.md for file structure.
 
+**Enterprise modular DX** (feature modules, `createModule`, tsyringe child containers, optional `discoverModules` stub, **`apiPrefix`**) is specified in [plans/EnterpriseRoadmapV6.md](../plans/EnterpriseRoadmapV6.md). The **supported** paths are **`controllers`** via **`defineBananaControllers`** (legacy-friendly) or **`modules`** via **`createModule`**; both use **tsyringe** on `AppContext.container`.
+
 ## Workspace Architecture
 
 Nx monorepo with npm workspaces:
@@ -14,7 +16,9 @@ Nx monorepo with npm workspaces:
 
 ### Entry Point
 
-`BananaApp` class is the single initialization point. Consumers pass **one options object** with **`controllers`** (via **`defineBananaControllers`**) and optional global **`middlewares`** in options:
+`BananaApp` class is the single initialization point. Consumers pass **one options object**.
+
+**Current path (supported today):** pass **`controllers`** via **`defineBananaControllers`** and optional global **`middlewares`**:
 
 ```typescript
 import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
@@ -24,6 +28,21 @@ new BananaApp({
   middlewares: [authMiddleware],
 }).getInstance()
 ```
+
+**Planned path (see [EnterpriseRoadmapV6.md](../plans/EnterpriseRoadmapV6.md)):** pass **`modules`** built with **`createModule`** (per-feature `src/modules/<feature>/index.ts`), hierarchical **tsyringe** containers, and **`{ token, useClass }`** bindings from repository **ports** to **persistence** adapters. Legacy apps keep **`controllers`** without **`modules`** until migrated. Full layout, DI conventions, plugin ordering, and migration notes live in that plan.
+
+### Modular applications (implemented in core)
+
+Feature modules use **`createModule`**, per-module child containers, and **`providers`** with **`{ token, useClass }`**. See the roadmap and `defineBananaAppOptions({ modules: [...] })`.
+
+| Topic        | Intended direction                                                                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Layout       | `src/modules/<feature>/` with **`domain/`** and **`persistence/`**; feature entry **`index.ts`** exports **`createModule`**.                                               |
+| HTTP         | **One controller per module**; split into another module if the API slice grows (e.g. admin vs public).                                                                    |
+| DI           | **tsyringe** child container per module; **InjectionToken** colocated with repository **port** in `domain/`; **`providers`** bind token → adapter.                         |
+| Bootstrap    | **`plugins`** register shared tokens (e.g. ORM `DataSource`) on the **root** container **before** module providers resolve — ordering is part of the contract.             |
+| Testing      | **`BananaTestApp`**-style composition with **token overrides** for fakes (see plan).                                                                                       |
+| API versions | **URI-first** (e.g. `/v1/...` via `@Controller` or optional app **`apiPrefix`**); split modules for parallel major versions; OpenAPI aligned with paths (see plan **§4**). |
 
 ### Decorator-Based Route Registration
 
@@ -91,7 +110,7 @@ All error responses extend `ApiResponse` directly (no data payload).
 
 ## Testing Architecture
 
-No tests present in current state. Not planned for this iteration — will be addressed in a future milestone.
+No tests present in current state. Not planned for this iteration — will be addressed in a future milestone. The **modular DI** roadmap ([EnterpriseRoadmapV6.md](../plans/EnterpriseRoadmapV6.md)) calls for **integration tests** that compose **`modules`** and **override DI tokens** (e.g. in-memory repositories) via **`BananaTestApp`** or documented equivalents.
 
 ## Publishing
 

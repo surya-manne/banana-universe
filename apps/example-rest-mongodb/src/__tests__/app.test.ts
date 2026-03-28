@@ -3,7 +3,6 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import request from 'supertest'
 import mongoose from 'mongoose'
-import { asFunction } from 'awilix'
 import {
   BananaApp,
   defineBananaAppOptions,
@@ -11,9 +10,7 @@ import {
 } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
 import { ArticleController } from '../article.controller.js'
-import { getArticleModel } from '../article.model.js'
-import type { ArticleDoc } from '../article.model.js'
-import type { Model } from 'mongoose'
+import { getArticleModel, ArticleModelToken } from '../article.model.js'
 
 test('health without live MongoDB (CI default)', async () => {
   const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/ci_dummy'
@@ -23,13 +20,7 @@ test('health without live MongoDB (CI default)', async () => {
   const banana = await BananaApp.create(
     defineBananaAppOptions({
       controllers: defineBananaControllers(ArticleController),
-      services: {
-        articleModel: asFunction(() => articleModel).singleton(),
-        articleController: asFunction(
-          (cradle: { articleModel: Model<ArticleDoc> }) =>
-            new ArticleController(cradle.articleModel),
-        ).singleton(),
-      },
+      providers: [{ token: ArticleModelToken, useFactory: () => articleModel }, ArticleController],
       plugins: [MongoosePlugin(connection) as never],
       logger: false,
       gracefulShutdown: false,

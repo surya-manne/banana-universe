@@ -11,7 +11,7 @@ interface BananaPlugin {
 }
 ```
 
-**`AppContext`** exposes the Express **`Application`**, optional **`Logger`**, and optional **awilix** **`container`**.
+**`AppContext`** exposes the Express **`Application`**, optional **`Logger`**, optional **tsyringe** **`DependencyContainer`**, and optional **`controllerClasses`** for plugins that scan HTTP controllers.
 
 ## Lifecycle (simplified)
 

@@ -11,14 +11,27 @@ Express is unopinionated by design. As apps grow, teams accumulate inconsistent 
 - **Typed controllers** via decorators — co-locate routes, validation, and handlers
 - **Standardized responses** via `SuccessResponse` / `ApiError` subclasses
 - **First-class testing** via `BananaTestApp` (no live server needed)
-- **Built-in DI** via `@Injectable`
+- **Built-in DI** via **tsyringe** (`injectable`, `inject`, tokens) — legacy `@Injectable()` from BananaJS remains for metadata only; prefer tsyringe for constructor injection
 - **Request context** propagation via `RequestContext`
 
 ---
 
 ## Bootstrap API (breaking)
 
-`BananaApp`, `BananaApp.create`, `createBananaApplication`, and `BananaTestApp.create` take **one object** that includes **`controllers`**. Use **`defineBananaControllers(...)`** for that field, and optionally **`defineBananaAppOptions({ ... })`** when merging Awilix **`services`**.
+`BananaApp`, `BananaApp.create`, `createBananaApplication`, and `BananaTestApp.create` take **one object** that includes **`controllers`** (or **`modules`** built with **`createModule`**). Use **`defineBananaControllers(...)`** for controllers, and optionally **`defineBananaAppOptions({ ... })`** with **`providers`** (tsyringe registrations) merged into the app container.
+
+### Awilix → tsyringe (BananaJS ≥ 0.6)
+
+`AppContext.container` and **`defineBananaAppOptions({ services })`** were removed. There is **no** supported runtime that mixes Awilix and tsyringe.
+
+| Before (Awilix)                                                 | After (tsyringe)                                                                                                      |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `import { createContainer, asFunction, asValue } from 'awilix'` | `import { injectable, inject } from 'tsyringe'` (or `import { injectable, inject } from '@banana-universe/bananajs'`) |
+| `services: { foo: asFunction(...).singleton() }`                | `providers: [{ token: FooToken, useClass: Foo }, ...]` or `providers: [MyService]` for self-registration              |
+| `container.resolve('foo')`                                      | `container.resolve(FooToken)` or `container.resolve(MyClass)`                                                         |
+| Plugins register with `asValue` / `asClass`                     | Plugins use `container.registerInstance('dataSource', ds)` (TypeORM) or equivalent **tsyringe** APIs                  |
+
+**Checklist:** (1) Replace Awilix imports. (2) Mark classes with `@injectable()` where they are resolved from the container. (3) Use `@inject(Token)` for constructor parameters. (4) Pass **`providers`** in **`defineBananaAppOptions`** instead of **`services`**. (5) Re-run integration tests — resolution order is unchanged: **plugins run before controllers**.
 
 **Before:**
 

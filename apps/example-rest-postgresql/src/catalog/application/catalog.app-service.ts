@@ -1,12 +1,16 @@
 import { randomUUID } from 'node:crypto'
-import { Injectable } from '@banana-universe/bananajs'
+import { inject, injectable } from 'tsyringe'
 import type { CatalogItemRepository } from '../domain/catalog-item.repository.js'
+import { CatalogItemRepositoryToken } from '../domain/catalog-item.repository.js'
 import { CatalogItem } from '../domain/catalog-item.entity.js'
 
-/** Application-layer orchestration (DDD); uses framework `@Injectable()` for awilix resolution. */
-@Injectable()
+/** Application-layer orchestration (DDD); tsyringe constructor injection. */
+@injectable()
 export class CatalogAppService {
-  constructor(public readonly catalogItemRepository: CatalogItemRepository) {}
+  constructor(
+    @inject(CatalogItemRepositoryToken)
+    public readonly catalogItemRepository: CatalogItemRepository,
+  ) {}
 
   async create(name: string, sku: string): Promise<CatalogItem> {
     const now = new Date()

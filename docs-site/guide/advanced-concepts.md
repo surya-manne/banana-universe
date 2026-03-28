@@ -22,25 +22,25 @@ await BananaApp.create({
 
 The rest of the object is **`BananaAppOptions`** (`packages/bananajs/src/lib/Core/App.ts`). Highlights:
 
-| Area              | Options (illustrative)                                                              |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| **HTTP**          | `middlewares` — extra Express handlers before routes                                |
-| **Security**      | `security.helmet`, `security.cors` — defaults on; can disable or pass config        |
-| **Request ID**    | `requestId` — default `true`                                                        |
-| **Logging**       | `logger` — `Logger` instance or `false`                                             |
-| **DI**            | `container` — **awilix** container for `@Injectable` resolution                     |
-| **Shutdown**      | `gracefulShutdown` — SIGINT/SIGTERM hooks                                           |
-| **Auth**          | `auth.guard` — **`AuthGuard`** for `@Auth` / `@Roles` / `@Public`                   |
-| **Swagger**       | `swagger.enabled`, `path`, `title`, `version`, ... — OpenAPI JSON + UI              |
-| **Rate limit**    | `rateLimit` — global rate limiting (optional peer)                                  |
-| **Health**        | `health.enabled`, `path`, `checks` — **`GET /health`**                              |
-| **Plugins**       | `plugins` — **`BananaPlugin[]`**; use **`BananaApp.create`** for async registration |
-| **Cache**         | `cache.store` — memory (default) or custom **`CacheStore`**                         |
-| **DevTools**      | `devTools` — `GET /_banana/routes` in non-production                                |
-| **Metrics**       | `metrics.enabled`, `path` — Prometheus (optional peer)                              |
-| **ABAC**          | `abac.guard` — **`AbacGuard`** for `@Can`                                           |
-| **Multi-tenancy** | `tenant` — tenant resolution and **`TenantContext`**                                |
-| **Performance**   | `lazyControllers` — defer controller instantiation to first use                     |
+| Area              | Options (illustrative)                                                                  |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| **HTTP**          | `middlewares` — extra Express handlers before routes                                    |
+| **Security**      | `security.helmet`, `security.cors` — defaults on; can disable or pass config            |
+| **Request ID**    | `requestId` — default `true`                                                            |
+| **Logging**       | `logger` — `Logger` instance or `false`                                                 |
+| **DI**            | `container` — **tsyringe** `DependencyContainer` for `injectable` / `inject` resolution |
+| **Shutdown**      | `gracefulShutdown` — SIGINT/SIGTERM hooks                                               |
+| **Auth**          | `auth.guard` — **`AuthGuard`** for `@Auth` / `@Roles` / `@Public`                       |
+| **Swagger**       | `swagger.enabled`, `path`, `title`, `version`, ... — OpenAPI JSON + UI                  |
+| **Rate limit**    | `rateLimit` — global rate limiting (optional peer)                                      |
+| **Health**        | `health.enabled`, `path`, `checks` — **`GET /health`**                                  |
+| **Plugins**       | `plugins` — **`BananaPlugin[]`**; use **`BananaApp.create`** for async registration     |
+| **Cache**         | `cache.store` — memory (default) or custom **`CacheStore`**                             |
+| **DevTools**      | `devTools` — `GET /_banana/routes` in non-production                                    |
+| **Metrics**       | `metrics.enabled`, `path` — Prometheus (optional peer)                                  |
+| **ABAC**          | `abac.guard` — **`AbacGuard`** for `@Can`                                               |
+| **Multi-tenancy** | `tenant` — tenant resolution and **`TenantContext`**                                    |
+| **Performance**   | `lazyControllers` — defer controller instantiation to first use                         |
 
 Exact field types and defaults are in the **[BananaAppOptions interface](/reference/bananaapp-options)** and TypeDoc.
 

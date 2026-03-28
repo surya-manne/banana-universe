@@ -5,7 +5,7 @@
 
 /** Keep dependency ranges aligned with published @banana-universe packages. */
 export const SCAFFOLD_VERSIONS = {
-  bananajs: '^0.5.0',
+  bananajs: '^0.6.0',
   ddd: '^0.1.0',
   pluginMongoose: '^0.1.0',
   pluginTypeorm: '^0.1.0',
@@ -69,7 +69,7 @@ function mongoPackageJson(ctx: ScaffoldContext): string {
         '@banana-universe/bananajs': SCAFFOLD_VERSIONS.bananajs,
         '@banana-universe/ddd': SCAFFOLD_VERSIONS.ddd,
         '@banana-universe/plugin-mongoose': SCAFFOLD_VERSIONS.pluginMongoose,
-        awilix: '^13.0.3',
+        tsyringe: '^4.8.0',
         express: '^4.21.2',
         mongoose: '^8.9.0',
         'reflect-metadata': '^0.2.2',
@@ -101,7 +101,7 @@ function sqlPackageJson(ctx: ScaffoldContext): string {
         '@banana-universe/bananajs': SCAFFOLD_VERSIONS.bananajs,
         '@banana-universe/ddd': SCAFFOLD_VERSIONS.ddd,
         '@banana-universe/plugin-typeorm': SCAFFOLD_VERSIONS.pluginTypeorm,
-        awilix: '^13.0.3',
+        tsyringe: '^4.8.0',
         express: '^4.21.2',
         pg: '^8.13.1',
         'reflect-metadata': '^0.2.2',
@@ -185,7 +185,6 @@ banana.getInstance().listen(port, () => {
       relativePath: 'src/bootstrap.ts',
       content: `import 'reflect-metadata'
 import mongoose from 'mongoose'
-import { asFunction } from 'awilix'
 import {
   BananaApp,
   type BananaPlugin,
@@ -194,9 +193,7 @@ import {
 } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
 import { ArticleController } from './article.controller.js'
-import { getArticleModel } from './article.model.js'
-import type { ArticleDoc } from './article.model.js'
-import type { Model } from 'mongoose'
+import { getArticleModel, ArticleModelToken } from './article.model.js'
 
 export async function createMongoApp(): Promise<BananaApp> {
   const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/bananajs_app'
@@ -205,12 +202,10 @@ export async function createMongoApp(): Promise<BananaApp> {
   return BananaApp.create(
     defineBananaAppOptions({
       controllers: defineBananaControllers(ArticleController),
-      services: {
-        articleModel: asFunction(() => getArticleModel(connection)).singleton(),
-        articleController: asFunction(
-          (cradle: { articleModel: Model<ArticleDoc> }) => new ArticleController(cradle.articleModel),
-        ).singleton(),
-      },
+      providers: [
+        { token: ArticleModelToken, useFactory: () => getArticleModel(connection) },
+        ArticleController,
+      ],
       plugins: [MongoosePlugin(connection) as BananaPlugin],
       logger: false,
       gracefulShutdown: false,
@@ -227,13 +222,16 @@ export async function createMongoApp(): Promise<BananaApp> {
       content: `import 'reflect-metadata'
 import type { Request, Response } from 'express'
 import type { Model } from 'mongoose'
+import { inject, injectable } from 'tsyringe'
 import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
 import type { ArticleDoc } from './article.model.js'
+import { ArticleModelToken } from './article.model.js'
 import { CreateArticleSchema } from './article.schema.js'
 
+@injectable()
 @Controller('articles')
 export class ArticleController extends BaseController {
-  constructor(private readonly articleModel: Model<ArticleDoc>) {
+  constructor(@inject(ArticleModelToken) private readonly articleModel: Model<ArticleDoc>) {
     super()
   }
 
@@ -255,12 +253,15 @@ export class ArticleController extends BaseController {
     },
     {
       relativePath: 'src/article.model.ts',
-      content: `import { Schema, type Connection, type HydratedDocument } from 'mongoose'
+      content: `import type { InjectionToken } from 'tsyringe'
+import { Schema, type Connection, type HydratedDocument, type Model } from 'mongoose'
 
 export type ArticleDoc = HydratedDocument<{
   title: string
   body: string
 }>
+
+export const ArticleModelToken = Symbol('ArticleModel') as InjectionToken<Model<ArticleDoc>>
 
 const articleSchema = new Schema(
   {
@@ -271,7 +272,7 @@ const articleSchema = new Schema(
 )
 
 export function getArticleModel(connection: Connection) {
-  const existing = connection.models['Article'] as import('mongoose').Model<ArticleDoc> | undefined
+  const existing = connection.models['Article'] as Model<ArticleDoc> | undefined
   return existing ?? connection.model<ArticleDoc>('Article', articleSchema)
 }
 `,

@@ -1,10 +1,9 @@
 import 'reflect-metadata'
-import type { DataSource } from 'typeorm'
-import { createContainer, asFunction } from 'awilix'
+import type { BananaAppCreateInput } from '@banana-universe/bananajs'
 import {
   BananaApp,
-  type BananaAppOptions,
   createBananaApplication,
+  defineBananaAppOptions,
   defineBananaControllers,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
@@ -38,20 +37,11 @@ export function buildTypeOrmOptions(
   }
 }
 
-/** Declarative BananaJS options for the multitenant notes API (Awilix + plugins + guards). */
-export function buildTenantAppOptions(typeorm: Record<string, unknown>): BananaAppOptions {
-  const container = createContainer()
-  container.register({
-    noteAppService: asFunction(
-      (cradle: { dataSource: DataSource }) => new NoteAppService(cradle.dataSource),
-    ).singleton(),
-    noteController: asFunction(
-      (cradle: { noteAppService: NoteAppService }) => new NoteController(cradle.noteAppService),
-    ).singleton(),
-  })
-
-  return {
-    container,
+/** Declarative BananaJS options for the multitenant notes API (tsyringe + plugins + guards). */
+export function buildTenantAppOptions(typeorm: Record<string, unknown>): BananaAppCreateInput {
+  return defineBananaAppOptions({
+    controllers: defineBananaControllers(NoteController),
+    providers: [NoteAppService, NoteController],
     plugins: [TypeOrmPlugin(typeorm) as import('@banana-universe/bananajs').BananaPlugin],
     auth: { guard: new BearerAuthGuard() },
     abac: { guard: new DemoAbacGuard() },
@@ -61,15 +51,12 @@ export function buildTenantAppOptions(typeorm: Record<string, unknown>): BananaA
     rateLimit: false,
     requestId: false,
     security: { helmet: false, cors: false },
-  }
+  })
 }
 
 /** For tests and programmatic use: creates the app without calling `listen`. */
 export async function createTenantApp(typeorm: Record<string, unknown>) {
-  return BananaApp.create({
-    controllers: defineBananaControllers(NoteController),
-    ...buildTenantAppOptions(typeorm),
-  })
+  return BananaApp.create(buildTenantAppOptions(typeorm))
 }
 
 /** Starts the HTTP server using core `createBananaApplication` (async plugin lifecycle + optional listen). */
@@ -78,7 +65,6 @@ export async function startTenantApp(
   typeorm: Record<string, unknown>,
 ): Promise<void> {
   await createBananaApplication({
-    controllers: defineBananaControllers(NoteController),
     ...buildTenantAppOptions(typeorm),
     port,
     onListening: ({ port: p }) => {

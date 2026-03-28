@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import mongoose from 'mongoose'
-import { asFunction } from 'awilix'
 import {
   BananaApp,
   type BananaPlugin,
@@ -9,9 +8,7 @@ import {
 } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
 import { ArticleController } from './article.controller.js'
-import { getArticleModel } from './article.model.js'
-import type { ArticleDoc } from './article.model.js'
-import type { Model } from 'mongoose'
+import { getArticleModel, ArticleModelToken } from './article.model.js'
 
 export async function createMongoApp(): Promise<BananaApp> {
   const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/banana_example'
@@ -20,13 +17,13 @@ export async function createMongoApp(): Promise<BananaApp> {
   return BananaApp.create(
     defineBananaAppOptions({
       controllers: defineBananaControllers(ArticleController),
-      services: {
-        articleModel: asFunction(() => getArticleModel(connection)).singleton(),
-        articleController: asFunction(
-          (cradle: { articleModel: Model<ArticleDoc> }) =>
-            new ArticleController(cradle.articleModel),
-        ).singleton(),
-      },
+      providers: [
+        {
+          token: ArticleModelToken,
+          useFactory: () => getArticleModel(connection),
+        },
+        ArticleController,
+      ],
       plugins: [MongoosePlugin(connection) as BananaPlugin],
       logger: false,
       gracefulShutdown: false,

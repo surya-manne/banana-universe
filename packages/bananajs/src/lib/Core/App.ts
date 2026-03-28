@@ -10,7 +10,7 @@ import express, {
 import helmet from 'helmet'
 import cors from 'cors'
 import type { CorsOptions } from 'cors'
-import type { AwilixContainer } from 'awilix'
+import { container as tsyringeRoot, type DependencyContainer } from 'tsyringe'
 import { IRouter } from '../Router/Route.decorator'
 import { MetadataKeys } from '../Router/MetaData.constants'
 import { joinRouteSegments } from '../Router/route-path.js'
@@ -21,6 +21,9 @@ import { requestContextMiddleware } from '../Context/RequestContext'
 import type { AuthGuard } from '../Auth/AuthGuard.interface.js'
 import type { HealthCheck } from '../Health/health.middleware.js'
 import type { BananaPlugin, AppContext } from '../Plugin/Plugin.interface.js'
+import type { BananaModuleDescriptor } from '../DI/BananaModule.js'
+import { registerBananaProvider, registerBananaProviders } from '../DI/registerProviders.js'
+import type { BananaProviderRegistration } from '../DI/registerProviders.js'
 import { CacheManager } from '../Cache/CacheManager.js'
 import type { CacheStore } from '../Cache/CacheManager.js'
 import type { CacheOptions } from '../Cache/Cache.decorator.js'
@@ -36,8 +39,10 @@ import { createTenantMiddleware, getTenantId } from '../Tenant/TenantContext.js'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- framework constructor slot (see JSDoc above)
 export type Constructor<T = unknown> = new (...args: any[]) => T
 
-/** Bootstrap input: {@link BananaAppOptions} plus `controllers` (set with **`defineBananaControllers`** from the public package export). */
-export type BananaAppCreateInput = BananaAppOptions & { controllers: Constructor[] }
+/** Bootstrap: either legacy `controllers` or modular `modules` (not both). */
+export type BananaAppCreateInput =
+  | (BananaAppOptions & { controllers: Constructor[]; modules?: undefined })
+  | (BananaAppOptions & { modules: BananaModuleDescriptor[]; controllers?: undefined })
 
 export interface BananaAppOptions {
   middlewares?: RequestHandler[]
@@ -47,7 +52,16 @@ export interface BananaAppOptions {
   }
   requestId?: boolean
   logger?: Logger | false
-  container?: AwilixContainer
+  /** Root tsyringe container; optional — created when using `modules` without an explicit container. */
+  container?: DependencyContainer
+  /**
+   * Prepended to every controller base path (e.g. `v1` → `/v1/...`). Use URI versioning per enterprise DX docs.
+   */
+  apiPrefix?: string
+  /**
+   * Applied to the root container after plugin/module setup — for tests (e.g. swap a repository port for a fake).
+   */
+  testOverrides?: BananaProviderRegistration[]
   gracefulShutdown?: boolean
   // Phase 2 additions
   auth?: {
@@ -101,34 +115,65 @@ export class BananaApp {
   private readonly app: Application
   private readonly logger: Logger | undefined
   private readonly routeTable: RouteInfo[] = []
-  private readonly container: AwilixContainer | undefined
+  /** Root DI container (plugins); undefined if no DI. */
+  private readonly container: DependencyContainer | undefined
+  /** When using `modules`, per-controller child containers (tsyringe). */
+  private readonly moduleContainers: Map<Constructor, DependencyContainer> | undefined
   private readonly controllers: Constructor[]
   private readonly options: BananaAppOptions
   private readonly plugins: BananaPlugin[]
   private cacheManager: CacheManager | undefined
 
   constructor(input: BananaAppCreateInput) {
-    const { controllers, ...options } = input
-    this.controllers = controllers
-    this.options = options
-
     const {
       middlewares = [],
       security = {},
       requestId = true,
       logger: loggerOption,
       container,
-    } = options
+    } = input
 
-    this.container = container
+    if (input.modules !== undefined) {
+      const sorted = [...input.modules].sort((a, b) => a.id.localeCompare(b.id))
+      this.controllers = sorted.map((m) => m.controller)
+      const root = container ?? tsyringeRoot.createChildContainer()
+      this.container = root
+      this.moduleContainers = new Map()
+      for (const mod of sorted) {
+        const child = root.createChildContainer()
+        for (const p of mod.providers ?? []) {
+          registerBananaProvider(child, p)
+        }
+        registerBananaProvider(child, mod.controller)
+        this.moduleContainers.set(mod.controller, child)
+      }
+    } else {
+      this.controllers = input.controllers
+      this.container = container
+      this.moduleContainers = undefined
+    }
+
+    const {
+      modules: _m,
+      controllers: _ctl,
+      ...restOpts
+    } = input as BananaAppCreateInput & {
+      controllers?: Constructor[]
+      modules?: BananaModuleDescriptor[]
+    }
+    this.options = restOpts as BananaAppOptions
+
+    if (input.testOverrides?.length && this.container) {
+      registerBananaProviders(this.container, input.testOverrides)
+    }
     this.logger = loggerOption === false ? undefined : loggerOption ?? new PinoLogger()
-    this.plugins = options.plugins ?? []
+    this.plugins = this.options.plugins ?? []
 
-    if (options.cache) {
+    if (this.options.cache) {
       this.cacheManager = CacheManager.getInstance(
-        options.cache.store === 'memory' || options.cache.store === undefined
+        this.options.cache.store === 'memory' || this.options.cache.store === undefined
           ? undefined
-          : (options.cache.store as CacheStore),
+          : (this.options.cache.store as CacheStore),
       )
     }
 
@@ -152,13 +197,13 @@ export class BananaApp {
     middlewares.forEach((mw) => this.app.use(mw))
 
     // [Phase 3] Metrics middleware must be mounted BEFORE routes to intercept all requests
-    if (options.metrics?.enabled) {
+    if (this.options.metrics?.enabled) {
       void this.setupMetricsMiddleware()
     }
 
     if (this.plugins.length === 0) {
       // No plugins — initialize synchronously as before
-      this.initializeControllers(this.controllers, options.auth?.guard)
+      this.initializeControllers(this.controllers, this.options.auth?.guard)
       this._finalizeSetup()
     } else {
       // Plugins present — BananaApp.create() will call initializePlugins()
@@ -212,6 +257,7 @@ export class BananaApp {
       app: this.app,
       logger: this.logger,
       container: this.container,
+      controllerClasses: this.controllers,
     }
 
     // [Phase 3] Metrics middleware must be mounted BEFORE routes and BEFORE plugin.register()
@@ -282,9 +328,18 @@ export class BananaApp {
   }
 
   private resolveController(controllerClass: Constructor): Record<string, unknown> {
-    if (this.container) {
+    const scope = this.moduleContainers?.get(controllerClass) ?? this.container
+    if (scope) {
+      if (scope.isRegistered(controllerClass)) {
+        return scope.resolve(controllerClass) as Record<string, unknown>
+      }
       const name = controllerClass.name.charAt(0).toLowerCase() + controllerClass.name.slice(1)
-      return this.container.resolve<Record<string, unknown>>(name)
+      if (scope.isRegistered(name)) {
+        return scope.resolve(name) as Record<string, unknown>
+      }
+      throw new Error(
+        `BananaApp: cannot resolve "${controllerClass.name}" — register it on the tsyringe container (createModule providers, providers in defineBananaAppOptions, or container.register).`,
+      )
     }
     return new controllerClass() as Record<string, unknown>
   }
@@ -309,7 +364,8 @@ export class BananaApp {
         MetadataKeys.BASE_PATH,
         controllerClass,
       ) as string
-      const mountPath = joinRouteSegments(baseToken)
+      const apiPx = this.options.apiPrefix
+      const mountPath = apiPx ? joinRouteSegments(apiPx, baseToken) : joinRouteSegments(baseToken)
       const routers: IRouter[] =
         (Reflect.getMetadata(MetadataKeys.ROUTERS, controllerClass) as IRouter[]) ?? []
       const router = Router()
@@ -330,7 +386,9 @@ export class BananaApp {
 
       routers.forEach(({ method, path: pathToken, handlerName, middlewares = [] }) => {
         const expressPath = joinRouteSegments(pathToken)
-        const fullPath = joinRouteSegments(baseToken, pathToken)
+        const fullPath = apiPx
+          ? joinRouteSegments(apiPx, baseToken, pathToken)
+          : joinRouteSegments(baseToken, pathToken)
         this.routeTable.push({
           method: method.toUpperCase(),
           path: fullPath,
@@ -541,9 +599,12 @@ export interface CreateBananaApplicationOptions extends BananaAppOptions {
   onListening?: (info: { port: number; hostname?: string }) => void
 }
 
-export type CreateBananaApplicationInput = CreateBananaApplicationOptions & {
-  controllers: Constructor[]
-}
+export type CreateBananaApplicationInput =
+  | (CreateBananaApplicationOptions & { controllers: Constructor[]; modules?: undefined })
+  | (CreateBananaApplicationOptions & {
+      modules: BananaModuleDescriptor[]
+      controllers?: undefined
+    })
 
 /**
  * Async factory: `BananaApp.create` plus optional `listen` in one call for declarative bootstrap.
@@ -766,15 +827,17 @@ function createLazyThrottleMiddleware(
 
 export function BananaRouter(
   controllers: Constructor[],
-  container?: AwilixContainer,
+  container?: DependencyContainer,
 ): ReturnType<typeof Router> {
   const router = Router()
 
   controllers.forEach((controllerClass) => {
     const controllerInstance: Record<string, unknown> = container
-      ? container.resolve<Record<string, unknown>>(
-          controllerClass.name.charAt(0).toLowerCase() + controllerClass.name.slice(1),
-        )
+      ? container.isRegistered(controllerClass)
+        ? (container.resolve(controllerClass) as Record<string, unknown>)
+        : (container.resolve(
+            controllerClass.name.charAt(0).toLowerCase() + controllerClass.name.slice(1),
+          ) as Record<string, unknown>)
       : (new controllerClass() as Record<string, unknown>)
 
     const baseToken: string = Reflect.getMetadata(MetadataKeys.BASE_PATH, controllerClass) as string

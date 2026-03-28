@@ -1,4 +1,4 @@
-import type { AwilixContainer } from 'awilix'
+import type { DependencyContainer } from 'tsyringe'
 import { WsMetadataKeys } from './WsMetadata.js'
 import type { Constructor, WsBodyMeta } from './WsDecorators.js'
 
@@ -21,7 +21,7 @@ interface ControllerHandlers {
 export function wireWsControllers(
   wsServer: WsServerLike,
   controllers: Constructor[],
-  container?: AwilixContainer,
+  container?: DependencyContainer,
 ): void {
   for (const controllerClass of controllers) {
     const handlers = scanController(controllerClass)
@@ -119,10 +119,13 @@ function scanController(controllerClass: Constructor): ControllerHandlers | null
   return result
 }
 
-function resolveController(controllerClass: Constructor, container?: AwilixContainer): unknown {
+function resolveController(controllerClass: Constructor, container?: DependencyContainer): unknown {
   if (container) {
+    if (container.isRegistered(controllerClass)) {
+      return container.resolve(controllerClass)
+    }
     const name = controllerClass.name.charAt(0).toLowerCase() + controllerClass.name.slice(1)
-    return container.resolve<unknown>(name)
+    return container.resolve(name)
   }
   return new controllerClass()
 }

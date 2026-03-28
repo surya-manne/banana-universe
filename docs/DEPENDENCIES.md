@@ -41,14 +41,15 @@ This file lists all dependencies for each module in the banana-universe monorepo
 
 ### Runtime Dependencies
 
-| Package            | Version | Purpose                      |
-| ------------------ | ------- | ---------------------------- |
-| cors               | ^2.8.5  | CORS middleware              |
-| helmet             | ^8.1.0  | Security headers             |
-| reflect-metadata   | ^0.2.2  | Decorator metadata polyfill  |
-| tslib              | ^2.3.0  | TypeScript helpers           |
-| zod                | ^3.24.0 | Request validation schemas   |
-| zod-to-json-schema | ^3.24.0 | OpenAPI JSON Schema from Zod |
+| Package            | Version | Purpose                        |
+| ------------------ | ------- | ------------------------------ |
+| cors               | ^2.8.5  | CORS middleware                |
+| helmet             | ^8.1.0  | Security headers               |
+| reflect-metadata   | ^0.2.2  | Decorator metadata polyfill    |
+| tslib              | ^2.3.0  | TypeScript helpers             |
+| zod                | ^3.24.0 | Request validation schemas     |
+| zod-to-json-schema | ^3.24.0 | OpenAPI JSON Schema from Zod   |
+| tsyringe           | ^4.8.0  | Dependency injection container |
 
 ### Peer Dependencies (required by consumers)
 

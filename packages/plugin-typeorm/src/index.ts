@@ -11,9 +11,7 @@ interface AppContext {
   app: { use: (...args: unknown[]) => unknown }
   logger?: { info(msg: string): void; warn(msg: string): void; error(msg: string): void }
   container?: {
-    register(nameAndRegistrationPair: Record<string, unknown>): void
-    resolve<T>(name: string): T
-    registrations: Record<string, unknown>
+    registerInstance<T>(token: string | symbol | object, instance: T): unknown
   }
 }
 
@@ -129,10 +127,6 @@ type TypeOrmDataSourceInstance = {
 
 type TypeOrmDataSourceCtor = new (opts: unknown) => TypeOrmDataSourceInstance
 
-// Abstract constructor type used for safe dynamic class extension
-// Return type must be `object` (not `unknown`) for TypeScript to allow `extends`
-type AbstractCtor = abstract new (...args: unknown[]) => object
-
 export function TypeOrmPlugin(options: TypeOrmPluginOptions): BananaPlugin {
   return {
     name: 'TypeOrmPlugin',
@@ -150,49 +144,7 @@ export function TypeOrmPlugin(options: TypeOrmPluginOptions): BananaPlugin {
       typeormDataSource = dataSource
 
       if (ctx.container) {
-        try {
-          const { asValue } = await import('awilix')
-          ctx.container.register({ dataSource: asValue(dataSource) })
-
-          const registrations = ctx.container.registrations
-          for (const serviceName of Object.keys(registrations)) {
-            try {
-              const service = ctx.container.resolve<{ constructor: Function }>(serviceName)
-              const ctor = service.constructor
-
-              const repoMetas = Reflect.getMetadata(INJECT_REPOSITORY, ctor) as
-                | InjectRepositoryMeta[]
-                | undefined
-              if (!repoMetas || repoMetas.length === 0) continue
-
-              const repositoriesByIndex = new Map<number, unknown>()
-              for (const meta of repoMetas) {
-                repositoriesByIndex.set(meta.paramIndex, dataSource.getRepository(meta.entity))
-              }
-
-              const OriginalClass = ctor as new (...args: unknown[]) => unknown
-              const PatchedClass = class extends (OriginalClass as unknown as AbstractCtor) {
-                constructor(...args: unknown[]) {
-                  for (const [idx, repo] of repositoriesByIndex.entries()) {
-                    args[idx] = repo
-                  }
-                  super(...args)
-                }
-              }
-
-              const { asClass } = await import('awilix')
-              ctx.container.register({
-                [serviceName]: asClass(
-                  PatchedClass as unknown as new (...args: unknown[]) => unknown,
-                ),
-              })
-            } catch {
-              // Service may not be resolvable at this point — skip silently
-            }
-          }
-        } catch {
-          ctx.logger?.warn('TypeOrmPlugin: awilix not available — skipping DI registration')
-        }
+        ctx.container.registerInstance('dataSource', dataSource)
       }
 
       ctx.logger?.info('TypeOrmPlugin: DataSource initialized successfully')

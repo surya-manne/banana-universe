@@ -1,13 +1,16 @@
 import 'reflect-metadata'
 import type { Request, Response } from 'express'
 import type { Model } from 'mongoose'
+import { inject, injectable } from 'tsyringe'
 import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
 import type { ArticleDoc } from './article.model.js'
+import { ArticleModelToken } from './article.model.js'
 import { CreateArticleSchema } from './article.schema.js'
 
+@injectable()
 @Controller('articles')
 export class ArticleController extends BaseController {
-  constructor(private readonly articleModel: Model<ArticleDoc>) {
+  constructor(@inject(ArticleModelToken) private readonly articleModel: Model<ArticleDoc>) {
     super()
   }
 

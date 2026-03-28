@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto'
-import { Injectable } from '@banana-universe/bananajs'
 import type { DataSource } from 'typeorm'
+import { inject, injectable } from 'tsyringe'
 import { TenantNoteOrmEntity } from './note.orm-entity.js'
 
-@Injectable()
+@injectable()
 export class NoteAppService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(@inject('dataSource') private readonly dataSource: DataSource) {}
 
   async create(tenantId: string, title: string): Promise<{ id: string; title: string }> {
     const repo = this.dataSource.getRepository(TenantNoteOrmEntity)

@@ -75,15 +75,11 @@ export function MongoosePlugin(connection: Connection): BananaPlugin {
     async register(ctx): Promise<void> {
       connectionRef = connection
 
-      if (ctx.container) {
-        try {
-          const { asValue } = await import('awilix')
-          ctx.container.register({
-            mongooseConnection: asValue(connection),
-          })
-        } catch {
-          ctx.logger?.warn('MongoosePlugin: awilix not available — skipping DI registration')
-        }
+      if (ctx.container && 'registerInstance' in ctx.container) {
+        ;(ctx.container as { registerInstance<T>(t: string, v: T): void }).registerInstance(
+          'mongooseConnection',
+          connection,
+        )
       }
 
       ctx.logger?.info('MongoosePlugin: Connection registered successfully')
