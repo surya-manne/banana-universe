@@ -10,33 +10,65 @@ Pick **one** path:
 
 The CLI scaffolds a **new project folder** from **built-in presets** (**MongoDB** / Mongoose or **SQL** / TypeORM). Files are generated on disk—**no git clone** and no external template repository.
 
-**Run it** (pick one)
+**Run it** (pick your package manager tab):
 
-```bash
+::: code-group
+
+```bash [npm]
 npx @banana-universe/bananajs-cli new my-app
 ```
 
-```bash
+```bash [pnpm]
 pnpm dlx @banana-universe/bananajs-cli new my-app
 ```
 
-```bash
+```bash [yarn]
 yarn dlx @banana-universe/bananajs-cli new my-app
 ```
 
-Or install the CLI once globally, then use **`bananajs`**:
+:::
 
-```bash
+Or install the CLI once globally, then use **`bjs`**:
+
+::: code-group
+
+```bash [npm]
 npm install -g @banana-universe/bananajs-cli
-bananajs new my-app
+bjs new my-app
 ```
+
+```bash [pnpm]
+pnpm add -g @banana-universe/bananajs-cli
+bjs new my-app
+```
+
+```bash [yarn]
+yarn global add @banana-universe/bananajs-cli
+bjs new my-app
+```
+
+:::
 
 **Non-interactive / CI** — pass a preset explicitly (required in scripts so the choice is not ambiguous):
 
-```bash
+::: code-group
+
+```bash [npm]
 npx @banana-universe/bananajs-cli new my-app --preset sql
 npx @banana-universe/bananajs-cli new my-app --preset mongodb
 ```
+
+```bash [pnpm]
+pnpm dlx @banana-universe/bananajs-cli new my-app --preset sql
+pnpm dlx @banana-universe/bananajs-cli new my-app --preset mongodb
+```
+
+```bash [yarn]
+yarn dlx @banana-universe/bananajs-cli new my-app --preset sql
+yarn dlx @banana-universe/bananajs-cli new my-app --preset mongodb
+```
+
+:::
 
 If stdin is not a TTY and **`--preset`** is omitted, the CLI defaults to **`sql`** and reminds you to pass **`--preset`** when you want MongoDB.
 
@@ -48,7 +80,24 @@ If stdin is not a TTY and **`--preset`** is omitted, the CLI defaults to **`sql`
 **After it finishes**
 
 1. **`cd`** into the new folder.
-2. **`npm install`** (or your package manager).
+2. Install dependencies:
+
+::: code-group
+
+```bash [npm]
+npm install
+```
+
+```bash [pnpm]
+pnpm install
+```
+
+```bash [yarn]
+yarn install
+```
+
+:::
+
 3. Typical next steps: **`npm run build`** then **`npm start`** (the CLI prints a short hint). Copy **`.env.example`** if present, set database URLs, and use the project **README** for scripts and configuration.
 
 Further tooling (**`generate`**, **`ai`**, **`routes`**, …): [CLI reference](/tooling/cli).
@@ -57,10 +106,24 @@ Further tooling (**`generate`**, **`ai`**, **`routes`**, …): [CLI reference](/
 
 Install dependencies, turn on **decorators** in **`tsconfig.json`**, and import **`reflect-metadata`** once at the top of your entry file (before controllers).
 
-```bash
+::: code-group
+
+```bash [npm]
 npm install @banana-universe/bananajs reflect-metadata express zod
 npm install -D typescript @types/node @types/express
 ```
+
+```bash [pnpm]
+pnpm add @banana-universe/bananajs reflect-metadata express zod
+pnpm add -D typescript @types/node @types/express
+```
+
+```bash [yarn]
+yarn add @banana-universe/bananajs reflect-metadata express zod
+yarn add -D typescript @types/node @types/express
+```
+
+:::
 
 ```typescript
 import 'reflect-metadata'
@@ -76,7 +139,7 @@ new BananaApp({
 
 Incremental adoption and Express migration: [From Express](/migration/from-express). Concepts and options: [Basic concepts](/guide/basic-concepts), [Advanced concepts](/guide/advanced-concepts).
 
-The **`bananajs`** CLI can also help in an existing repo (**`migrate`**, **`generate`**, **`routes`**, **`openapi`**, **`ai`**—see [CLI reference](/tooling/cli)).
+The **`bjs`** CLI can also help in an existing repo (**`migrate`**, **`generate`**, **`routes`**, **`openapi`**, **`ai`**—see [CLI reference](/tooling/cli)).
 
 ## Next
 

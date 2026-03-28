@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { inject, injectable } from 'tsyringe'
-import type { CatalogItemMapper } from '../domain/CatalogItemMapper.js'
-import { CatalogItemMapperToken } from '../domain/CatalogItemMapper.js'
-import { CatalogItem } from '../domain/CatalogItemEntity.js'
+import type { CatalogItemMapper } from '../domain/CatalogItem.mapper.js'
+import { CatalogItemMapperToken } from '../domain/CatalogItem.mapper.js'
+import { CatalogItem } from '../domain/CatalogItem.entity.js'
 
 /** Application-layer orchestration (DDD); tsyringe constructor injection. */
 @injectable()

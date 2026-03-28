@@ -6,14 +6,8 @@
 
 # Type Alias: BananaAppCreateInput
 
-> **BananaAppCreateInput** = [`BananaAppOptions`](../interfaces/BananaAppOptions.md) & `object`
+> **BananaAppCreateInput** = [`BananaAppOptions`](../interfaces/BananaAppOptions.md) & `object` \| [`BananaAppOptions`](../interfaces/BananaAppOptions.md) & `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:40
+Defined in: packages/bananajs/src/lib/Core/App.ts:43
 
-Bootstrap input: [BananaAppOptions](../interfaces/BananaAppOptions.md) plus `controllers` (set via `defineBananaControllers` from `./DI/bananaBootstrap.js`).
-
-## Type Declaration
-
-### controllers
-
-> **controllers**: [`Constructor`](Constructor.md)[]
+Bootstrap: either legacy `controllers` or modular `modules` (not both).

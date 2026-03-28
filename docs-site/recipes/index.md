@@ -6,7 +6,7 @@ All recipes align with **BananaJS v0.6**: **tsyringe** DI and **`createModule`**
 
 ## Conventions
 
-- **Layout**: `src/modules/<feature>/` per vertical slice (controller, DTOs, services, infrastructure). **PascalCase** for feature files (e.g. `CatalogController.ts`); keep **`main.ts`**, **`bootstrap.ts`**, and barrel **`index.ts`** in **lowercase**. **`createModule`**: list only non-controller providers — the **`controller`** field registers the HTTP class; do not duplicate it in **`providers`**. Domain persistence contracts use **`domain/<Feature>Mapper.ts`** (not a separate “list query” DTO file — combine query Zod schemas into the feature DTO module).
+- **Layout**: `src/modules/<feature>/` per vertical slice (controller, DTOs, services, infrastructure). **Dotted role names** for feature files (e.g. `Catalog.controller.ts`, `CatalogItem.entity.ts`, `Article.service.ts`); keep **`main.ts`**, **`bootstrap.ts`**, and barrel **`index.ts`** in **lowercase**. **`createModule`**: list only non-controller providers — the **`controller`** field registers the HTTP class; do not duplicate it in **`providers`**. Domain persistence contracts use **`domain/<Entity>.mapper.ts`** (repository port) or **`domain/<Entity>.repository.ts`** (not a separate “list query” DTO file — combine query Zod schemas into the feature **`*.dto.ts`** module).
 - **Shared code**: guards/utilities under `src/lib/` when needed (e.g. `BearerAuthGuard.ts`).
 - **Env**: copy `.env.example` → `.env`; apps load **`dotenv`** at process entry (`import 'dotenv/config'` in `main.ts`).
 - **Development**: `npm run dev` uses **`tsx watch`** for hot reload; `npm run build` / `npm start` for production-style runs.

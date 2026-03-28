@@ -16,6 +16,7 @@ import { aiGenerateModule } from './lib/ai-module.js'
 import { aiSetup } from './lib/ai-setup.js'
 import { writeScaffoldedApp } from './lib/create-app.js'
 import { APP_PRESETS, getPresetById, type AppPreset } from './lib/create-app-presets.js'
+import { PRESET_ORM_HELP, presetIdToOrm } from './lib/preset-orm.js'
 
 /** Keep in sync with packages/bananajs-cli/package.json */
 const CLI_VERSION = '0.3.0'
@@ -50,12 +51,21 @@ program
     '--orm <orm>',
     'For type module: typeorm | mongoose | none (default: typeorm if non-interactive)',
   )
+  .option(
+    '--preset <id>',
+    `For type module: ${PRESET_ORM_HELP} — overrides non-interactive default; use --orm to force a specific adapter`,
+  )
   .option('--out <dir>', 'Output base directory (for type module; default: ./src)')
   .action(
-    (type: string, name: string, options: { dryRun?: boolean; orm?: string; out?: string }) => {
+    (
+      type: string,
+      name: string,
+      options: { dryRun?: boolean; orm?: string; preset?: string; out?: string },
+    ) => {
       generateResource(type, name, {
         dryRun: options.dryRun ?? false,
         orm: options.orm,
+        preset: options.preset,
         out: options.out,
       }).catch((err: unknown) => {
         console.error('Unexpected error:', err)
@@ -146,6 +156,10 @@ aiCmd
   )
   .option('--orm <orm>', 'For DDD module: typeorm | mongoose | none')
   .option(
+    '--preset <id>',
+    `For DDD module: ${PRESET_ORM_HELP} — sets ORM when --orm omitted (overridden by --orm)`,
+  )
+  .option(
     '--out <dir>',
     'Output directory (flat: cwd; DDD: default from .bananarc.json generate.outDir)',
   )
@@ -158,6 +172,7 @@ aiCmd
       fromSchema?: string
       fromPrompt?: string
       orm?: string
+      preset?: string
       out?: string
       dryRun?: boolean
       detailed?: boolean
@@ -169,6 +184,7 @@ aiCmd
             module: typeof opts.module === 'string' ? opts.module : undefined,
             fromSchema: opts.fromSchema,
             orm: opts.orm,
+            preset: opts.preset,
             out: opts.out,
             dryRun: opts.dryRun,
             detailed: opts.detailed,
@@ -308,7 +324,7 @@ async function createApp(
 async function generateResource(
   type: string,
   name: string,
-  opts: { dryRun: boolean; orm?: string; out?: string },
+  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string },
 ): Promise<void> {
   const validTypes = ['controller', 'dto', 'middleware', 'module']
   if (!validTypes.includes(type)) {
@@ -351,7 +367,7 @@ async function generateResource(
 
 async function generateModuleResource(
   name: string,
-  opts: { dryRun: boolean; orm?: string; out?: string },
+  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string },
 ): Promise<void> {
   let ormChoice: OrmChoice
   const raw = opts.orm?.toLowerCase()
@@ -360,6 +376,13 @@ async function generateModuleResource(
   } else if (opts.orm !== undefined) {
     console.log(chalk.red(`Invalid --orm "${opts.orm}". Use typeorm, mongoose, or none.`))
     process.exit(1)
+  } else if (opts.preset) {
+    const mapped = presetIdToOrm(opts.preset)
+    if (!mapped) {
+      console.log(chalk.red(`Invalid --preset "${opts.preset}". Use: ${PRESET_ORM_HELP}`))
+      process.exit(1)
+    }
+    ormChoice = mapped
   } else if (process.stdin.isTTY) {
     const answers = await inquirer.prompt<{ orm: OrmChoice }>([
       {

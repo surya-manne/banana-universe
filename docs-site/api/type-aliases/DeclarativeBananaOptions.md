@@ -8,16 +8,17 @@
 
 > **DeclarativeBananaOptions** = `Omit`\<[`BananaAppOptions`](../interfaces/BananaAppOptions.md), `"container"`\> & `object`
 
-Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:22
+Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:28
 
 ## Type Declaration
 
 ### container?
 
-> `optional` **container?**: `AwilixContainer`
+> `optional` **container?**: `DependencyContainer`
 
-### services?
+### providers?
 
-> `optional` **services?**: [`BananaServiceRegistrations`](BananaServiceRegistrations.md)
+> `optional` **providers?**: [`BananaProviderRegistration`](BananaProviderRegistration.md)[]
 
-Merged into a new container, or into `container` when both are set.
+Merged into a new DependencyContainer, or into `container` when both are set.
+Replaces legacy Awilix `services` registrations.

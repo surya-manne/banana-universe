@@ -6,7 +6,7 @@
 
 # Interface: BananaPlugin
 
-Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:11
+Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:15
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:11
 
 > **name**: `string`
 
-Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:12
+Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:16
 
 ## Methods
 
@@ -22,7 +22,7 @@ Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:12
 
 > `optional` **onReady**(`ctx`): `void` \| `Promise`\<`void`\>
 
-Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:14
+Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:18
 
 #### Parameters
 
@@ -40,7 +40,7 @@ Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:14
 
 > `optional` **onShutdown**(): `void` \| `Promise`\<`void`\>
 
-Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:15
+Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:19
 
 #### Returns
 
@@ -52,7 +52,7 @@ Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:15
 
 > **register**(`ctx`): `void` \| `Promise`\<`void`\>
 
-Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:13
+Defined in: packages/bananajs/src/lib/Plugin/Plugin.interface.ts:17
 
 #### Parameters
 

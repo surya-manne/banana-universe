@@ -2,14 +2,33 @@
 
 ***
 
-[@banana-universe/bananajs](../index.md) / Injectable
+[@banana-universe/bananajs](../index.md) / injectable
 
-# Function: Injectable()
+# Function: injectable()
 
-> **Injectable**(): `ClassDecorator`
+> **injectable**\<`T`\>(`options?`): (`target`) => `void`
 
-Defined in: packages/bananajs/src/lib/DI/Injectable.decorator.ts:3
+Defined in: node\_modules/tsyringe/dist/typings/decorators/injectable.d.ts:9
+
+Class decorator factory that allows the class' dependencies to be injected
+at runtime.
+
+## Type Parameters
+
+### T
+
+`T`
+
+## Parameters
+
+### options?
+
+#### token?
+
+`InjectionToken`\<`T`\> \| `InjectionToken`\<`T`\>[]
 
 ## Returns
 
-`ClassDecorator`
+The class decorator
+
+(`target`) => `void`

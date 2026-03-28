@@ -34,7 +34,7 @@ await BananaApp.create({
 ## Features
 
 - **`TypeOrmPlugin`** — lazy-imports `typeorm`, constructs `DataSource`, **`initialize()`**, stores module-level reference for `@Transactional`
-- **`@InjectRepository(Entity)`** — **removed** in v0.6+ (Awilix-only). Inject **`DataSource`** with **`@inject('dataSource')`** (registered by **`TypeOrmPlugin`**) and call **`getRepository(Entity)`** in the constructor or use a tsyringe factory provider
+- **`@InjectRepository(Entity)`** — **removed** in v0.6+ (legacy DI). Inject **`DataSource`** with **`@inject('dataSource')`** (registered by **`TypeOrmPlugin`**) and call **`getRepository(Entity)`** in the constructor or use a tsyringe factory provider
 - **`@Transactional()`** — wraps method in `QueryRunner` transaction; requires plugin registered
 - **`TransactionContext.getRunner()`** — access active runner inside transactional methods
 - **`onShutdown`** — destroys DataSource

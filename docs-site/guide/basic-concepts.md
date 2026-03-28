@@ -41,5 +41,5 @@ Unknown errors are treated as internal failures; in **production**, internal err
 
 ## App bootstrap
 
-- **`BananaApp.create({ controllers: defineBananaControllers(...), ...options })`** — use when **plugins** need async `register` / `onReady` (e.g. TypeORM). Prefer **`defineBananaAppOptions({ controllers: defineBananaControllers(...), services, ... })`** when registering Awilix **`services`**.
+- **`BananaApp.create({ controllers: defineBananaControllers(...), ...options })`** — use when **plugins** need async `register` / `onReady` (e.g. TypeORM). Prefer **`defineBananaAppOptions({ modules: [...], providers: [...], ... })`** for **`createModule`** slices and extra **tsyringe** registrations on the root container ([Layered architecture](/guide/layered-architecture), [Dependency injection](/guide/dependency-injection)).
 - **`createBananaApplication({ controllers: defineBananaControllers(...), ...options, port?, onListening? })`** — optional **`listen`** in one call.

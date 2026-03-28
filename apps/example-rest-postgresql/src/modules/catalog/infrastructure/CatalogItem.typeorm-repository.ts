@@ -1,8 +1,8 @@
 import type { DataSource } from 'typeorm'
 import { inject, injectable } from 'tsyringe'
 import { TypeOrmRepositoryAdapter } from '@banana-universe/plugin-typeorm'
-import { CatalogItem } from '../domain/CatalogItemEntity.js'
-import { CatalogItemOrmEntity } from './CatalogItemOrmEntity.js'
+import { CatalogItem } from '../domain/CatalogItem.entity.js'
+import { CatalogItemOrmEntity } from './CatalogItem.orm-entity.js'
 
 @injectable()
 export class CatalogItemTypeOrmRepository extends TypeOrmRepositoryAdapter<

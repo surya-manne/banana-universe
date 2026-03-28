@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { presetIdToOrm } from '../preset-orm.js'
 
 export type LlmProviderKind = 'ollama' | 'llamacpp' | 'openai' | 'anthropic'
 export type OrmPreference = 'typeorm' | 'mongoose' | 'none'
@@ -14,6 +15,8 @@ export interface BananarcConfig {
   }
   generate?: {
     defaultOrm?: OrmPreference
+    /** Same as `ban new --preset`: sets default ORM when `defaultOrm` is omitted (`mongodb` → mongoose, `sql` → typeorm). */
+    preset?: 'mongodb' | 'sql'
     outDir?: string
   }
 }
@@ -63,6 +66,10 @@ function mergeBananarc(parsed: BananarcConfig): BananarcConfig {
     for (const [k, v] of Object.entries(parsed.generate)) {
       if (v !== undefined) (generate as Record<string, unknown>)[k] = v
     }
+  }
+  if (parsed.generate?.preset !== undefined && parsed.generate.defaultOrm === undefined) {
+    const mapped = presetIdToOrm(String(parsed.generate.preset))
+    if (mapped) (generate as { defaultOrm: OrmPreference }).defaultOrm = mapped as OrmPreference
   }
   const rawOrm = (generate as { defaultOrm?: string }).defaultOrm
   if (rawOrm === 'prisma') {

@@ -50,6 +50,14 @@ export default withMermaid(
                 text: 'Layered Architecture & DDD',
                 link: '/guide/layered-architecture',
               },
+              {
+                text: 'Domain & persistence',
+                link: '/guide/domain-and-persistence',
+              },
+              {
+                text: 'Dependency injection',
+                link: '/guide/dependency-injection',
+              },
             ],
           },
           {

@@ -4,7 +4,7 @@ BananaJS is built for teams who want **serious structure** without **enterprise 
 
 ## AI-first
 
-Developer productivity is not optional. The **`bananajs`** CLI ships **AI-assisted** flows: generate from **OpenAPI / JSON Schema** or **natural language**, add **JSDoc**, and **review** controllers. **`bananajs ai setup`** writes **`.bananarc.json`**; the **`llm/`** provider layer supports **Ollama** (default), **llama.cpp**, **OpenAI**, and **Anthropic**. **`bananajs ai generate --module`** produces **DDD-shaped** domain, application, and infrastructure folders from a description or schema—so the framework meets teams where they work: specs, prompts, and automation—not only hand-written boilerplate.
+Developer productivity is not optional. The **`bjs`** CLI ships **AI-assisted** flows: generate from **OpenAPI / JSON Schema** or **natural language**, add **JSDoc**, and **review** controllers. **`bjs ai setup`** writes **`.bananarc.json`**; the **`llm/`** provider layer supports **Ollama** (default), **llama.cpp**, **OpenAI**, and **Anthropic**. **`bjs ai generate --module`** produces **layered** domain, application, and infrastructure folders from a description or schema—so the framework meets teams where they work: specs, prompts, and automation—not only hand-written boilerplate.
 
 ## Developer experience (DX)
 
@@ -16,7 +16,11 @@ The core stays lean; **everything heavy is optional**. **Official plugins** (Typ
 
 ## Domain-driven design
 
-**`@banana-universe/ddd`** provides **Entity**, **ValueObject**, **AggregateRoot**, **Repository** with **`FindCriteria`**, **UnitOfWork**, and **`@DomainService` / `@ApplicationService`**. Official ORM plugins ship **repository adapters** and transactional helpers. **`bananajs generate module`** (or **`ai generate --module`**) scaffolds **domain / application / infrastructure** layouts while adapters stay in infrastructure—generated, consistent, and documented.
+**Structure can grow with the problem** — start simple, then introduce **clear boundaries** between **domain rules**, **use cases**, and **infrastructure** when the model deserves it. Nothing about BananaJS requires a heavy ceremony up front.
+
+**Optional depth** — A dedicated **DDD toolkit** and **layered module** scaffolding exist for teams that want **shared vocabulary** (entities, repositories, units of work) and **consistent folders**; you can adopt as much or as little as fits your codebase.
+
+**Edges, not leaks** — **Databases and integrations** stay behind **ports and adapters**; HTTP stays thin. Deeper dive: [Domain & persistence](/guide/domain-and-persistence). Layouts and CLI: [Layered architecture](/guide/layered-architecture), [AI module generation](/tooling/ai-module-generation).
 
 ---
 

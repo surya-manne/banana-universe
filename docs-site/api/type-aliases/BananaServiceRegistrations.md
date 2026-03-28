@@ -4,10 +4,12 @@
 
 [@banana-universe/bananajs](../index.md) / BananaServiceRegistrations
 
-# Type Alias: BananaServiceRegistrations
+# ~~Type Alias: BananaServiceRegistrations~~
 
-> **BananaServiceRegistrations** = `Record`\<`string`, `Resolver`\<`unknown`\>\>
+> **BananaServiceRegistrations** = `never`
 
-Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:5
+Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:9
 
-Awilix registrations keyed by injection token (e.g. `articleController`).
+## Deprecated
+
+Use [createBananaProviderContainer](../functions/createBananaProviderContainer.md) — Awilix is no longer supported.

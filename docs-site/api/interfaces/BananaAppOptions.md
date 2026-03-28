@@ -6,7 +6,7 @@
 
 # Interface: BananaAppOptions
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:42
+Defined in: packages/bananajs/src/lib/Core/App.ts:47
 
 ## Extended by
 
@@ -18,7 +18,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:42
 
 > `optional` **abac?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:86
+Defined in: packages/bananajs/src/lib/Core/App.ts:100
 
 #### guard
 
@@ -26,11 +26,21 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:86
 
 ***
 
+### apiPrefix?
+
+> `optional` **apiPrefix?**: `string`
+
+Defined in: packages/bananajs/src/lib/Core/App.ts:60
+
+Prepended to every controller base path (e.g. `v1` → `/v1/...`). Use URI versioning per enterprise DX docs.
+
+***
+
 ### auth?
 
 > `optional` **auth?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:53
+Defined in: packages/bananajs/src/lib/Core/App.ts:67
 
 #### guard
 
@@ -42,7 +52,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:53
 
 > `optional` **cache?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:77
+Defined in: packages/bananajs/src/lib/Core/App.ts:91
 
 #### store?
 
@@ -52,9 +62,11 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:77
 
 ### container?
 
-> `optional` **container?**: `AwilixContainer`\<\{ \}\>
+> `optional` **container?**: `DependencyContainer`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:50
+Defined in: packages/bananajs/src/lib/Core/App.ts:56
+
+Root tsyringe container; optional — created when using `modules` without an explicit container.
 
 ***
 
@@ -62,7 +74,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:50
 
 > `optional` **devTools?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:80
+Defined in: packages/bananajs/src/lib/Core/App.ts:94
 
 ***
 
@@ -70,7 +82,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:80
 
 > `optional` **gracefulShutdown?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:51
+Defined in: packages/bananajs/src/lib/Core/App.ts:65
 
 ***
 
@@ -78,7 +90,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:51
 
 > `optional` **health?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:70
+Defined in: packages/bananajs/src/lib/Core/App.ts:84
 
 #### checks?
 
@@ -98,7 +110,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:70
 
 > `optional` **lazyControllers?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:90
+Defined in: packages/bananajs/src/lib/Core/App.ts:104
 
 ***
 
@@ -106,7 +118,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:90
 
 > `optional` **logger?**: `false` \| [`Logger`](Logger.md)
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:49
+Defined in: packages/bananajs/src/lib/Core/App.ts:54
 
 ***
 
@@ -114,7 +126,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:49
 
 > `optional` **metrics?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:81
+Defined in: packages/bananajs/src/lib/Core/App.ts:95
 
 #### enabled
 
@@ -130,7 +142,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:81
 
 > `optional` **middlewares?**: `RequestHandler`\<`ParamsDictionary`, `any`, `any`, `ParsedQs`, `Record`\<`string`, `any`\>\>[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:43
+Defined in: packages/bananajs/src/lib/Core/App.ts:48
 
 ***
 
@@ -138,7 +150,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:43
 
 > `optional` **plugins?**: [`BananaPlugin`](BananaPlugin.md)[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:76
+Defined in: packages/bananajs/src/lib/Core/App.ts:90
 
 ***
 
@@ -146,7 +158,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:76
 
 > `optional` **rateLimit?**: `false` \| \{ `max?`: `number`; `message?`: `string`; `windowMs?`: `number`; \}
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:63
+Defined in: packages/bananajs/src/lib/Core/App.ts:77
 
 ***
 
@@ -154,7 +166,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:63
 
 > `optional` **requestId?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:48
+Defined in: packages/bananajs/src/lib/Core/App.ts:53
 
 ***
 
@@ -162,7 +174,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:48
 
 > `optional` **security?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:44
+Defined in: packages/bananajs/src/lib/Core/App.ts:49
 
 #### cors?
 
@@ -178,7 +190,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:44
 
 > `optional` **swagger?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:56
+Defined in: packages/bananajs/src/lib/Core/App.ts:70
 
 #### description?
 
@@ -206,4 +218,14 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:56
 
 > `optional` **tenant?**: [`TenantOptions`](TenantOptions.md)
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:89
+Defined in: packages/bananajs/src/lib/Core/App.ts:103
+
+***
+
+### testOverrides?
+
+> `optional` **testOverrides?**: [`BananaProviderRegistration`](../type-aliases/BananaProviderRegistration.md)[]
+
+Defined in: packages/bananajs/src/lib/Core/App.ts:64
+
+Applied to the root container after plugin/module setup — for tests (e.g. swap a repository port for a fake).

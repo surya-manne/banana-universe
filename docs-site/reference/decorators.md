@@ -63,7 +63,7 @@ Hand-written overview; generated signatures live under [**TypeDoc API**](/api/) 
 
 | Export                       | Role                                            |
 | ---------------------------- | ----------------------------------------------- |
-| `Injectable`, `isInjectable` | Awilix registration                             |
+| `Injectable`, `isInjectable` | tsyringe / `injectable` metadata for DI         |
 | `BananaApp`, `BananaRouter`  | Application entry, incremental Express adoption |
 | `BananaConfig`               | Typed environment configuration (schema-based)  |
 

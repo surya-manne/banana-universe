@@ -1,6 +1,6 @@
 # AI module generation
 
-This guide covers **`bananajs ai setup`**, **`.bananarc.json`**, and **`bananajs ai generate --module`** — offline-first LLM providers (Ollama default) plus optional cloud models, and a two-step pipeline: **LLM → JSON (validated with Zod) → DDD templates**.
+This guide covers **`bjs ai setup`**, **`.bananarc.json`**, and **`bjs ai generate --module`** — offline-first LLM providers (Ollama default) plus optional cloud models, and a two-step pipeline: **LLM → JSON (validated with Zod) → DDD templates**.
 
 ## Prerequisites
 
@@ -8,12 +8,12 @@ This guide covers **`bananajs ai setup`**, **`.bananarc.json`**, and **`bananajs
 - For **local** generation: [Ollama](https://ollama.com) running (`ollama serve`) and a model pulled (e.g. `ollama pull llama3.2`).
 - Optional: **`zod`** for JSON validation of the extraction step (recommended; listed as an optional peer of the CLI).
 
-## 1. Configure the CLI: `bananajs ai setup`
+## 1. Configure the CLI: `bjs ai setup`
 
 Run from your app root:
 
 ```bash
-npx bananajs ai setup
+npx @banana-universe/bananajs-cli ai setup
 ```
 
 The wizard lets you pick:
@@ -43,28 +43,28 @@ The command writes **`.bananarc.json`** at the project root, for example:
 }
 ```
 
-`.bananarc.json` is the **general BananaJS project config**: the `llm` block holds provider settings; `generate` holds defaults for `bananajs ai generate --module` (ORM and output directory).
+`.bananarc.json` is the **general BananaJS project config**: the `llm` block holds provider settings; `generate` holds defaults for `bjs ai generate --module` (ORM and output directory).
 
 ## 2. Generate a full DDD module
 
 ### From natural language
 
 ```bash
-npx bananajs ai generate --module "Product catalog with name, price, category, and stock quantity"
+npx @banana-universe/bananajs-cli ai generate --module "Product catalog with name, price, category, and stock quantity"
 ```
 
 The CLI:
 
 1. Calls the configured LLM with a **strict JSON extraction** prompt (entity name + fields).
 2. Parses and validates the response with **Zod** (`EntityExtractionSchema`); on failure it **retries once** (then exits with a clear error; use **`--debug`** to print raw LLM output).
-3. Fills **embedded templates** for the standard DDD layout: `domain/`, `application/`, `infrastructure/`, and controller.
+3. Fills **embedded templates** for the standard DDD layout: `domain/`, `application/`, `infrastructure/`, and **`<Name>.controller.ts`** at the feature root (same **dotted filenames** as **`bjs generate module`** — see [Layered architecture](/guide/layered-architecture)).
 
 ### From JSON Schema or OpenAPI
 
 Use **`--module`** together with **`--from-schema`** so the schema drives the entity shape (no LLM extraction step):
 
 ```bash
-npx bananajs ai generate --module --from-schema ./openapi/product.yaml
+npx @banana-universe/bananajs-cli ai generate --module --from-schema ./openapi/product.yaml
 ```
 
 You can pass a bare **`--module`** flag when only the schema is needed (the description is optional if the schema is present).

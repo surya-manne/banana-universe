@@ -1,6 +1,6 @@
 # BananaAppOptions
 
-`BananaApp` is created with **one object**: **`controllers`** (via **`defineBananaControllers`**) plus **`BananaAppOptions`** fields.
+`BananaApp` is created with **one object**: either **`controllers`** (via **`defineBananaControllers`**) or **`modules`** (from **`createModule`**) plus **`BananaAppOptions`** fields.
 
 ```typescript
 import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
@@ -16,6 +16,7 @@ Use **`BananaApp.create({ ... })`** when you need **async plugin registration** 
 ## Declarative bootstrap (optional)
 
 - **`defineBananaControllers(...controllers)`** — returns the controller list for the **`controllers`** property
+- **`defineBananaAppOptions({ modules: [...], plugins, ... })`** — preferred for feature slices: each module supplies **`controller`**, **`providers`**, and **`id`**; do not list the controller class again inside **`providers`**
 - **`defineBananaAppOptions({ controllers: defineBananaControllers(...), providers, ... })`** — merges **`providers`** (tsyringe-style registrations: classes and `{ token, useClass | useFactory | useValue }`) into a container and returns a **`BananaApp.create`**-ready input
 - **`createBananaProviderContainer(providers)`** — isolated child container + registrations in one call (see **`bananaBootstrap.ts`**)
 

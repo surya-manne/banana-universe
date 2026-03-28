@@ -12,12 +12,15 @@ import {
 import { buildDddModuleFromExtraction } from './generate-ai-module.js'
 import type { OrmChoice } from './generate-module.js'
 import { parseSchema, type ParsedSchema } from './schema-parse.js'
+import { PRESET_ORM_HELP, presetIdToOrm } from './preset-orm.js'
 
 export interface AiModuleGenerateOptions {
   /** Natural language module description */
   module?: string
   fromSchema?: string
   orm?: string
+  /** Same as `ban new --preset`: mongodb → mongoose, sql → typeorm; overridden by `--orm`. */
+  preset?: string
   out?: string
   dryRun?: boolean
   detailed?: boolean
@@ -134,7 +137,16 @@ export async function aiGenerateModule(opts: AiModuleGenerateOptions): Promise<v
   const cwd = opts.cwd ?? process.cwd()
   const config = await loadBananarc(cwd)
   const defaultOrm = resolveOrm(config.generate?.defaultOrm, 'typeorm')
-  const orm = resolveOrm(opts.orm, defaultOrm)
+  let fallback = defaultOrm
+  if (opts.preset) {
+    const mapped = presetIdToOrm(opts.preset)
+    if (!mapped) {
+      console.error(chalk.red(`Invalid --preset "${opts.preset}". Use: ${PRESET_ORM_HELP}`))
+      process.exit(1)
+    }
+    fallback = mapped
+  }
+  const orm = resolveOrm(opts.orm, fallback)
   const outBase = path.resolve(cwd, opts.out ?? config.generate?.outDir ?? 'src')
 
   let extraction: EntityExtraction

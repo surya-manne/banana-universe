@@ -1,6 +1,6 @@
 import type { Repository } from '@banana-universe/ddd'
 import type { InjectionToken } from 'tsyringe'
-import type { CatalogItem } from './CatalogItemEntity.js'
+import type { CatalogItem } from './CatalogItem.entity.js'
 
 export type CatalogItemMapper = Repository<CatalogItem>
 

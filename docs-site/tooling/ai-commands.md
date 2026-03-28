@@ -2,9 +2,9 @@
 
 AI is a **primary axis** for BananaJS—not a gimmick. Capabilities include **generate** from schema or prompt, **`ai generate --module`** for DDD layouts (with **`.bananarc.json`** and **`ai setup`**), **`doc`**, and **`review`** ([Philosophy](/guide/philosophy)).
 
-Commands live under **`bananajs ai`** (`packages/bananajs-cli/src/lib/ai.ts` and related modules).
+Commands live under **`bjs ai`** (`packages/bananajs-cli/src/lib/ai.ts` and related modules).
 
-## `bananajs ai generate`
+## `bjs ai generate`
 
 | Option                     | Description                                                                                           |
 | -------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -16,23 +16,23 @@ Commands live under **`bananajs ai`** (`packages/bananajs-cli/src/lib/ai.ts` and
 
 Implementation details and provider matrix can change between releases — inspect **`packages/bananajs-cli`** for the current stack.
 
-## `bananajs ai doc`
+## `bjs ai doc`
 
 Adds JSDoc to controller methods using the configured LLM.
 
 - **`--file <path>`** — single file; otherwise scans project `src/`
 - **`--dry-run`**
 
-## `bananajs ai review`
+## `bjs ai review`
 
 Reviews a controller for BananaJS best practices.
 
 - **`--file <path>`** — required target file
 
-## `bananajs ai setup`
+## `bjs ai setup`
 
 Interactive wizard that writes **`.bananarc.json`** (LLM provider, defaults for **`ai generate --module`**). See **[AI module generation](/tooling/ai-module-generation)** for the full walkthrough.
 
 ## DDD module generation
 
-**`bananajs ai generate --module`** uses the **`llm/`** provider layer, Zod-validated extraction, and embedded templates for domain / application / infrastructure folders. Full walkthrough: **[AI module generation](/tooling/ai-module-generation)**.
+**`bjs ai generate --module`** uses the **`llm/`** provider layer, Zod-validated extraction, and embedded templates for domain / application / infrastructure folders. Full walkthrough: **[AI module generation](/tooling/ai-module-generation)**.

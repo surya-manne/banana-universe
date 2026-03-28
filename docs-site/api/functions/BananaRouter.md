@@ -8,7 +8,7 @@
 
 > **BananaRouter**(`controllers`, `container?`): `Router`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:765
+Defined in: packages/bananajs/src/lib/Core/App.ts:828
 
 ## Parameters
 
@@ -18,7 +18,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:765
 
 ### container?
 
-`AwilixContainer`\<\{ \}\>
+`DependencyContainer`
 
 ## Returns
 

@@ -293,7 +293,7 @@ import {
   defineBananaAppOptions,
 } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
-import { buildArticlesModule } from './modules/articles/ArticlesModule.js'
+import { articlesModule } from './modules/articles/index.js'
 
 export async function createMongoApp(): Promise<BananaApp> {
   const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/bananajs_app'
@@ -301,7 +301,7 @@ export async function createMongoApp(): Promise<BananaApp> {
 
   return BananaApp.create(
     defineBananaAppOptions({
-      modules: [buildArticlesModule()],
+      modules: [articlesModule],
       plugins: [MongoosePlugin(mongoose.connection) as BananaPlugin],
       logger: false,
       gracefulShutdown: false,
@@ -314,34 +314,35 @@ export async function createMongoApp(): Promise<BananaApp> {
 `,
     },
     {
-      relativePath: 'src/modules/articles/ArticlesModule.ts',
+      relativePath: 'src/modules/articles/index.ts',
       content: `import { createModule } from '@banana-universe/bananajs'
-import { ArticleController } from './ArticleController.js'
-import { ArticleModelToken, getArticleModel } from './ArticleModel.js'
+import { ArticleController } from './Article.controller.js'
+import { ArticleAppService } from './application/Article.service.js'
+import { ArticleMongooseRepository } from './infrastructure/Article.mongoose-repository.js'
+import { ArticleRepositoryToken } from './domain/Article.repository.js'
 
-export function buildArticlesModule() {
-  return createModule({
-    id: 'articles',
-    controller: ArticleController,
-    providers: [{ token: ArticleModelToken, useFactory: () => getArticleModel() }],
-  })
-}
+export const articlesModule = createModule({
+  id: 'articles',
+  controller: ArticleController,
+  providers: [
+    { token: ArticleRepositoryToken, useClass: ArticleMongooseRepository },
+    ArticleAppService,
+  ],
+})
 `,
     },
     {
-      relativePath: 'src/modules/articles/ArticleController.ts',
+      relativePath: 'src/modules/articles/Article.controller.ts',
       content: `import 'reflect-metadata'
 import type { Request, Response } from 'express'
-import type { Model } from 'mongoose'
 import { inject } from 'tsyringe'
 import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
-import type { ArticleDoc } from './ArticleModel.js'
-import { ArticleModelToken } from './ArticleModel.js'
-import { CreateArticleSchema } from './ArticleSchema.js'
+import { ArticleAppService } from './application/Article.service.js'
+import { CreateArticleSchema } from './Article.dto.js'
 
 @Controller('articles')
 export class ArticleController extends BaseController {
-  constructor(@inject(ArticleModelToken) private readonly articleModel: Model<ArticleDoc>) {
+  constructor(@inject(ArticleAppService) private readonly articleAppService: ArticleAppService) {
     super()
   }
 
@@ -355,47 +356,157 @@ export class ArticleController extends BaseController {
   @Body(CreateArticleSchema)
   async create(req: Request, res: Response) {
     const { title, body } = req.body as { title: string; body: string }
-    const created = await this.articleModel.create({ title, body })
-    return this.ok(res, 'created', { id: String(created._id), title: created.title })
+    const created = await this.articleAppService.create(title, body)
+    return this.ok(res, 'created', { id: created.id, title: created.title })
   }
 }
 `,
     },
     {
-      relativePath: 'src/modules/articles/ArticleModel.ts',
-      content: `import type { InjectionToken } from 'tsyringe'
-import mongoose, { Schema, type HydratedDocument, type Model } from 'mongoose'
-
-export type ArticleDoc = HydratedDocument<{
-  title: string
-  body: string
-}>
-
-const articleSchema = new Schema(
-  {
-    title: { type: String, required: true },
-    body: { type: String, required: true },
-  },
-  { collection: 'articles' },
-)
-
-export const ArticleModelToken = Symbol('ArticleModel') as InjectionToken<Model<ArticleDoc>>
-
-/** Registers the model on the default Mongoose connection (see \`mongoose.connect\` in bootstrap). */
-export function getArticleModel(): Model<ArticleDoc> {
-  const existing = mongoose.models['Article'] as Model<ArticleDoc> | undefined
-  return existing ?? mongoose.model<ArticleDoc>('Article', articleSchema)
-}
-`,
-    },
-    {
-      relativePath: 'src/modules/articles/ArticleSchema.ts',
+      relativePath: 'src/modules/articles/Article.dto.ts',
       content: `import { z } from 'zod'
 
 export const CreateArticleSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(10000),
 })
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/domain/Article.entity.ts',
+      content: `import { Entity } from '@banana-universe/ddd'
+
+export interface ArticleProps {
+  id: string
+  title: string
+  body: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export class Article extends Entity<ArticleProps> {
+  constructor(props: ArticleProps) {
+    super(props)
+  }
+
+  get title(): string {
+    return this.props.title
+  }
+
+  get body(): string {
+    return this.props.body
+  }
+}
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/domain/Article.repository.ts',
+      content: `import type { Repository } from '@banana-universe/ddd'
+import type { InjectionToken } from 'tsyringe'
+import type { Article } from './Article.entity.js'
+
+export type ArticleRepository = Repository<Article>
+
+/** Runtime DI token for the articles persistence port (tsyringe). */
+export const ArticleRepositoryToken = Symbol('ArticleRepository') as InjectionToken<ArticleRepository>
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/application/Article.service.ts',
+      content: `import { randomUUID } from 'node:crypto'
+import { inject, injectable } from 'tsyringe'
+import type { ArticleRepository } from '../domain/Article.repository.js'
+import { ArticleRepositoryToken } from '../domain/Article.repository.js'
+import { Article } from '../domain/Article.entity.js'
+
+/** Application-layer orchestration (DDD); tsyringe constructor injection. */
+@injectable()
+export class ArticleAppService {
+  constructor(
+    @inject(ArticleRepositoryToken)
+    public readonly articleRepository: ArticleRepository,
+  ) {}
+
+  async create(title: string, body: string): Promise<Article> {
+    const now = new Date()
+    const entity = new Article({
+      id: randomUUID(),
+      title,
+      body,
+      createdAt: now,
+      updatedAt: now,
+    })
+    return this.articleRepository.save(entity)
+  }
+}
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/infrastructure/Article.mongoose-model.ts',
+      content: `import type { Connection } from 'mongoose'
+import { Schema, type HydratedDocument, type Model } from 'mongoose'
+
+/** Mongoose document shape for the \`articles\` collection. */
+export type ArticleDoc = HydratedDocument<{
+  _id: string
+  title: string
+  body: string
+  createdAt: Date
+  updatedAt: Date
+}>
+
+export const articleSchema = new Schema(
+  {
+    _id: { type: String, required: true },
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+    createdAt: { type: Date, required: true },
+    updatedAt: { type: Date, required: true },
+  },
+  { collection: 'articles' },
+)
+
+/** Registers or reuses the Article model on the given connection. */
+export function getArticleModel(connection: Connection): Model<ArticleDoc> {
+  const existing = connection.models['Article'] as Model<ArticleDoc> | undefined
+  return existing ?? connection.model<ArticleDoc>('Article', articleSchema)
+}
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/infrastructure/Article.mongoose-repository.ts',
+      content: `import type { Connection } from 'mongoose'
+import { inject, injectable } from 'tsyringe'
+import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
+import { Article } from '../domain/Article.entity.js'
+import { getArticleModel, type ArticleDoc } from './Article.mongoose-model.js'
+
+@injectable()
+export class ArticleMongooseRepository extends MongooseRepositoryAdapter<Article, ArticleDoc> {
+  constructor(@inject('mongooseConnection') connection: Connection) {
+    super(getArticleModel(connection))
+  }
+
+  toDomain(doc: ArticleDoc): Article {
+    return new Article({
+      id: String(doc._id),
+      title: doc.title,
+      body: doc.body,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    })
+  }
+
+  toPersistence(domain: Article): Partial<ArticleDoc> {
+    return {
+      _id: domain.id,
+      title: domain.title,
+      body: domain.body,
+      createdAt: domain.createdAt,
+      updatedAt: domain.updatedAt,
+    }
+  }
+}
 `,
     },
   ]
@@ -436,8 +547,8 @@ import {
   defineBananaAppOptions,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
-import { HealthController } from './modules/health/HealthController.js'
-import { NoteEntity } from './modules/health/NoteEntity.js'
+import { HealthController } from './modules/health/Health.controller.js'
+import { NoteEntity } from './modules/health/Note.entity.js'
 
 const healthModule = createModule({
   id: 'health',
@@ -470,7 +581,7 @@ function buildTypeOrmOptions(): Record<string, unknown> {
 `,
     },
     {
-      relativePath: 'src/modules/health/HealthController.ts',
+      relativePath: 'src/modules/health/Health.controller.ts',
       content: `import 'reflect-metadata'
 import type { Request, Response } from 'express'
 import { BaseController, Controller, Get, Public } from '@banana-universe/bananajs'
@@ -486,7 +597,7 @@ export class HealthController extends BaseController {
 `,
     },
     {
-      relativePath: 'src/modules/health/NoteEntity.ts',
+      relativePath: 'src/modules/health/Note.entity.ts',
       content: `import 'reflect-metadata'
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
 

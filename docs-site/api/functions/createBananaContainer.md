@@ -4,20 +4,22 @@
 
 [@banana-universe/bananajs](../index.md) / createBananaContainer
 
-# Function: createBananaContainer()
+# ~~Function: createBananaContainer()~~
 
-> **createBananaContainer**(`registrations`): `AwilixContainer`
+> **createBananaContainer**(`_registrations`): `DependencyContainer`
 
-Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:8
-
-Create a container and register all services in one call.
+Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:12
 
 ## Parameters
 
-### registrations
+### \_registrations
 
-[`BananaServiceRegistrations`](../type-aliases/BananaServiceRegistrations.md)
+`never`
 
 ## Returns
 
-`AwilixContainer`
+`DependencyContainer`
+
+## Deprecated
+
+Use [createBananaProviderContainer](createBananaProviderContainer.md) with tsyringe providers.

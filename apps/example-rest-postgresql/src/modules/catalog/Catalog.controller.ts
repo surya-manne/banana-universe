@@ -13,13 +13,13 @@ import {
   Query,
   PaginatedResponse,
 } from '@banana-universe/bananajs'
-import { CatalogAppService } from './application/CatalogAppService.js'
+import { CatalogAppService } from './application/Catalog.service.js'
 import {
   CatalogItemIdParamsSchema,
   CatalogListQuerySchema,
   CreateCatalogItemSchema,
   type CatalogListQuery,
-} from './CatalogDto.js'
+} from './Catalog.dto.js'
 
 @Controller('catalog')
 @Auth()

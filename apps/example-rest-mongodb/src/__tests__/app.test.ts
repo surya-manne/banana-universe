@@ -5,7 +5,7 @@ import request from 'supertest'
 import mongoose from 'mongoose'
 import { BananaApp, defineBananaAppOptions } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
-import { buildArticlesModule } from '../modules/articles/ArticlesModule.js'
+import { articlesModule } from '../modules/articles/index.js'
 
 test('health without live MongoDB (CI default)', async () => {
   const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/ci_dummy'
@@ -13,7 +13,7 @@ test('health without live MongoDB (CI default)', async () => {
 
   const banana = await BananaApp.create(
     defineBananaAppOptions({
-      modules: [buildArticlesModule()],
+      modules: [articlesModule],
       plugins: [MongoosePlugin(mongoose.connection) as never],
       logger: false,
       gracefulShutdown: false,
