@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import 'reflect-metadata'
 import { createExampleApp, buildTypeOrmOptions } from './bootstrap.js'
 

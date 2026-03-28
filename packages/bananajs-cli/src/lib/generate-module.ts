@@ -35,10 +35,10 @@ export class ${Pascal} extends Entity<${Pascal}Props> {
 }
 `
 
-  const domainRepo = `import type { Repository } from '@banana-universe/ddd'
-import type { ${Pascal} } from './${kebab}.entity.js'
+  const domainMapper = `import type { Repository } from '@banana-universe/ddd'
+import type { ${Pascal} } from './${Pascal}Entity.js'
 
-export type ${Pascal}Repository = Repository<${Pascal}>
+export type ${Pascal}Mapper = Repository<${Pascal}>
 `
 
   const domainService = `import { DomainService } from '@banana-universe/ddd'
@@ -64,42 +64,40 @@ export type Update${Pascal}Dto = z.infer<typeof Update${Pascal}Schema>
 `
 
   const files: ModuleFile[] = [
-    { relativePath: path.join(base, 'domain', `${kebab}.entity.ts`), content: domainEntity },
-    { relativePath: path.join(base, 'domain', `${kebab}.repository.ts`), content: domainRepo },
-    { relativePath: path.join(base, 'domain', `${kebab}.service.ts`), content: domainService },
-    { relativePath: path.join(base, 'application', `${kebab}.dto.ts`), content: appDto },
+    { relativePath: path.join(base, 'domain', `${Pascal}Entity.ts`), content: domainEntity },
+    { relativePath: path.join(base, 'domain', `${Pascal}Mapper.ts`), content: domainMapper },
     {
-      relativePath: path.join(base, 'application', `${kebab}.app-service.ts`),
+      relativePath: path.join(base, 'domain', `${Pascal}DomainService.ts`),
+      content: domainService,
+    },
+    { relativePath: path.join(base, 'application', `${Pascal}Dto.ts`), content: appDto },
+    {
+      relativePath: path.join(base, 'application', `${Pascal}AppService.ts`),
       content: simplifyAppService(Pascal, kebab),
     },
     {
-      relativePath: path.join(base, `${kebab}.controller.ts`),
+      relativePath: path.join(base, `${Pascal}Controller.ts`),
       content: simplifyController(Pascal, kebab),
     },
   ]
 
   if (orm === 'typeorm') {
     files.push({
-      relativePath: path.join(base, 'infrastructure', 'typeorm', `${kebab}.orm-entity.ts`),
+      relativePath: path.join(base, 'infrastructure', 'typeorm', `${Pascal}OrmEntity.ts`),
       content: typeormEntity(Pascal, kebab),
     })
     files.push({
-      relativePath: path.join(base, 'infrastructure', 'typeorm', `${kebab}.typeorm-repository.ts`),
+      relativePath: path.join(base, 'infrastructure', 'typeorm', `${Pascal}TypeOrmRepository.ts`),
       content: typeormRepo(Pascal, kebab),
     })
   } else if (orm === 'mongoose') {
     files.push({
-      relativePath: path.join(
-        base,
-        'infrastructure',
-        'mongoose',
-        `${kebab}.mongoose-repository.ts`,
-      ),
+      relativePath: path.join(base, 'infrastructure', 'mongoose', `${Pascal}MongooseRepository.ts`),
       content: mongooseRepo(Pascal, kebab),
     })
   } else {
     files.push({
-      relativePath: path.join(base, 'infrastructure', `${kebab}.in-memory-repository.ts`),
+      relativePath: path.join(base, 'infrastructure', `${Pascal}InMemoryRepository.ts`),
       content: inMemoryRepo(Pascal, kebab),
     })
   }
@@ -114,21 +112,21 @@ function camel(pascal: string): string {
 function simplifyAppService(Pascal: string, kebab: string): string {
   const c = camel(Pascal)
   return `import { ApplicationService } from '@banana-universe/ddd'
-import type { ${Pascal}Repository } from '../domain/${kebab}.repository.js'
-import { ${Pascal}, type ${Pascal}Props } from '../domain/${kebab}.entity.js'
-import type { Create${Pascal}Dto, Update${Pascal}Dto } from './${kebab}.dto.js'
+import type { ${Pascal}Mapper } from '../domain/${Pascal}Mapper.js'
+import { ${Pascal}, type ${Pascal}Props } from '../domain/${Pascal}Entity.js'
+import type { Create${Pascal}Dto, Update${Pascal}Dto } from './${Pascal}Dto.js'
 import { randomUUID } from 'node:crypto'
 
 @ApplicationService()
 export class ${Pascal}AppService {
-  constructor(private readonly ${c}Repository: ${Pascal}Repository) {}
+  constructor(private readonly ${c}Mapper: ${Pascal}Mapper) {}
 
   async findAll(): Promise<${Pascal}[]> {
-    return this.${c}Repository.findAll()
+    return this.${c}Mapper.findAll()
   }
 
   async findOne(id: string): Promise<${Pascal} | null> {
-    return this.${c}Repository.findById(id)
+    return this.${c}Mapper.findById(id)
   }
 
   async create(dto: Create${Pascal}Dto): Promise<${Pascal}> {
@@ -137,11 +135,11 @@ export class ${Pascal}AppService {
       name: dto.name,
     }
     const entity = new ${Pascal}(props)
-    return this.${c}Repository.save(entity)
+    return this.${c}Mapper.save(entity)
   }
 
   async update(id: string, dto: Update${Pascal}Dto): Promise<${Pascal} | null> {
-    const existing = await this.${c}Repository.findById(id)
+    const existing = await this.${c}Mapper.findById(id)
     if (!existing) return null
     const props: ${Pascal}Props = {
       id: existing.id as string,
@@ -149,11 +147,11 @@ export class ${Pascal}AppService {
       createdAt: existing.createdAt,
       updatedAt: existing.updatedAt,
     }
-    return this.${c}Repository.save(new ${Pascal}(props))
+    return this.${c}Mapper.save(new ${Pascal}(props))
   }
 
   async remove(id: string): Promise<void> {
-    await this.${c}Repository.delete(id)
+    await this.${c}Mapper.delete(id)
   }
 }
 `
@@ -166,19 +164,17 @@ function simplifyController(Pascal: string, kebab: string): string {
   Controller,
   Delete,
   Get,
-  Injectable,
   Params,
   Post,
   Put,
 } from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
 import { z } from 'zod'
-import { ${Pascal}AppService } from './application/${kebab}.app-service.js'
-import { Create${Pascal}Schema, Update${Pascal}Schema } from './application/${kebab}.dto.js'
+import { ${Pascal}AppService } from './application/${Pascal}AppService.js'
+import { Create${Pascal}Schema, Update${Pascal}Schema } from './application/${Pascal}Dto.js'
 
 const ${kebab}IdParams = z.object({ id: z.string().min(1) })
 
-@Injectable()
 @Controller('${kebab}')
 export class ${Pascal}Controller extends BaseController {
   constructor(private readonly app: ${Pascal}AppService) {
@@ -251,8 +247,8 @@ export class ${Pascal}OrmEntity {
 function typeormRepo(Pascal: string, kebab: string): string {
   return `import type { DataSource } from 'typeorm'
 import { TypeOrmRepositoryAdapter } from '@banana-universe/plugin-typeorm'
-import { ${Pascal} } from '../../domain/${kebab}.entity.js'
-import { ${Pascal}OrmEntity } from './${kebab}.orm-entity.js'
+import { ${Pascal} } from '../../domain/${Pascal}Entity.js'
+import { ${Pascal}OrmEntity } from './${Pascal}OrmEntity.js'
 
 export class ${Pascal}TypeOrmRepository extends TypeOrmRepositoryAdapter<${Pascal}, ${Pascal}OrmEntity> {
   constructor(dataSource: DataSource) {
@@ -284,7 +280,7 @@ function mongooseRepo(Pascal: string, kebab: string): string {
   const schemaVar = `${camel(Pascal)}Schema`
   return `import { Schema, type Connection, type HydratedDocument } from 'mongoose'
 import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
-import { ${Pascal} } from '../../domain/${kebab}.entity.js'
+import { ${Pascal} } from '../../domain/${Pascal}Entity.js'
 
 type ${Pascal}Doc = HydratedDocument<{
   name: string
@@ -332,10 +328,10 @@ export class ${Pascal}MongooseRepository extends MongooseRepositoryAdapter<${Pas
 
 function inMemoryRepo(Pascal: string, kebab: string): string {
   return `import type { FindCriteria } from '@banana-universe/ddd'
-import type { ${Pascal}Repository } from '../domain/${kebab}.repository.js'
-import { ${Pascal} } from '../domain/${kebab}.entity.js'
+import type { ${Pascal}Mapper } from '../domain/${Pascal}Mapper.js'
+import { ${Pascal} } from '../domain/${Pascal}Entity.js'
 
-export class ${Pascal}InMemoryRepository implements ${Pascal}Repository {
+export class ${Pascal}InMemoryRepository implements ${Pascal}Mapper {
   private readonly store = new Map<string, ${Pascal}>()
 
   async findById(id: string): Promise<${Pascal} | null> {

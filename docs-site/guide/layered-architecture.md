@@ -15,15 +15,15 @@ You can structure code as **domain / application / infrastructure** without the 
 ```
 src/<name>/
   domain/
-    <Name>.entity.ts
-    <Name>.repository.ts      # interface — persistence contract
-    <Name>.service.ts         # @DomainService
+    <Name>Entity.ts           # domain entity
+    <Name>Mapper.ts           # persistence port (DDD Repository<T> alias + DI token)
+    <Name>DomainService.ts    # @DomainService
   application/
-    <Name>.app-service.ts     # @ApplicationService
-    <Name>.dto.ts
+    <Name>AppService.ts       # @ApplicationService
+    <Name>Dto.ts              # Zod schemas + types (list/query params live here too)
   infrastructure/
-    typeorm/<Name>.typeorm-repository.ts   # or mongoose/ / in-memory
-  <Name>.controller.ts
+    typeorm/<Name>TypeOrmRepository.ts   # or mongoose/ / in-memory
+  <Name>Controller.ts
 ```
 
 ## Principles

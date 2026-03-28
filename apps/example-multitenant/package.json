@@ -5,12 +5,18 @@
   "type": "module",
   "description": "Recipe: TypeORM + PostgreSQL, @Tenant, per-tenant data, @Can ABAC",
   "scripts": {
+    "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.app.json",
     "start": "node dist/main.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "pretest": "cd ../../packages/bananajs && npx tsc -p tsconfig.lib.json && cd ../ddd && npx tsc -p tsconfig.lib.json && cd ../plugin-typeorm && npx tsc -p tsconfig.lib.json",
     "test": "npm run build && NODE_ENV=test node --test dist/__tests__/app.test.js"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "@banana-universe/bananajs": "*",
     "@banana-universe/ddd": "*",
     "@banana-universe/plugin-typeorm": "*",
@@ -22,6 +28,14 @@
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
+    "@banana-universe/bananajs-cli": "*",
+    "@eslint/js": "^9.8.0",
+    "@types/node": "~18.16.9",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^2.6.2",
+    "tsx": "^4.19.2",
+    "typescript-eslint": "^8.19.0",
     "@types/supertest": "^7.2.0",
     "sql.js": "^1.11.0",
     "supertest": "^7.2.2",

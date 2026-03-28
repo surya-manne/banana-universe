@@ -1,18 +1,10 @@
 import 'reflect-metadata'
-import {
-  BananaApp,
-  type BananaPlugin,
-  defineBananaAppOptions,
-  defineBananaControllers,
-} from '@banana-universe/bananajs'
+import { BananaApp, type BananaPlugin, defineBananaAppOptions } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
 import { OpenTelemetryPlugin } from '@banana-universe/plugin-otel'
-import { BearerAuthGuard } from './lib/bearer-auth-guard.js'
-import { CatalogController } from './catalog/catalog.controller.js'
-import { CatalogAppService } from './catalog/application/catalog.app-service.js'
-import { CatalogItemTypeOrmRepository } from './catalog/infrastructure/catalog-item.typeorm-repository.js'
-import { CatalogItemRepositoryToken } from './catalog/domain/catalog-item.repository.js'
-import { CatalogItemOrmEntity } from './catalog/infrastructure/catalog-item.orm-entity.js'
+import { BearerAuthGuard } from './lib/BearerAuthGuard.js'
+import { catalogModule } from './modules/catalog/CatalogModule.js'
+import { CatalogItemOrmEntity } from './modules/catalog/infrastructure/CatalogItemOrmEntity.js'
 
 export { CatalogItemOrmEntity }
 
@@ -31,12 +23,7 @@ export async function createExampleApp(options: {
 
   return BananaApp.create(
     defineBananaAppOptions({
-      controllers: defineBananaControllers(CatalogController),
-      providers: [
-        { token: CatalogItemRepositoryToken, useClass: CatalogItemTypeOrmRepository },
-        CatalogAppService,
-        CatalogController,
-      ],
+      modules: [catalogModule],
       plugins,
       auth: { guard: new BearerAuthGuard() },
       swagger: { enabled: true },

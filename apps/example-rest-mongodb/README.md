@@ -1,6 +1,20 @@
 # example-rest-mongodb
 
+**[BananaJS](https://surya-manne.github.io/banana-universe/)** is a TypeScript framework on Express—decorator routing, Zod validation, and feature modules via `createModule` under `src/modules/<feature>/`. This repo’s runnable recipes live under [`apps/`](https://github.com/surya-manne/banana-universe/tree/main/apps).
+
 **Mongoose** with core **`@Body(ZodSchema)`** for request bodies.
+
+## Scripts
+
+| Script                                    | Description                           |
+| ----------------------------------------- | ------------------------------------- |
+| `npm run dev`                             | `tsx watch` — develop with hot reload |
+| `npm run build`                           | Compile to `dist/`                    |
+| `npm start`                               | Run compiled server                   |
+| `npm run lint` / `npm run lint:fix`       | ESLint (type-aware)                   |
+| `npm run format` / `npm run format:check` | Prettier                              |
+
+The **BananaJS CLI** (`@banana-universe/bananajs-cli`) is included as a devDependency for `bananajs` commands.
 
 ## MongoDB notes (read before production)
 
@@ -19,9 +33,11 @@ This sample uses **single-document** `create` operations.
 
 ```bash
 cp .env.example .env
-npm run build
-npm run start
+npm run dev
+# or: npm run build && npm start
 ```
+
+Environment variables are loaded with **`dotenv`** at startup (`import 'dotenv/config'` in `main.ts`).
 
 ## Tests
 

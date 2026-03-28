@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import 'reflect-metadata'
 import { createChatApp } from './bootstrap.js'
 

@@ -1,15 +1,11 @@
 import 'reflect-metadata'
-import {
-  BananaApp,
-  defineBananaAppOptions,
-  defineBananaControllers,
-} from '@banana-universe/bananajs'
-import { HealthController } from './health.controller.js'
+import { BananaApp, defineBananaAppOptions } from '@banana-universe/bananajs'
+import { healthModule } from './modules/health/HealthModule.js'
 
 export async function createFastifyBananaApp(): Promise<BananaApp> {
   return BananaApp.create(
     defineBananaAppOptions({
-      controllers: defineBananaControllers(HealthController),
+      modules: [healthModule],
       logger: false,
       gracefulShutdown: false,
       rateLimit: false,

@@ -5,16 +5,30 @@
   "type": "module",
   "description": "Recipe: Fastify + @fastify/express mounting BananaJS (Express) — hybrid HTTP stack",
   "scripts": {
+    "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.app.json",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "@banana-universe/bananajs": "*",
     "@fastify/express": "^4.0.2",
     "fastify": "^5.2.0",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "@banana-universe/bananajs-cli": "*",
+    "@eslint/js": "^9.8.0",
+    "@types/node": "~18.16.9",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^2.6.2",
+    "tsx": "^4.19.2",
+    "typescript-eslint": "^8.19.0",
     "typescript": "~5.7.2"
   }
 }

@@ -4,7 +4,7 @@ import type { Constructor } from '../Core/App.js'
 
 /**
  * Provider entry for {@link createModule} — a class, or an explicit token binding.
- * Controllers are registered automatically from the module descriptor; list other services here.
+ * The module **`controller`** is registered on the child container automatically — **do not** list it in **`providers`**.
  */
 export type BananaModuleProvider =
   | Constructor

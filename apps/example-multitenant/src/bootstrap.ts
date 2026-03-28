@@ -4,14 +4,12 @@ import {
   BananaApp,
   createBananaApplication,
   defineBananaAppOptions,
-  defineBananaControllers,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
-import { BearerAuthGuard } from './lib/bearer-auth-guard.js'
-import { DemoAbacGuard } from './lib/demo-abac-guard.js'
-import { NoteController } from './note/note.controller.js'
-import { NoteAppService } from './note/note.app-service.js'
-import { TenantNoteOrmEntity } from './note/note.orm-entity.js'
+import { BearerAuthGuard } from './lib/BearerAuthGuard.js'
+import { DemoAbacGuard } from './lib/DemoAbacGuard.js'
+import { noteModule } from './modules/note/NoteModule.js'
+import { TenantNoteOrmEntity } from './modules/note/TenantNoteOrmEntity.js'
 
 export { TenantNoteOrmEntity }
 
@@ -40,8 +38,7 @@ export function buildTypeOrmOptions(
 /** Declarative BananaJS options for the multitenant notes API (tsyringe + plugins + guards). */
 export function buildTenantAppOptions(typeorm: Record<string, unknown>): BananaAppCreateInput {
   return defineBananaAppOptions({
-    controllers: defineBananaControllers(NoteController),
-    providers: [NoteAppService, NoteController],
+    modules: [noteModule],
     plugins: [TypeOrmPlugin(typeorm) as import('@banana-universe/bananajs').BananaPlugin],
     auth: { guard: new BearerAuthGuard() },
     abac: { guard: new DemoAbacGuard() },
