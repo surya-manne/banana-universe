@@ -149,10 +149,12 @@ Example: [https://github.com/surya-manne/banana-universe/tree/main/apps/bananajs
     In your `src/index.ts` (or main file), initialize the app by importing `BananaApp` and passing in the routes.
 
     ```typescript
-    import BananaApp from '@banana-universe/bananajs'
+    import BananaApp, { defineBananaControllers } from '@banana-universe/bananajs'
     import { UserController } from './routes'
 
-    const bananaApp = new BananaApp([UserController]).getInstance()
+    const bananaApp = new BananaApp({
+      controllers: defineBananaControllers(UserController),
+    }).getInstance()
 
     bananaApp.listen(3000, () => {
       console.log('Server started on port 3000')

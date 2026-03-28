@@ -41,11 +41,12 @@ Full native Fastify support (without Express in the middle) is targeted for **v2
 ## What the API will look like (once implemented)
 
 ```typescript
-import BananaApp from '@banana-universe/bananajs'
+import BananaApp, { defineBananaControllers } from '@banana-universe/bananajs'
 import { FastifyAdapter } from '@banana-universe/adapter-fastify'
 import { UserController } from './controllers/UserController'
 
-const app = await BananaApp.create([UserController], {
+const app = await BananaApp.create({
+  controllers: defineBananaControllers(UserController),
   adapter: new FastifyAdapter(),
 })
 

@@ -4,15 +4,23 @@ BananaJS ships a **wide** enterprise surface—auth, OpenAPI, plugins, cache, me
 
 ## `BananaAppOptions`
 
-`BananaApp` is constructed as:
+`BananaApp` is constructed with **one object**: **`BananaAppOptions`** plus **`controllers`** (use **`defineBananaControllers`**).
 
 ```typescript
-new BananaApp(controllers, options)
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
+
+new BananaApp({
+  controllers: defineBananaControllers(UserController),
+  // ...BananaAppOptions
+})
 // or
-await BananaApp.create(controllers, options)
+await BananaApp.create({
+  controllers: defineBananaControllers(UserController),
+  // ...BananaAppOptions
+})
 ```
 
-The second argument is the **`BananaAppOptions`** object (`packages/bananajs/src/lib/Core/App.ts`). Highlights:
+The rest of the object is **`BananaAppOptions`** (`packages/bananajs/src/lib/Core/App.ts`). Highlights:
 
 | Area              | Options (illustrative)                                                              |
 | ----------------- | ----------------------------------------------------------------------------------- |

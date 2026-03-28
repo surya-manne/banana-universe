@@ -15,10 +15,11 @@ npm install pg
 Build a **`BananaPlugin`** with **`TypeOrmPlugin(options)`** where `options` is the **TypeORM `DataSource` constructor options** (entities, migrations, etc.).
 
 ```typescript
-import { BananaApp } from '@banana-universe/bananajs'
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
 
-await BananaApp.create([UserController], {
+await BananaApp.create({
+  controllers: defineBananaControllers(UserController),
   plugins: [
     TypeOrmPlugin({
       type: 'postgres',

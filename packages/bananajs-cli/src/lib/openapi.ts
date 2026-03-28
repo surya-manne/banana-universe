@@ -29,7 +29,11 @@ export async function openapiExport(options: { out?: string; client?: string }):
     console.log(chalk.gray('Expected locations:'))
     candidates.forEach((c) => console.log(chalk.gray(`  ${c}`)))
     console.log(chalk.gray('\nMake sure your app is built and the swagger option is enabled:'))
-    console.log(chalk.gray('  BananaApp.create([], { swagger: { enabled: true } })'))
+    console.log(
+      chalk.gray(
+        '  BananaApp.create({ controllers: defineBananaControllers(), swagger: { enabled: true } })',
+      ),
+    )
     return
   }
 
@@ -64,7 +68,7 @@ export async function openapiExport(options: { out?: string; client?: string }):
       const error = err as { message?: string }
       if (error.message?.includes('Cannot find module')) {
         console.log(chalk.red('openapi-typescript is not installed.'))
-        console.log(chalk.gray('Install it: npm install -D openapi-typescript'))
+        console.log(chalk.gray('Install it: npm install openapi-typescript'))
       } else {
         console.log(chalk.red(`Client generation failed: ${error.message ?? String(err)}`))
       }

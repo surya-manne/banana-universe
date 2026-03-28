@@ -12,11 +12,13 @@ npm install @banana-universe/plugin-mongoose mongoose
 
 ```typescript
 import mongoose from 'mongoose'
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
 
 const connection = await mongoose.createConnection(process.env.DATABASE_URL!).asPromise()
 
-const app = await BananaApp.create([ArticleController], {
+const app = await BananaApp.create({
+  controllers: defineBananaControllers(ArticleController),
   plugins: [MongoosePlugin(connection)],
   // ...
 })

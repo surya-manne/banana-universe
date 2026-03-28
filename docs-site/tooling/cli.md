@@ -13,11 +13,12 @@ bananajs --version
 
 ## `bananajs new [appName]`
 
-Scaffolds an app by **cloning** a GitHub template (MongoDB or SQL). Requires **`git`** on PATH.
+Scaffolds an app from **built-in presets** (MongoDB/Mongoose or SQL/TypeORM). Writes files under **`./<appName>`**—**no git** and no remote template.
 
-- Prompts for app name if omitted
-- Prompts **MongoDB** vs **SQL** template
-- Removes `.git` after clone
+- Prompts for app name if omitted (default suggestion: **`my-bananajs-app`**)
+- Interactive terminal: prompts for **MongoDB** vs **SQL** preset
+- **`--preset <id>`** — **`mongodb`** \| **`sql`** — skip the preset prompt (use in CI/scripts)
+- Non-interactive stdin (no TTY): defaults to **`sql`** if **`--preset`** is omitted; pass **`--preset`** explicitly to choose MongoDB or silence the default
 
 ## `bananajs generate <type> <name>` (alias: `g`)
 

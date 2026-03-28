@@ -8,7 +8,7 @@
 
 > **DeclarativeBananaOptions** = `Omit`\<[`BananaAppOptions`](../interfaces/BananaAppOptions.md), `"container"`\> & `object`
 
-Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:14
+Defined in: packages/bananajs/src/lib/DI/bananaBootstrap.ts:22
 
 ## Type Declaration
 

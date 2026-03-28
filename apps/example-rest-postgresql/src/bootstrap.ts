@@ -4,8 +4,8 @@ import { asFunction } from 'awilix'
 import {
   BananaApp,
   type BananaPlugin,
-  type Constructor,
   defineBananaAppOptions,
+  defineBananaControllers,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
 import { OpenTelemetryPlugin } from '@banana-universe/plugin-otel'
@@ -30,31 +30,33 @@ export async function createExampleApp(options: {
     )
   }
 
-  const appOptions = defineBananaAppOptions({
-    services: {
-      catalogItemRepository: asFunction(
-        (cradle: { dataSource: DataSource }) => new CatalogItemTypeOrmRepository(cradle.dataSource),
-      ).singleton(),
-      catalogAppService: asFunction(
-        (cradle: { catalogItemRepository: CatalogItemTypeOrmRepository }) =>
-          new CatalogAppService(cradle.catalogItemRepository),
-      ).singleton(),
-      catalogController: asFunction(
-        (cradle: { catalogAppService: CatalogAppService }) =>
-          new CatalogController(cradle.catalogAppService),
-      ).singleton(),
-    },
-    plugins,
-    auth: { guard: new BearerAuthGuard() },
-    swagger: { enabled: true },
-    logger: false,
-    gracefulShutdown: false,
-    rateLimit: false,
-    requestId: false,
-    security: { helmet: false, cors: false },
-  })
-
-  return BananaApp.create([CatalogController as unknown as Constructor], appOptions)
+  return BananaApp.create(
+    defineBananaAppOptions({
+      controllers: defineBananaControllers(CatalogController),
+      services: {
+        catalogItemRepository: asFunction(
+          (cradle: { dataSource: DataSource }) =>
+            new CatalogItemTypeOrmRepository(cradle.dataSource),
+        ).singleton(),
+        catalogAppService: asFunction(
+          (cradle: { catalogItemRepository: CatalogItemTypeOrmRepository }) =>
+            new CatalogAppService(cradle.catalogItemRepository),
+        ).singleton(),
+        catalogController: asFunction(
+          (cradle: { catalogAppService: CatalogAppService }) =>
+            new CatalogController(cradle.catalogAppService),
+        ).singleton(),
+      },
+      plugins,
+      auth: { guard: new BearerAuthGuard() },
+      swagger: { enabled: true },
+      logger: false,
+      gracefulShutdown: false,
+      rateLimit: false,
+      requestId: false,
+      security: { helmet: false, cors: false },
+    }),
+  )
 }
 
 export function buildTypeOrmOptions(

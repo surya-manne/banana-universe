@@ -6,25 +6,21 @@
 
 # Class: BananaApp
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:92
+Defined in: packages/bananajs/src/lib/Core/App.ts:100
 
 ## Constructors
 
 ### Constructor
 
-> **new BananaApp**(`controllers`, `options?`): `BananaApp`
+> **new BananaApp**(`input`): `BananaApp`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:102
+Defined in: packages/bananajs/src/lib/Core/App.ts:110
 
 #### Parameters
 
-##### controllers
+##### input
 
-[`Constructor`](../type-aliases/Constructor.md)\<`unknown`\>[]
-
-##### options?
-
-[`BananaAppOptions`](../interfaces/BananaAppOptions.md) = `{}`
+[`BananaAppCreateInput`](../type-aliases/BananaAppCreateInput.md)
 
 #### Returns
 
@@ -36,7 +32,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:102
 
 > **getInstance**(): `Application`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:498
+Defined in: packages/bananajs/src/lib/Core/App.ts:504
 
 #### Returns
 
@@ -48,7 +44,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:498
 
 > **getRouteTable**(): [`RouteInfo`](../interfaces/RouteInfo.md)[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:502
+Defined in: packages/bananajs/src/lib/Core/App.ts:508
 
 #### Returns
 
@@ -58,19 +54,15 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:502
 
 ### create()
 
-> `static` **create**(`controllers`, `options?`): `Promise`\<`BananaApp`\>
+> `static` **create**(`input`): `Promise`\<`BananaApp`\>
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:163
+Defined in: packages/bananajs/src/lib/Core/App.ts:172
 
 #### Parameters
 
-##### controllers
+##### input
 
-[`Constructor`](../type-aliases/Constructor.md)\<`unknown`\>[]
-
-##### options?
-
-[`BananaAppOptions`](../interfaces/BananaAppOptions.md) = `{}`
+[`BananaAppCreateInput`](../type-aliases/BananaAppCreateInput.md)
 
 #### Returns
 

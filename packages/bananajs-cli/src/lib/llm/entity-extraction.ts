@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export interface EntityExtraction {
   entityName: string
   fields: Array<{ name: string; type: string; optional?: boolean }>
@@ -23,21 +25,18 @@ export function tryParseJsonObject(text: string): unknown {
   }
 }
 
-export async function validateEntityExtraction(data: unknown): Promise<EntityExtraction> {
-  const zod = await import('zod').catch(() => {
-    throw new Error('Install zod to use AI module generation: npm install zod')
-  })
-  const schema = zod.z.object({
-    entityName: zod.z.string().min(1),
-    fields: zod.z
+export function validateEntityExtraction(data: unknown): EntityExtraction {
+  const schema = z.object({
+    entityName: z.string().min(1),
+    fields: z
       .array(
-        zod.z.object({
-          name: zod.z.string().min(1),
-          type: zod.z.string().min(1),
-          optional: zod.z.boolean().optional(),
+        z.object({
+          name: z.string().min(1),
+          type: z.string().min(1),
+          optional: z.boolean().optional(),
         }),
       )
       .min(1),
   })
-  return schema.parse(data) as EntityExtraction
+  return schema.parse(data)
 }

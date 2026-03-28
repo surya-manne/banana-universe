@@ -13,7 +13,7 @@ Current implementation state. Very brief — references other docs. The only cha
 - **Pagination**: `PaginationQuerySchema` + `z.infer` replaces `PaginationDto`
 - **Routing**: `@Controller('segment')` and `@Get('segment')` — **no leading slash**; `joinRouteSegments` in `route-path.ts`
 - **Controllers**: `BaseController` with `ok` / `error`
-- **Bootstrap**: `createBananaApplication(controllers, { port?, onListening?, ...BananaAppOptions })`; **`defineBananaAppOptions`**, **`createBananaContainer`** for declarative Awilix registration (`services` + options)
+- **Bootstrap**: single object only — `new BananaApp` / `BananaApp.create` / `createBananaApplication` / `BananaTestApp.create` take `{ controllers: defineBananaControllers(...), ...BananaAppOptions }`; **`defineBananaAppOptions({ controllers: defineBananaControllers(...), services, ... })`**, **`defineBananaControllers`**, **`createBananaContainer`**
 - **plugin-zod**: deprecated re-export shim; **`plugin-websocket`**: `@WsBody(zodSchema?)`
 
 ### packages/bananajs v0.4.0 [Phase 4 Complete]
@@ -97,7 +97,7 @@ Current implementation state. Very brief — references other docs. The only cha
 **Phase 1 additions:**
 
 - `BananaAppOptions` — typed options object (security, logger, container, gracefulShutdown, requestId)
-- `BananaApp.create()` — static async factory (sync constructor retained for backward compat)
+- `BananaApp.create()` — static async factory (same input shape as `new BananaApp`)
 - `BananaApp.getRouteTable()` — returns `RouteInfo[]` for debug/introspection
 - `BananaRouter(controllers, container?)` — Express Router export for incremental adoption
 - `@Headers(DtoClass)` — request header validation decorator (closes README gap)
@@ -256,6 +256,11 @@ Key architectural decisions from Phase 2:
 
 | Date       | Change                                                                                                                                                                                                                                                                                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-28 | **bananajs** **breaking**: removed legacy `(controllers[], options)` overloads; added **`defineBananaControllers`**, **`defineBananaAppOptions`** normalizes **`controllers`** through it; docs + **`docs/MIGRATION.md`** updated; **`docs-site`** TypeDoc regen                                                                                                      |
+| 2026-03-28 | **bananajs-cli**: **`zod`** added as a **runtime dependency** (was optional peer only) so **`bananajs ai generate --module`** works with **`npx`** / global install; **`entity-extraction`** uses static **`import { z } from 'zod'`**; extraction failure messages distinguish JSON parse errors from Zod validation                                                 |
+| 2026-03-28 | **docs-site**: **Getting started** + **CLI** — installation commands aligned with preset-based **`bananajs new`** (**`npx` / `pnpm dlx` / `yarn dlx`**, global install, **`--preset`**, non-TTY behavior); removed git-clone wording                                                                                                                                  |
+| 2026-03-28 | **bananajs-cli** **`new`**: declarative built-in presets (**`create-app-presets.ts`**) — writes **MongoDB** / **SQL** scaffolds locally (no **`git clone`**); **`--preset mongodb \| sql`**; non-TTY defaults to **`sql`**; **`writeScaffoldedApp`** in **`create-app.ts`**                                                                                           |
+| 2026-03-28 | **bananajs-cli**: explicit pre-**`parse`** handling for top-level **`-h` / `--help`** and **`-V` / `--version`** ( **`CLI_VERSION`** ); avoids **Unknown command** style failures when only global flags are passed                                                                                                                                                   |
 | 2026-03-28 | **Local-only publishing**: removed **`.github/workflows/publish.yml`** and **`publish-github-packages.yml`**; root **`publish:bananajs`** / **`publish:bananajs-cli`** replaced by **`publish:local`** + **`scripts/publish-local-verdaccio.sh`**; **README**, **`npmrc.example`**, **`docs/CONTEXT.md`**, **`docs/ARCHITECTURE.md`** updated for Verdaccio-only flow |
 | 2026-03-27 | **README + publishing**: **Publishing and consuming packages** (Verdaccio, npm, GitHub Packages); **`npm run registry:local`**; **`engines.node`**; **`npmrc.example`**; restored **`.github/workflows/publish-github-packages.yml`**                                                                                                                                 |
 | 2026-03-27 | **Verdaccio + Node 24+**: **`package.json`** **`overrides`** → **`jwa@1.4.2`** (fixes **`SlowBuffer`** / **`buffer-equal-constant-time`** crash: Verdaccio → **jsonwebtoken** → **jws** → **jwa**)                                                                                                                                                                    |

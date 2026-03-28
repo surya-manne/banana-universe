@@ -4,8 +4,8 @@ import { createContainer, asFunction } from 'awilix'
 import {
   BananaApp,
   type BananaAppOptions,
-  type Constructor,
   createBananaApplication,
+  defineBananaControllers,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
 import { BearerAuthGuard } from './lib/bearer-auth-guard.js'
@@ -64,11 +64,12 @@ export function buildTenantAppOptions(typeorm: Record<string, unknown>): BananaA
   }
 }
 
-const controllers = [NoteController as unknown as Constructor]
-
 /** For tests and programmatic use: creates the app without calling `listen`. */
 export async function createTenantApp(typeorm: Record<string, unknown>) {
-  return BananaApp.create(controllers, buildTenantAppOptions(typeorm))
+  return BananaApp.create({
+    controllers: defineBananaControllers(NoteController),
+    ...buildTenantAppOptions(typeorm),
+  })
 }
 
 /** Starts the HTTP server using core `createBananaApplication` (async plugin lifecycle + optional listen). */
@@ -76,7 +77,8 @@ export async function startTenantApp(
   port: number,
   typeorm: Record<string, unknown>,
 ): Promise<void> {
-  await createBananaApplication(controllers, {
+  await createBananaApplication({
+    controllers: defineBananaControllers(NoteController),
     ...buildTenantAppOptions(typeorm),
     port,
     onListening: ({ port: p }) => {

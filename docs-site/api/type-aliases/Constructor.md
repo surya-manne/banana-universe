@@ -8,7 +8,10 @@
 
 > **Constructor**\<`T`\> = (...`args`) => `T`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:32
+Defined in: packages/bananajs/src/lib/Core/App.ts:37
+
+Controller / injectable class constructor.
+Rest args are intentionally unconstrained so DI-backed classes (typed constructors) assign without casts.
 
 ## Type Parameters
 
@@ -20,7 +23,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:32
 
 ### args
 
-...`unknown`[]
+...`any`[]
 
 ## Returns
 

@@ -8,12 +8,20 @@ Pick **one** path:
 
 ## 1. New app — CLI
 
-The CLI scaffolds a **new project folder** from an official starter.
+The CLI scaffolds a **new project folder** from **built-in presets** (**MongoDB** / Mongoose or **SQL** / TypeORM). Files are generated on disk—**no git clone** and no external template repository.
 
-**Run it**
+**Run it** (pick one)
 
 ```bash
 npx @banana-universe/bananajs-cli new my-app
+```
+
+```bash
+pnpm dlx @banana-universe/bananajs-cli new my-app
+```
+
+```bash
+yarn dlx @banana-universe/bananajs-cli new my-app
 ```
 
 Or install the CLI once globally, then use **`bananajs`**:
@@ -23,16 +31,25 @@ npm install -g @banana-universe/bananajs-cli
 bananajs new my-app
 ```
 
-**What you’ll be asked**
+**Non-interactive / CI** — pass a preset explicitly (required in scripts so the choice is not ambiguous):
+
+```bash
+npx @banana-universe/bananajs-cli new my-app --preset sql
+npx @banana-universe/bananajs-cli new my-app --preset mongodb
+```
+
+If stdin is not a TTY and **`--preset`** is omitted, the CLI defaults to **`sql`** and reminds you to pass **`--preset`** when you want MongoDB.
+
+**What you’ll be asked** (interactive terminal only)
 
 1. **App name** — If you run **`new`** without a name, the CLI prompts for it (default suggestion: **`my-bananajs-app`**).
-2. **Template** — Choose **MongoDB** (Mongoose-oriented starter) or **SQL** (SQL / TypeORM-oriented starter), depending on how you want to store data.
+2. **Preset** — **MongoDB** (Mongoose-oriented) or **SQL** (TypeORM-oriented), depending on how you want to store data.
 
 **After it finishes**
 
 1. **`cd`** into the new folder.
-2. **`npm install`** (or follow the package manager the README mentions).
-3. Open the project **README**: copy **`.env.example`** if present, set database URLs, and use the documented **`npm`** scripts to run and test the app.
+2. **`npm install`** (or your package manager).
+3. Typical next steps: **`npm run build`** then **`npm start`** (the CLI prints a short hint). Copy **`.env.example`** if present, set database URLs, and use the project **README** for scripts and configuration.
 
 Further tooling (**`generate`**, **`ai`**, **`routes`**, …): [CLI reference](/tooling/cli).
 
@@ -47,10 +64,14 @@ npm install -D typescript @types/node @types/express
 
 ```typescript
 import 'reflect-metadata'
-import { BananaApp } from '@banana-universe/bananajs'
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
 import { UserController } from './user.controller.js'
 
-new BananaApp([UserController], {}).getInstance().listen(3000)
+new BananaApp({
+  controllers: defineBananaControllers(UserController),
+})
+  .getInstance()
+  .listen(3000)
 ```
 
 Incremental adoption and Express migration: [From Express](/migration/from-express). Concepts and options: [Basic concepts](/guide/basic-concepts), [Advanced concepts](/guide/advanced-concepts).

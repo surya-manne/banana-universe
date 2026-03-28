@@ -4,7 +4,6 @@ import { Command } from 'commander'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import chalk from 'chalk'
-import { spawn } from 'child_process'
 import inquirer from 'inquirer'
 import { generateController, generateDto, generateMiddleware } from './lib/generate'
 import { buildDddModuleFiles, type OrmChoice } from './lib/generate-module.js'
@@ -15,22 +14,26 @@ import { openapiExport } from './lib/openapi'
 import { aiGenerate, aiDoc, aiReview } from './lib/ai.js'
 import { aiGenerateModule } from './lib/ai-module.js'
 import { aiSetup } from './lib/ai-setup.js'
+import { writeScaffoldedApp } from './lib/create-app.js'
+import { APP_PRESETS, getPresetById, type AppPreset } from './lib/create-app-presets.js'
 
-const MONGO_TEMPLATE_REPO = 'https://github.com/surya-manne/bananajs-mongo-app-template.git'
-const SQL_TEMPLATE_REPO = 'https://github.com/surya-manne/bananajs-sql-app-template.git'
+/** Keep in sync with packages/bananajs-cli/package.json */
+const CLI_VERSION = '0.3.0'
 
 const program = new Command()
 
 program
   .name('bananajs')
-  .version('0.3.0')
+  .version(CLI_VERSION)
   .description('BananaJS CLI — scaffold and generate BananaJS resources')
 
 program
   .command('new [appName]')
-  .description('Scaffold a new BananaJS application')
-  .action((appName?: string) => {
-    createApp(appName).catch((err: unknown) => {
+  .description('Scaffold a new BananaJS application from built-in presets (no git clone)')
+  .option('--preset <id>', 'mongodb | sql — skip interactive template choice')
+  .action(function (this: Command, appName?: string) {
+    const opts = this.opts() as { preset?: string }
+    createApp(appName, opts).catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })
@@ -210,36 +213,73 @@ aiCmd
     })
   })
 
+// Top-level -h/--help and -V/--version: handle before parse so they always work with subcommand-only CLIs
+// (some Commander / bundling setups treat these as unknown command names).
+const [, , ...argv] = process.argv
+if (argv.length === 1) {
+  const only = argv[0]
+  if (only === '-h' || only === '--help') {
+    program.help()
+  }
+  if (only === '-V' || only === '--version') {
+    process.stdout.write(`${CLI_VERSION}\n`)
+    process.exit(0)
+  }
+}
+
 program.parse(process.argv)
 
-async function createApp(appNameArg?: string): Promise<void> {
-  const prompts: {
-    type: string
-    name: string
-    message: string
-    default?: string
-    choices?: string[]
-  }[] = []
-
-  if (!appNameArg) {
-    prompts.push({
-      type: 'input',
-      name: 'appName',
-      message: 'What is the name of your app?',
-      default: 'my-bananajs-app',
-    })
+async function createApp(
+  appNameArg: string | undefined,
+  cmdOpts: { preset?: string },
+): Promise<void> {
+  let appName = appNameArg
+  if (!appName) {
+    const { appName: answered } = await inquirer.prompt<{ appName: string }>([
+      {
+        type: 'input',
+        name: 'appName',
+        message: 'What is the name of your app?',
+        default: 'my-bananajs-app',
+      },
+    ])
+    appName = answered
   }
 
-  prompts.push({
-    type: 'list',
-    name: 'templateType',
-    message: 'Which app configuration do you want?',
-    choices: ['MongoDB', 'SQL'],
-  })
+  let preset: AppPreset | undefined
+  if (cmdOpts.preset) {
+    preset = getPresetById(cmdOpts.preset)
+    if (!preset) {
+      const allowed = APP_PRESETS.map((p) => p.id).join(', ')
+      console.log(chalk.red(`Unknown --preset "${cmdOpts.preset}". Use: ${allowed}`))
+      process.exit(1)
+    }
+  } else if (!process.stdin.isTTY) {
+    preset = getPresetById('sql')
+    console.log(
+      chalk.yellow(
+        'Non-interactive terminal: using preset "sql". Pass --preset mongodb or --preset sql to choose explicitly.',
+      ),
+    )
+  } else {
+    const { presetId } = await inquirer.prompt<{ presetId: string }>([
+      {
+        type: 'list',
+        name: 'presetId',
+        message: 'Which app configuration do you want?',
+        choices: APP_PRESETS.map((p) => ({
+          name: `${p.promptLabel} — ${p.description}`,
+          value: p.id,
+        })),
+      },
+    ])
+    preset = getPresetById(presetId)
+  }
 
-  const answers = await inquirer.prompt(prompts)
-  const appName = appNameArg ?? (answers['appName'] as string)
-  const templateType = answers['templateType'] as string
+  if (!preset || !appName) {
+    console.log(chalk.red('Could not resolve app name or preset.'))
+    process.exit(1)
+  }
 
   const appDir = path.join(process.cwd(), appName)
 
@@ -254,43 +294,15 @@ async function createApp(appNameArg?: string): Promise<void> {
     }
   }
 
-  await fs.mkdir(appDir)
-
   try {
-    const repo = templateType === 'MongoDB' ? MONGO_TEMPLATE_REPO : SQL_TEMPLATE_REPO
-    await setupAppConfiguration(appDir, appName, repo)
+    await writeScaffoldedApp(appDir, { appName, preset })
+    console.log(chalk.green(`App "${appName}" created successfully!`))
+    console.log(chalk.cyan(`Next: cd ${appName} && npm install && npm run build && npm start`))
   } catch (error) {
     console.error('Error creating app:', error)
-    console.log(chalk.yellow('Make sure git is available on your CLI before running this command.'))
     await fs.rm(appDir, { recursive: true, force: true })
     process.exit(1)
   }
-}
-
-async function setupAppConfiguration(appDir: string, appName: string, repo: string): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    const gitSetup = spawn('git', ['clone', '--depth', '1', '--progress', repo, appDir])
-
-    gitSetup.stderr.on('data', (data: Buffer) => {
-      const output = data.toString()
-      if (!output.includes('Cloning into')) {
-        console.log(chalk.gray(output))
-      }
-    })
-
-    gitSetup.on('close', (code: number | null) => {
-      if (code === 0) {
-        console.log(chalk.green(`App "${appName}" created successfully!`))
-        const gitFolderPath = path.join(appDir, '.git')
-        fs.rm(gitFolderPath, { recursive: true, force: true })
-          .then(() => resolve())
-          .catch(reject)
-      } else {
-        console.log(chalk.red(`Failed to create the app with exit code ${code}.`))
-        reject(new Error(`git clone failed with exit code ${code}`))
-      }
-    })
-  })
 }
 
 async function generateResource(

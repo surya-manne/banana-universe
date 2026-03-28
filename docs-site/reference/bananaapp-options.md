@@ -1,16 +1,22 @@
 # BananaAppOptions
 
-`BananaApp` is created with:
+`BananaApp` is created with **one object**: **`controllers`** (via **`defineBananaControllers`**) plus **`BananaAppOptions`** fields.
 
 ```typescript
-new BananaApp(controllers: Constructor[], options?: BananaAppOptions)
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
+
+new BananaApp({
+  controllers: defineBananaControllers(UserController),
+  // ...BananaAppOptions
+})
 ```
 
-Use **`BananaApp.create(controllers, options)`** when you need **async plugin registration** (`plugins` array).
+Use **`BananaApp.create({ ... })`** when you need **async plugin registration** (`plugins` array).
 
 ## Declarative bootstrap (optional)
 
-- **`defineBananaAppOptions({ services, ... })`** — merges **`services`** (Awilix resolvers) into a container and returns **`BananaAppOptions`**
+- **`defineBananaControllers(...controllers)`** — returns the controller list for the **`controllers`** property
+- **`defineBananaAppOptions({ controllers: defineBananaControllers(...), services, ... })`** — merges **`services`** (Awilix resolvers) into a container and returns a **`BananaApp.create`**-ready input
 - **`createBananaContainer(registrations)`** — `createContainer()` + `register()` in one call
 
 See **`packages/bananajs/src/lib/DI/bananaBootstrap.ts`**.

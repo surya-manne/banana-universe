@@ -82,10 +82,12 @@
 
 ## Type Aliases
 
+- [BananaAppCreateInput](type-aliases/BananaAppCreateInput.md)
 - [BananaServiceRegistrations](type-aliases/BananaServiceRegistrations.md)
 - [ConfigResult](type-aliases/ConfigResult.md)
 - [ConfigSchema](type-aliases/ConfigSchema.md)
 - [Constructor](type-aliases/Constructor.md)
+- [CreateBananaApplicationInput](type-aliases/CreateBananaApplicationInput.md)
 - [DeclarativeBananaOptions](type-aliases/DeclarativeBananaOptions.md)
 - [HealthStatus](type-aliases/HealthStatus.md)
 - [PaginationQuery](type-aliases/PaginationQuery.md)
@@ -125,6 +127,7 @@
 - [createMetricsMiddleware](functions/createMetricsMiddleware.md)
 - [createTenantMiddleware](functions/createTenantMiddleware.md)
 - [defineBananaAppOptions](functions/defineBananaAppOptions.md)
+- [defineBananaControllers](functions/defineBananaControllers.md)
 - [getTenantId](functions/getTenantId.md)
 - [Headers](functions/Headers.md)
 - [Injectable](functions/Injectable.md)

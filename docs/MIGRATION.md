@@ -16,6 +16,54 @@ Express is unopinionated by design. As apps grow, teams accumulate inconsistent 
 
 ---
 
+## Bootstrap API (breaking)
+
+`BananaApp`, `BananaApp.create`, `createBananaApplication`, and `BananaTestApp.create` take **one object** that includes **`controllers`**. Use **`defineBananaControllers(...)`** for that field, and optionally **`defineBananaAppOptions({ ... })`** when merging Awilix **`services`**.
+
+**Before:**
+
+```typescript
+new BananaApp([UserController], { logger: false })
+await BananaApp.create([UserController], { plugins: [myPlugin] })
+await createBananaApplication([UserController], { port: 3000 })
+BananaTestApp.create([UserController])
+```
+
+**After:**
+
+```typescript
+import {
+  BananaApp,
+  createBananaApplication,
+  defineBananaAppOptions,
+  defineBananaControllers,
+} from '@banana-universe/bananajs'
+import { BananaTestApp } from '@banana-universe/bananajs/testing'
+
+new BananaApp({
+  controllers: defineBananaControllers(UserController),
+  logger: false,
+})
+
+await BananaApp.create(
+  defineBananaAppOptions({
+    controllers: defineBananaControllers(UserController),
+    plugins: [myPlugin],
+  }),
+)
+
+await createBananaApplication({
+  controllers: defineBananaControllers(UserController),
+  port: 3000,
+})
+
+BananaTestApp.create({
+  controllers: defineBananaControllers(UserController),
+})
+```
+
+---
+
 ## Incremental Adoption
 
 You do not have to migrate everything at once. `BananaRouter` lets you mount BananaJS-controlled routes into an existing Express app alongside legacy routes.
@@ -249,10 +297,12 @@ Existing Express middlewares work as-is — pass them through `BananaApp` or `Ba
 ```typescript
 import helmet from 'helmet'
 import cors from 'cors'
-import { BananaApp } from 'bananajs'
+import { BananaApp, defineBananaControllers } from 'bananajs'
+import { UserController } from './controllers/UserController'
 
 // Option A: BananaApp security options (built-in)
-const app = new BananaApp([UserController], {
+const app = new BananaApp({
+  controllers: defineBananaControllers(UserController),
   security: { helmet: true, cors: true },
 })
 
@@ -287,9 +337,12 @@ test('GET /users returns list', async () => {
 
 ```typescript
 import { BananaTestApp } from 'bananajs/testing'
+import { defineBananaControllers } from 'bananajs'
 import { UserController } from '../src/controllers/UserController'
 
-const testApp = BananaTestApp.create([UserController])
+const testApp = BananaTestApp.create({
+  controllers: defineBananaControllers(UserController),
+})
 
 test('GET /users returns list', async () => {
   const res = await testApp.inject({ method: 'GET', url: '/users' })
@@ -323,17 +376,18 @@ legacyApp.listen(3000)
 **After (full BananaJS):**
 
 ```typescript
-import BananaApp from 'bananajs'
+import BananaApp, { defineBananaControllers } from 'bananajs'
 import { UserController } from './controllers/UserController'
 import { OrderController } from './controllers/OrderController'
 
-const app = new BananaApp([UserController, OrderController], {
+const app = new BananaApp({
+  controllers: defineBananaControllers(UserController, OrderController),
   security: { helmet: true, cors: true },
   gracefulShutdown: true,
   requestId: true,
 })
 
-app.listen(3000)
+app.getInstance().listen(3000)
 ```
 
 At this point you can remove the `express` dependency from your project.

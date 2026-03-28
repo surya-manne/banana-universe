@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { joinRouteSegments } from '@banana-universe/bananajs'
 import chalk from 'chalk'
 
 interface RouteEntry {
@@ -46,7 +47,7 @@ export async function listRoutes(): Promise<void> {
 
         routes.push({
           method: method.toUpperCase(),
-          fullPath: `${basePath}${match[1]}`,
+          fullPath: joinRouteSegments(basePath, match[1]),
           controller: controllerName,
           handler: handlerName,
         })
@@ -80,12 +81,12 @@ export async function listRoutes(): Promise<void> {
       route.method === 'GET'
         ? chalk.green
         : route.method === 'POST'
-          ? chalk.blue
-          : route.method === 'PUT'
-            ? chalk.yellow
-            : route.method === 'PATCH'
-              ? chalk.cyan
-              : chalk.red
+        ? chalk.blue
+        : route.method === 'PUT'
+        ? chalk.yellow
+        : route.method === 'PATCH'
+        ? chalk.cyan
+        : chalk.red
 
     console.log(
       methodColor(route.method.padEnd(methodWidth)) +

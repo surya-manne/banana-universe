@@ -7,7 +7,7 @@ How to build multi-tenant applications with BananaJS. Covers tenant identificati
 ## Quick Start
 
 ```typescript
-import BananaApp from '@banana-universe/bananajs'
+import BananaApp, { defineBananaControllers } from '@banana-universe/bananajs'
 import { Controller, Get, Tenant, getTenantId } from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
 
@@ -22,7 +22,8 @@ export class UserController {
   }
 }
 
-const app = await BananaApp.create([UserController], {
+const app = await BananaApp.create({
+  controllers: defineBananaControllers(UserController),
   cache: { store: 'memory' }, // cache keys auto-namespaced per tenant
 })
 ```
@@ -92,7 +93,8 @@ import { getTenantId } from '@banana-universe/bananajs'
 
 // Option A: Schema per tenant (PostgreSQL)
 // Each tenant has their own schema: public, tenant_acme, tenant_corp, etc.
-const app = await BananaApp.create([UserController], {
+const app = await BananaApp.create({
+  controllers: defineBananaControllers(UserController),
   plugins: [
     new TypeOrmPlugin({
       type: 'postgres',

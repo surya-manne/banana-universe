@@ -8,7 +8,7 @@
 
 > **BananaRouter**(`controllers`, `container?`): `Router`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:758
+Defined in: packages/bananajs/src/lib/Core/App.ts:765
 
 ## Parameters
 

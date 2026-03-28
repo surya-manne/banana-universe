@@ -57,7 +57,7 @@ async function extractEntityWithLlm(
         console.log(chalk.gray('--- end ---'))
       }
       const parsed = tryParseJsonObject(rawOut)
-      return await validateEntityExtraction(parsed)
+      return validateEntityExtraction(parsed)
     } catch (e) {
       lastErr = e
       if (debug && attempt === 0) {
@@ -67,7 +67,12 @@ async function extractEntityWithLlm(
       }
     }
   }
-  console.error(chalk.red('LLM returned unparseable JSON. Use --debug to see raw output.'))
+  const msg = lastErr instanceof Error ? lastErr.message : String(lastErr)
+  if (msg.includes('LLM returned unparseable JSON')) {
+    console.error(chalk.red('LLM returned unparseable JSON. Use --debug to see raw output.'))
+  } else {
+    console.error(chalk.red(`Extraction failed: ${msg}`))
+  }
   throw lastErr
 }
 

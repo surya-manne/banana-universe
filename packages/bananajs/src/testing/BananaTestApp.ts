@@ -1,7 +1,7 @@
 import request from 'supertest'
 import type { Response as SupertestResponse } from 'supertest'
 import { BananaApp } from '../lib/Core/App'
-import type { BananaAppOptions, Constructor } from '../lib/Core/App'
+import type { BananaAppCreateInput, BananaAppOptions } from '../lib/Core/App'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -20,16 +20,22 @@ export class BananaTestApp {
     this.app = app
   }
 
-  static create(controllers: Constructor[], options: BananaAppOptions = {}): BananaTestApp {
-    const mergedOptions: BananaAppOptions = {
+  static create(input: BananaAppCreateInput): BananaTestApp {
+    const defaults: Pick<
+      BananaAppOptions,
+      'logger' | 'gracefulShutdown' | 'rateLimit' | 'requestId'
+    > = {
       logger: false,
       gracefulShutdown: false,
       rateLimit: false,
       requestId: false,
-      ...options,
-      security: { helmet: false, cors: false, ...options.security },
     }
-    return new BananaTestApp(new BananaApp(controllers, mergedOptions))
+    const mergedInput: BananaAppCreateInput = {
+      ...defaults,
+      ...input,
+      security: { helmet: false, cors: false, ...input.security },
+    }
+    return new BananaTestApp(new BananaApp(mergedInput))
   }
 
   withAuth(token: string): this {

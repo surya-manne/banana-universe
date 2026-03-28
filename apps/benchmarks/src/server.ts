@@ -1,5 +1,9 @@
-import BananaApp from '@banana-universe/bananajs'
-import { BaseController, Controller, Get } from '@banana-universe/bananajs'
+import BananaApp, {
+  BaseController,
+  Controller,
+  defineBananaControllers,
+  Get,
+} from '@banana-universe/bananajs'
 import type { Request, Response } from 'express'
 import { createServer as createHttpServer } from 'http'
 
@@ -25,7 +29,8 @@ export async function createServer(): Promise<{
   server: ReturnType<typeof createHttpServer>
   baseUrl: string
 }> {
-  const app = await BananaApp.create([BenchmarkController], {
+  const app = await BananaApp.create({
+    controllers: defineBananaControllers(BenchmarkController),
     health: { enabled: true, path: '/health' },
     logger: false,
   })

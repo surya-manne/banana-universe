@@ -14,10 +14,15 @@ Nx monorepo with npm workspaces:
 
 ### Entry Point
 
-`BananaApp` class is the single initialization point. Consumers pass an array of controller classes and optional global middlewares:
+`BananaApp` class is the single initialization point. Consumers pass **one options object** with **`controllers`** (via **`defineBananaControllers`**) and optional global **`middlewares`** in options:
 
 ```typescript
-new BananaApp([UserController, ProductController], [authMiddleware]).getInstance()
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
+
+new BananaApp({
+  controllers: defineBananaControllers(UserController, ProductController),
+  middlewares: [authMiddleware],
+}).getInstance()
 ```
 
 ### Decorator-Based Route Registration
@@ -40,7 +45,7 @@ HTTP controllers should extend **`BaseController`** for `ok` / `error` helpers o
 
 ### App bootstrap
 
-Use **`BananaApp.create`** when plugins need async lifecycle. Optional one-shot **`createBananaApplication(controllers, { ...options, port?, hostname?, onListening? })`** wraps `BananaApp.create` and calls **`listen`** when `port` is set.
+Use **`BananaApp.create`** when plugins need async lifecycle. Optional one-shot **`createBananaApplication({ controllers: defineBananaControllers(...), ...options, port?, hostname?, onListening? })`** wraps `BananaApp.create` and calls **`listen`** when `port` is set.
 
 ### Response Architecture
 

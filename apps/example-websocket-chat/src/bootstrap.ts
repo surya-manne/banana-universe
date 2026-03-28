@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import type { BananaPlugin } from '@banana-universe/bananajs'
-import { BananaApp, type Constructor } from '@banana-universe/bananajs'
+import { BananaApp, defineBananaControllers } from '@banana-universe/bananajs'
 import { WebSocketPlugin } from '@banana-universe/plugin-websocket'
 import { HealthController } from './health.controller.js'
 import { wsControllers } from './chat.ws-controller.js'
@@ -14,7 +14,8 @@ export async function createChatApp(): Promise<{
     controllers: wsControllers,
   })
 
-  const banana = await BananaApp.create([HealthController as unknown as Constructor], {
+  const banana = await BananaApp.create({
+    controllers: defineBananaControllers(HealthController),
     plugins: [wsPlugin as BananaPlugin],
     logger: false,
     gracefulShutdown: false,

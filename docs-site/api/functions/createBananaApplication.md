@@ -6,21 +6,17 @@
 
 # Function: createBananaApplication()
 
-> **createBananaApplication**(`controllers`, `options?`): `Promise`\<[`BananaApp`](../classes/BananaApp.md)\>
+> **createBananaApplication**(`options`): `Promise`\<[`BananaApp`](../classes/BananaApp.md)\>
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:541
+Defined in: packages/bananajs/src/lib/Core/App.ts:551
 
 Async factory: `BananaApp.create` plus optional `listen` in one call for declarative bootstrap.
 
 ## Parameters
 
-### controllers
+### options
 
-[`Constructor`](../type-aliases/Constructor.md)\<`unknown`\>[]
-
-### options?
-
-[`CreateBananaApplicationOptions`](../interfaces/CreateBananaApplicationOptions.md) = `{}`
+[`CreateBananaApplicationInput`](../type-aliases/CreateBananaApplicationInput.md)
 
 ## Returns
 

@@ -4,7 +4,11 @@ import assert from 'node:assert/strict'
 import request from 'supertest'
 import mongoose from 'mongoose'
 import { asFunction } from 'awilix'
-import { BananaApp, defineBananaAppOptions } from '@banana-universe/bananajs'
+import {
+  BananaApp,
+  defineBananaAppOptions,
+  defineBananaControllers,
+} from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
 import { ArticleController } from '../article.controller.js'
 import { getArticleModel } from '../article.model.js'
@@ -16,8 +20,9 @@ test('health without live MongoDB (CI default)', async () => {
   const connection = mongoose.createConnection(uri)
   const articleModel = getArticleModel(connection)
 
-  const banana = await BananaApp.create([ArticleController as never], {
-    ...defineBananaAppOptions({
+  const banana = await BananaApp.create(
+    defineBananaAppOptions({
+      controllers: defineBananaControllers(ArticleController),
       services: {
         articleModel: asFunction(() => articleModel).singleton(),
         articleController: asFunction(
@@ -32,7 +37,7 @@ test('health without live MongoDB (CI default)', async () => {
       requestId: false,
       security: { helmet: false, cors: false },
     }),
-  })
+  )
 
   const res = await request(banana.getInstance()).get('/articles/healthz').expect(200)
   assert.equal(res.body.data.status, 'up')

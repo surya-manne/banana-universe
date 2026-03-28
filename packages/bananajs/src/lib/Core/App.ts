@@ -29,7 +29,15 @@ import type { AbacGuard } from '../Security/AbacGuard.interface.js'
 import type { TenantOptions } from '../Tenant/TenantContext.js'
 import { createTenantMiddleware, getTenantId } from '../Tenant/TenantContext.js'
 
-export type Constructor<T = unknown> = new (...args: unknown[]) => T
+/**
+ * Controller / injectable class constructor.
+ * Rest args are intentionally unconstrained so DI-backed classes (typed constructors) assign without casts.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- framework constructor slot (see JSDoc above)
+export type Constructor<T = unknown> = new (...args: any[]) => T
+
+/** Bootstrap input: {@link BananaAppOptions} plus `controllers` (set with **`defineBananaControllers`** from the public package export). */
+export type BananaAppCreateInput = BananaAppOptions & { controllers: Constructor[] }
 
 export interface BananaAppOptions {
   middlewares?: RequestHandler[]
@@ -99,7 +107,8 @@ export class BananaApp {
   private readonly plugins: BananaPlugin[]
   private cacheManager: CacheManager | undefined
 
-  constructor(controllers: Constructor[], options: BananaAppOptions = {}) {
+  constructor(input: BananaAppCreateInput) {
+    const { controllers, ...options } = input
     this.controllers = controllers
     this.options = options
 
@@ -149,7 +158,7 @@ export class BananaApp {
 
     if (this.plugins.length === 0) {
       // No plugins — initialize synchronously as before
-      this.initializeControllers(controllers, options.auth?.guard)
+      this.initializeControllers(this.controllers, options.auth?.guard)
       this._finalizeSetup()
     } else {
       // Plugins present — BananaApp.create() will call initializePlugins()
@@ -160,11 +169,8 @@ export class BananaApp {
     }
   }
 
-  static async create(
-    controllers: Constructor[],
-    options: BananaAppOptions = {},
-  ): Promise<BananaApp> {
-    const instance = new BananaApp(controllers, options)
+  static async create(input: BananaAppCreateInput): Promise<BananaApp> {
+    const instance = new BananaApp(input)
     if (instance.plugins.length > 0) {
       await instance.initializePlugins()
     }
@@ -535,15 +541,18 @@ export interface CreateBananaApplicationOptions extends BananaAppOptions {
   onListening?: (info: { port: number; hostname?: string }) => void
 }
 
+export type CreateBananaApplicationInput = CreateBananaApplicationOptions & {
+  controllers: Constructor[]
+}
+
 /**
  * Async factory: `BananaApp.create` plus optional `listen` in one call for declarative bootstrap.
  */
 export async function createBananaApplication(
-  controllers: Constructor[],
-  options: CreateBananaApplicationOptions = {},
+  options: CreateBananaApplicationInput,
 ): Promise<BananaApp> {
   const { port, hostname, onListening, ...rest } = options
-  const banana = await BananaApp.create(controllers, rest)
+  const banana = await BananaApp.create(rest)
   if (port !== undefined) {
     const inst = banana.getInstance()
     if (hostname !== undefined) {
