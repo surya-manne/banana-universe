@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bananajs.dev/schemas/ai-review/1.0.0.json",
+  "title": "BananaJS AI structured review",
+  "type": "object",
+  "required": ["schemaVersion", "summary", "findings"],
+  "properties": {
+    "schemaVersion": { "type": "string", "description": "Review payload version (match CLI AI_REVIEW_JSON_SCHEMA_VERSION)" },
+    "summary": { "type": "string" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "message"],
+        "properties": {
+          "severity": { "enum": ["info", "warn", "error"] },
+          "message": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

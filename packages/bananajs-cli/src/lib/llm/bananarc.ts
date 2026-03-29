@@ -5,6 +5,18 @@ import { presetIdToOrm } from '../preset-orm.js'
 export type LlmProviderKind = 'ollama' | 'llamacpp' | 'openai' | 'anthropic'
 export type OrmPreference = 'typeorm' | 'mongoose' | 'none'
 
+/** Optional project context for codegen, wire hints, and AI rubrics (minimal schema; extend with care). */
+export interface BananarcProjectContext {
+  /** Layout contract for generated modules (e.g. \`1\` = current enterprise layout). */
+  moduleLayoutVersion?: string
+  /** Default URI prefix when documenting or suggesting routes (e.g. \`/api/v1\`). */
+  apiPrefix?: string
+  /** Path to bootstrap relative to project root (default: \`src/bootstrap.ts\`). */
+  bootstrap?: string
+  /** Entry file relative to project root (default: \`src/main.ts\`). */
+  main?: string
+}
+
 export interface BananarcConfig {
   llm?: {
     provider?: LlmProviderKind
@@ -19,6 +31,8 @@ export interface BananarcConfig {
     preset?: 'mongodb' | 'sql'
     outDir?: string
   }
+  /** Project layout and bootstrap hints for AI / wire commands. */
+  project?: BananarcProjectContext
 }
 
 export const BANANARC_FILENAME = '.bananarc.json'
@@ -34,6 +48,11 @@ export const DEFAULT_BANANARC: BananarcConfig = {
   generate: {
     defaultOrm: 'typeorm',
     outDir: './src',
+  },
+  project: {
+    moduleLayoutVersion: '1',
+    bootstrap: 'src/bootstrap.ts',
+    main: 'src/main.ts',
   },
 }
 
@@ -75,7 +94,8 @@ function mergeBananarc(parsed: BananarcConfig): BananarcConfig {
   if (rawOrm === 'prisma') {
     ;(generate as { defaultOrm: OrmPreference }).defaultOrm = 'mongoose'
   }
-  return { llm, generate }
+  const project = { ...d.project, ...parsed.project }
+  return { llm, generate, project }
 }
 
 export async function saveBananarc(cwd: string, config: BananarcConfig): Promise<void> {

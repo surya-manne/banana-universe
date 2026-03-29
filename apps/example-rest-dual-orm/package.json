@@ -1,0 +1,36 @@
+{
+  "name": "@banana-universe/example-rest-dual-orm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Recipe: TypeORM + Mongoose in one BananaJS app (one ORM per feature module)",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.app.json",
+    "start": "node dist/main.js",
+    "lint": "eslint src",
+    "pretest": "cd ../../packages/bananajs && npx tsc -p tsconfig.lib.json && cd ../ddd && npx tsc -p tsconfig.lib.json && cd ../plugin-typeorm && npx tsc -p tsconfig.lib.json && cd ../plugin-mongoose && npx tsc -p tsconfig.lib.json && cd ../../apps/example-rest-dual-orm",
+    "test": "npm run build && MONGODB_URI=${MONGODB_URI:-mongodb://127.0.0.1:27017/ci_dummy} NODE_ENV=test node --test dist/__tests__/app.test.js"
+  },
+  "dependencies": {
+    "@banana-universe/bananajs": "*",
+    "@banana-universe/ddd": "*",
+    "@banana-universe/plugin-mongoose": "*",
+    "@banana-universe/plugin-typeorm": "*",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.0",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.8.0",
+    "typeorm": "^0.3.20",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "~18.16.9",
+    "@types/supertest": "^7.2.0",
+    "sql.js": "^1.14.1",
+    "supertest": "^7.2.2",
+    "tsx": "^4.19.2",
+    "typescript": "~5.7.2"
+  }
+}

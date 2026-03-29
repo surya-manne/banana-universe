@@ -11,7 +11,11 @@ import { listRoutes } from './lib/routes'
 import { migrateCodemod } from './lib/migrate'
 import { dbStatus } from './lib/db'
 import { openapiExport } from './lib/openapi'
-import { aiGenerate, aiDoc, aiReview } from './lib/ai.js'
+import { aiGenerate, aiDoc, runAiReview } from './lib/ai.js'
+import { runAiWizard } from './lib/ai-wizard.js'
+import { runAiWire } from './lib/ai-wire.js'
+import { runAiTestScaffold } from './lib/ai-test-scaffold.js'
+import { runAiExplain } from './lib/ai-explain.js'
 import { aiGenerateModule } from './lib/ai-module.js'
 import { aiSetup } from './lib/ai-setup.js'
 import { writeScaffoldedApp } from './lib/create-app.js'
@@ -207,6 +211,16 @@ aiCmd
   )
 
 aiCmd
+  .command('wizard')
+  .description('Interactive wizard: DDD module from schema or description (TTY; flags preferred for CI)')
+  .action(() => {
+    runAiWizard().catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
   .command('doc')
   .description('Generate JSDoc for existing controllers using AI')
   .option('--file <path>', 'Path to controller file (default: scan src/)')
@@ -220,10 +234,61 @@ aiCmd
 
 aiCmd
   .command('review')
-  .description('Review a BananaJS controller for best practices')
-  .option('--file <path>', 'Path to controller file to review')
-  .action((opts: { file?: string }) => {
-    aiReview(opts).catch((err: unknown) => {
+  .description('Structured AI review (JSON + summary); supports single file or whole module directory')
+  .option('--file <path>', 'Path to a TypeScript file to review')
+  .option('--module <path>', 'Directory (e.g. src/modules/foo) — all .ts files')
+  .option('--format <fmt>', 'text | json (default: text)', 'text')
+  .option('--sarif', 'Emit SARIF 2.1.0 instead of text/json')
+  .option('--fix', 'Reserved: safe auto-fix is not applied; shows policy message')
+  .action(
+    (opts: {
+      file?: string
+      module?: string
+      format?: string
+      sarif?: boolean
+      fix?: boolean
+    }) => {
+      const fmt = opts.format === 'json' ? 'json' : 'text'
+      runAiReview({
+        file: opts.file,
+        module: opts.module,
+        format: fmt,
+        sarif: opts.sarif ?? false,
+        fix: opts.fix ?? false,
+      }).catch((err: unknown) => {
+        console.error('Unexpected error:', err)
+        process.exit(1)
+      })
+    },
+  )
+
+aiCmd
+  .command('wire')
+  .description('Suggest bootstrap wiring for discovered feature modules (dry-run; validates against .bananarc)')
+  .option('--llm', 'Optional LLM narrative (still does not modify files)')
+  .action((opts: { llm?: boolean }) => {
+    runAiWire({ llm: opts.llm ?? false }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('test')
+  .description('Scaffold a minimal node:test + supertest file (BananaTestApp-style recipes)')
+  .option('--out <path>', 'Output path (default: src/__tests__/ai-scaffold.test.ts)')
+  .action((opts: { out?: string }) => {
+    runAiTestScaffold({ out: opts.out }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('explain [file]')
+  .description('Short LLM summary of a TypeScript file (for humans / PR notes)')
+  .action((file: string | undefined) => {
+    runAiExplain(file).catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })

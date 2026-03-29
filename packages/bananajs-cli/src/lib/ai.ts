@@ -2,6 +2,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import chalk from 'chalk'
 import { loadBananarc } from './llm/bananarc.js'
+import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
 import { LEGACY_FLAT_GENERATE_SYSTEM_PROMPT } from './llm/prompts/generate-from-prompt.js'
 import { parseSchema } from './schema-parse.js'
@@ -22,10 +23,6 @@ export interface AiGenerateOptions {
 export interface AiDocOptions {
   file?: string
   dryRun?: boolean
-}
-
-export interface AiReviewOptions {
-  file?: string
 }
 
 async function writeOrPrint(filePath: string, content: string, dryRun: boolean): Promise<void> {
@@ -176,6 +173,11 @@ export async function aiGenerate(opts: AiGenerateOptions): Promise<void> {
 }
 
 export async function aiDoc(opts: AiDocOptions): Promise<void> {
+  console.log(
+    chalk.yellow(
+      '[ai doc] Deprecation path: prefer OpenAPI export + API docs over JSDoc injection. See docs-site AI hub for timeline and alternatives.',
+    ),
+  )
   const cwd = process.cwd()
   const config = await loadBananarc(cwd)
   const provider = resolveLlmProvider(config)
@@ -212,8 +214,9 @@ export async function aiDoc(opts: AiDocOptions): Promise<void> {
     let resultText: string
     try {
       resultText = await provider.generate(content, {
-        system:
+        system: appendBananaJsAiRules(
           'You are a BananaJS expert. Add JSDoc comments to each method in this controller. Return ONLY the updated file content.',
+        ),
         temperature: 0.2,
       })
     } catch (err) {
@@ -232,36 +235,5 @@ export async function aiDoc(opts: AiDocOptions): Promise<void> {
   }
 }
 
-export async function aiReview(opts: AiReviewOptions): Promise<void> {
-  if (!opts.file) {
-    console.error(chalk.red('Specify --file <path> to review a controller file.'))
-    return
-  }
-
-  let content: string
-  try {
-    content = await fs.readFile(opts.file, 'utf-8')
-  } catch {
-    console.error(chalk.red(`File not found: ${opts.file}`))
-    process.exit(1)
-  }
-
-  const cwd = process.cwd()
-  const config = await loadBananarc(cwd)
-  const provider = resolveLlmProvider(config)
-
-  let resultText: string
-  try {
-    resultText = await provider.generate(content, {
-      system:
-        'Review this BananaJS controller for best practices, security issues, naming conventions, and improvements. Be concise and actionable.',
-      temperature: 0.2,
-    })
-  } catch (err) {
-    console.error(chalk.red('AI review failed:'), err)
-    return
-  }
-
-  console.log(chalk.bold.blue(`\nAI Review: ${opts.file}\n`))
-  console.log(resultText)
-}
+export { runAiReview } from './ai-review-run.js'
+export type { AiReviewCliOptions } from './ai-review-run.js'

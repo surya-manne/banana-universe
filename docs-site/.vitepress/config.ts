@@ -29,6 +29,7 @@ export default withMermaid(
         { text: 'Integrations', link: '/integrations/typeorm', activeMatch: '/integrations/' },
         { text: 'Plugins', link: '/plugins/overview', activeMatch: '/plugins/' },
         { text: 'Tooling', link: '/tooling/cli', activeMatch: '/tooling/' },
+        { text: 'AI', link: '/ai/', activeMatch: '/ai/' },
         { text: 'API', link: '/api/', activeMatch: '/api/' },
       ],
 
@@ -113,6 +114,17 @@ export default withMermaid(
               { text: 'AI Commands', link: '/tooling/ai-commands' },
               { text: 'AI module generation', link: '/tooling/ai-module-generation' },
               { text: 'Benchmarks', link: '/tooling/benchmarks' },
+            ],
+          },
+        ],
+
+        '/ai/': [
+          {
+            text: 'AI',
+            items: [
+              { text: 'Overview', link: '/ai/' },
+              { text: 'AI Commands', link: '/tooling/ai-commands' },
+              { text: 'AI module generation', link: '/tooling/ai-module-generation' },
             ],
           },
         ],

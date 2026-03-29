@@ -3,6 +3,7 @@ import * as path from 'path'
 import chalk from 'chalk'
 import { loadBananarc } from './llm/bananarc.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
+import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
 import { ENTITY_EXTRACTION_SYSTEM } from './llm/prompts/extraction.js'
 import {
   tryParseJsonObject,
@@ -116,8 +117,9 @@ async function applyDetailedPass(
       const refined = await provider.generate(
         `Fill in TODO and stub methods with minimal realistic logic. Keep imports and exports. Output ONLY the full TypeScript source file, no markdown.\n\n${f.content}`,
         {
-          system:
+          system: appendBananaJsAiRules(
             'You are a BananaJS expert. Return a single valid TypeScript module. No markdown fences.',
+          ),
           temperature: 0.2,
         },
       )

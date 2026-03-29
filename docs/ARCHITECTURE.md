@@ -112,6 +112,10 @@ All error responses extend `ApiResponse` directly (no data payload).
 
 No tests present in current state. Not planned for this iteration — will be addressed in a future milestone. The **modular DI** roadmap ([EnterpriseRoadmapV6.md](../plans/EnterpriseRoadmapV6.md)) calls for **integration tests** that compose **`modules`** and **override DI tokens** (e.g. in-memory repositories) via **`BananaTestApp`** or documented equivalents.
 
+## BananaJS CLI and `.bananarc.json`
+
+The **`bananajs-cli`** package reads **`.bananarc.json`** for LLM provider settings, **`generate`** defaults (`defaultOrm`, `preset`, `outDir`), and optional **`project`** context (`moduleLayoutVersion`, `apiPrefix`, `bootstrap`, `main`) used by **`ai generate`**, **`ai wire`**, and shared LLM rules. Types and merge behavior: `packages/bananajs-cli/src/lib/llm/bananarc.ts`.
+
 ## Publishing
 
 - **Local only:** `npm run registry:local` starts Verdaccio (Nx `local-registry` target, port 4873, config `.verdaccio/config.yml`).

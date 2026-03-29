@@ -1,0 +1,12 @@
+{
+  "generate": {
+    "defaultOrm": "typeorm",
+    "outDir": "./src"
+  },
+  "project": {
+    "moduleLayoutVersion": "1",
+    "apiPrefix": "",
+    "bootstrap": "src/bootstrap.ts",
+    "main": "src/main.ts"
+  }
+}

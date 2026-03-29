@@ -15,6 +15,11 @@ jobs:
   type-check:
     name: Type Check & Build
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
 
     steps:
       - name: Checkout
@@ -80,6 +85,16 @@ jobs:
       - name: Type check — apps/example-rest-mongodb
         run: npx tsc -p tsconfig.app.json --noEmit
         working-directory: apps/example-rest-mongodb
+
+      - name: Type check — apps/example-rest-dual-orm
+        run: npx tsc -p tsconfig.app.json --noEmit
+        working-directory: apps/example-rest-dual-orm
+
+      - name: Integration smoke — apps/example-rest-dual-orm
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/ci_dual_orm
+        run: npm test
+        working-directory: apps/example-rest-dual-orm
 
       - name: Type check — apps/example-fastify
         run: npx tsc -p tsconfig.app.json --noEmit

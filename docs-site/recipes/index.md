@@ -13,12 +13,13 @@ All recipes align with **BananaJS v0.6**: **tsyringe** DI and **`createModule`**
 - **Quality**: ESLint 9 flat config (type-aware TypeScript) + Prettier; `npm run lint`, `npm run format`.
 - **CLI**: `@banana-universe/bananajs-cli` is a devDependency in each recipe (`bananajs`, `bjs`).
 
-| Recipe                                                                                                           | Stack             | What it demonstrates                                                          |
-| ---------------------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------- |
-| [example-rest-postgresql](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-postgresql) | SQL (PostgreSQL)  | Layered `modules/catalog`, auth, pagination, optional observability, API docs |
-| [example-rest-mongodb](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-mongodb)       | MongoDB           | `modules/articles`, Mongoose + `@Body(Zod)` (see app README for deployment)   |
-| [example-fastify](https://github.com/surya-manne/banana-universe/tree/main/apps/example-fastify)                 | Fastify + Express | `modules/health`, hybrid HTTP stack via `@fastify/express`                    |
-| [example-websocket-chat](https://github.com/surya-manne/banana-universe/tree/main/apps/example-websocket-chat)   | WebSockets        | `modules/health` + `modules/chat`, WebSocket plugin alongside HTTP            |
-| [example-multitenant](https://github.com/surya-manne/banana-universe/tree/main/apps/example-multitenant)         | SQL + tenancy     | `modules/note`, per-tenant data and `@Can` ABAC-style checks                  |
+| Recipe                                                                                                           | Stack             | What it demonstrates                                                             |
+| ---------------------------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------- |
+| [example-rest-postgresql](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-postgresql) | SQL (PostgreSQL)  | Layered `modules/catalog`, auth, pagination, optional observability, API docs    |
+| [example-rest-mongodb](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-mongodb)       | MongoDB           | `modules/articles`, Mongoose + `@Body(Zod)` (see app README for deployment)      |
+| [example-rest-dual-orm](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-dual-orm)     | SQL + MongoDB     | **One ORM per module**: `widgets` (TypeORM), `tags` (Mongoose); shared bootstrap |
+| [example-fastify](https://github.com/surya-manne/banana-universe/tree/main/apps/example-fastify)                 | Fastify + Express | `modules/health`, hybrid HTTP stack via `@fastify/express`                       |
+| [example-websocket-chat](https://github.com/surya-manne/banana-universe/tree/main/apps/example-websocket-chat)   | WebSockets        | `modules/health` + `modules/chat`, WebSocket plugin alongside HTTP               |
+| [example-multitenant](https://github.com/surya-manne/banana-universe/tree/main/apps/example-multitenant)         | SQL + tenancy     | `modules/note`, per-tenant data and `@Can` ABAC-style checks                     |
 
 Each recipe includes a `README.md`, `.env.example` where relevant, and `docker-compose.yml` when a database service is required.

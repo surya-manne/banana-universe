@@ -27,8 +27,12 @@
   },
   "files": [
     "dist",
+    "ai-review.schema.json",
     "!**/*.tsbuildinfo"
   ],
+  "scripts": {
+    "test": "tsc -p tsconfig.lib.json && node --test dist/__tests__/**/*.js"
+  },
   "dependencies": {
     "@banana-universe/bananajs": "*",
     "chalk": "4.1.2",

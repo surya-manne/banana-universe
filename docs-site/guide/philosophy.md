@@ -4,7 +4,7 @@ BananaJS is built for teams who want **serious structure** without **enterprise 
 
 ## AI-first
 
-Developer productivity is not optional. The **`bjs`** CLI ships **AI-assisted** flows: generate from **OpenAPI / JSON Schema** or **natural language**, add **JSDoc**, and **review** controllers. **`bjs ai setup`** writes **`.bananarc.json`**; the **`llm/`** provider layer supports **Ollama** (default), **llama.cpp**, **OpenAI**, and **Anthropic**. **`bjs ai generate --module`** produces **layered** domain, application, and infrastructure folders from a description or schema—so the framework meets teams where they work: specs, prompts, and automation—not only hand-written boilerplate.
+Developer productivity is not optional. The **`bjs`** CLI ships **AI-assisted** flows: generate from **OpenAPI / JSON Schema** or **natural language**, **structured review**, **wire** hints, **test** scaffolds, **`explain`**, and (on a deprecation path) **JSDoc** via **`ai doc`**. **`bjs ai setup`** writes **`.bananarc.json`**; the **`llm/`** provider layer supports **Ollama** (default), **llama.cpp**, **OpenAI**, and **Anthropic**. **`bjs ai generate --module`** produces **layered** domain, application, and infrastructure folders from a description or schema. Full index: **[AI hub](/ai/)**.
 
 ## Developer experience (DX)
 
