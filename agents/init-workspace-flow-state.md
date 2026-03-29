@@ -6,7 +6,8 @@
 - **plugin_active**: false
 - **composite**: false
 - **phase**: COMPLETE
-- **file_count**: ~46 source files (below large-workspace threshold)
+- **file_count**: ~200+ source files (large workspace)
+- **copilot_init**: 2026-03-29
 
 ## File Inventory
 
@@ -49,6 +50,24 @@
 - Phase 6 (documentation): ✅ complete — CONTEXT.md, ARCHITECTURE.md, IMPLEMENTATION.md, ASSUMPTIONS.md, MEMORY.md created
 - Phase 7 (questions): ✅ complete — testing (none yet), CLI scope (scaffold+codegen+deploy), validation fix (YES), Node.js ≥20
 - Phase 8 (verification): ✅ complete — all files verified
+
+## GitHub Copilot Init (2026-03-29)
+
+VS Code Copilot equivalents created in `.github/`:
+
+| File                                        | Status      |
+| ------------------------------------------- | ----------- |
+| .github/copilot-instructions.md             | ✅ created  |
+| .github/agents/discoverer.agent.md          | ✅ created  |
+| .github/agents/engineer.agent.md            | ✅ created  |
+| .github/agents/architect.agent.md           | ✅ created  |
+| .github/agents/planner.agent.md             | ✅ created  |
+| .github/agents/reviewer.agent.md            | ✅ created  |
+| .github/agents/validator.agent.md           | ✅ created  |
+| .github/agents/researcher.agent.md          | ✅ created  |
+| .github/agents/executor.agent.md            | ✅ created  |
+| .github/skills/load-context/SKILL.md        | ✅ created  |
+| .github/skills/coding-flow/SKILL.md         | ✅ created  |
 
 ## Unresolved Gaps
 
