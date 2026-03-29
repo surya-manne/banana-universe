@@ -12,7 +12,7 @@
 - **Operations-ready** — Authentication, authorization, tenancy, caching, metrics, health, uploads, rate limits, and structured logging when you need them (see [Advanced concepts](https://surya-manne.github.io/banana-universe/guide/advanced-concepts.html)).
 - **Composable stack** — Databases, observability, WebSocket, and more attach as plugins instead of bloating the core.
 - **Domain-friendly** — Optional DDD-style layers and CLI scaffolding for bounded contexts ([Layered architecture](https://surya-manne.github.io/banana-universe/guide/layered-architecture.html)).
-- **CLI & AI** — Project scaffolding, codegen, OpenAPI export, and AI flows for generation, documentation, and review—with optional project config for local or cloud models.
+- **CLI & AI** — Project scaffolding (**`bananajs new`**: built-in MongoDB/SQL presets with ESLint, Prettier, Swagger at **`/api-docs`**, typed dev deps, and DB connection helpers), codegen, OpenAPI export, and AI flows for generation, documentation, and review—with optional project config for local or cloud models.
 
 ## Workspace layout
 

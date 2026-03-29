@@ -2,5 +2,15 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
-  "references": [{ "path": "../../packages/bananajs" }, { "path": "./tsconfig.app.json" }]
+  "references": [
+    {
+      "path": "../../packages/bananajs"
+    },
+    {
+      "path": "../../packages/bananajs-cli"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
 }

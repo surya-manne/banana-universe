@@ -1,6 +1,8 @@
 # AI module generation
 
-This guide covers **`bjs ai setup`**, **`.bananarc.json`**, and **`bjs ai generate --module`** — offline-first LLM providers (Ollama default) plus optional cloud models, and a two-step pipeline: **LLM → JSON (validated with Zod) → DDD templates**.
+Start with the **[AI hub](/ai/)** if you want the guided story; **this page is the deep dive** into **`bjs ai generate --module`**: extraction, templates, and flags.
+
+It covers **`bjs ai setup`**, **`.bananarc.json`**, and **`bjs ai generate --module`** — offline-first LLM providers (Ollama default) plus optional cloud models, and a two-step pipeline: **LLM → JSON (validated with Zod) → DDD templates**.
 
 ## Prerequisites
 
@@ -76,8 +78,10 @@ You can pass a bare **`--module`** flag when only the schema is needed (the desc
 | **`--orm`**      | `typeorm` \| `mongoose` \| `none` (overrides `generate.defaultOrm`)                 |
 | **`--out`**      | Base directory for generated files (default: `generate.outDir` in `.bananarc.json`) |
 | **`--dry-run`**  | Print files without writing                                                         |
-| **`--detailed`** | Optional second LLM pass to expand domain/application service bodies                |
+| **`--detailed`** | Optional second LLM pass to expand application service bodies                       |
 | **`--debug`**    | Log raw extraction output and validation retries                                    |
+
+After a successful write (not **`--dry-run`**), the CLI registers the module in **`defineBananaAppOptions({ modules: [...] })`** when it finds **`src/bootstrap.ts`** (or another **`src/**/\*.ts`** with **`modules:`**), and adds **`<Name>OrmEntity`** to **`entities: [...]`** for TypeORM when possible. To generate files **without** touching bootstrap, use **`bjs generate module`** with **`--skip-bootstrap`\*\* instead ([CLI reference](/tooling/cli#bjs-generate-type-name-alias-g)).
 
 ## 3. Flat scaffold (unchanged)
 

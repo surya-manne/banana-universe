@@ -12,14 +12,14 @@ interface RouteEntry {
 
 const HTTP_METHODS = ['Get', 'Post', 'Put', 'Patch', 'Delete'] as const
 
-export async function listRoutes(): Promise<void> {
-  const srcDir = path.join(process.cwd(), 'src')
+export async function listRoutes(rootDir = 'src'): Promise<void> {
+  const srcDir = path.join(process.cwd(), rootDir)
 
   let sourceFiles: string[] = []
   try {
     sourceFiles = await findTsFiles(srcDir)
   } catch {
-    console.log(chalk.yellow('No src/ directory found. Run from a BananaJS project root.'))
+    console.log(chalk.yellow(`No "${srcDir}" directory found. Run from a BananaJS project root.`))
     return
   }
 
@@ -56,7 +56,7 @@ export async function listRoutes(): Promise<void> {
   }
 
   if (routes.length === 0) {
-    console.log(chalk.yellow('No BananaJS routes found in src/'))
+    console.log(chalk.yellow(`No BananaJS routes found under ${srcDir}`))
     console.log(chalk.gray('Note: Static scan only detects routes with literal string paths.'))
     return
   }

@@ -28,7 +28,7 @@ The rest of the object is **`BananaAppOptions`** (`packages/bananajs/src/lib/Cor
 | **Security**      | `security.helmet`, `security.cors` — defaults on; can disable or pass config                                                                                    |
 | **Request ID**    | `requestId` — default `true`                                                                                                                                    |
 | **Logging**       | `logger` — `Logger` instance or `false`                                                                                                                         |
-| **DI**            | `container` — **tsyringe** `DependencyContainer` for `injectable` / `inject` resolution ([Dependency injection](/guide/dependency-injection))                 |
+| **DI**            | `container` — **tsyringe** `DependencyContainer` for `injectable` / `inject` resolution ([Dependency injection](/guide/dependency-injection))                   |
 | **Modules**       | `modules` — **`createModule({ id, controller, providers })`** descriptors; one child container per module ([Layered architecture](/guide/layered-architecture)) |
 | **Shutdown**      | `gracefulShutdown` — SIGINT/SIGTERM hooks                                                                                                                       |
 | **Auth**          | `auth.guard` — **`AuthGuard`** for `@Auth` / `@Roles` / `@Public`                                                                                               |
@@ -56,6 +56,8 @@ Guards are **interfaces** — no JWT or session baked in.
 ## OpenAPI
 
 Decorators such as **`@ApiTags`**, **`@ApiOperation`**, **`@ApiBody`**, **`@ApiResponseDoc`** feed the schema extractor. The spec is exposed (typically **`/api-docs.json`**) with a documentation UI when Swagger options are enabled.
+
+Apps created with **`bananajs new`** turn on **`swagger.enabled`** by default and include **`swagger-ui-express`** so **`/api-docs`** works out of the box ([Getting started](/guide/getting-started)).
 
 ## Caching
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="BananaJS">
+  <defs>
+    <linearGradient id="b" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffb81c"/>
+      <stop offset="100%" style="stop-color:#fdb913"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="#0a1628"/>
+  <ellipse cx="16" cy="16" rx="10" ry="4.2" fill="url(#b)" stroke="#e6a010" stroke-width="1" transform="rotate(-14 16 16)"/>
+  <path d="M12 14 Q16 10 20 14" stroke="#0a1628" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.4"/>
+</svg>

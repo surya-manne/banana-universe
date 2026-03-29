@@ -1,95 +1,81 @@
 # **Bananajs CLI**
 
-A command-line interface (CLI) tool to create a new Bananajs app with different configurations, such as MongoDB or SQL-based setups. This CLI helps you quickly set up a project with your desired backend configuration.
+A command-line interface (CLI) tool to create BananaJS apps from built-in presets, generate controllers and **feature modules** that match the **`bananajs new`** layout, and run AI-assisted codegen, review, and OpenAPI tooling.
 
 ## **Table of Contents**
 
 - Installation
-- Usage
-- Available Configurations
-- Example
+- Usage (`new`, `generate`, routes, db, openapi, `ai`)
+- What `bananajs new` scaffolds
 - License
 
 ## **Installation**
 
-To get started with Bananajs CLI, you'll need to install it globally on your system. You can install it using npm or yarn.
-
-### **Install globally with npm:**
-
-```
+```bash
 npm install -g @banana-universe/bananajs-cli
 ```
 
-### **Or install it as a dev dependency:**
+Or as a dev dependency:
 
-```
+```bash
 npm install --save-dev @banana-universe/bananajs-cli
 ```
 
+Binaries: **`bananajs`** and **`bjs`**.
+
 ## **Usage**
 
-Once the CLI is installed, you can use it to create a new app by running the following command:
+### **`bananajs new [appName]`**
 
-```
-bananajs new
-```
+Creates a standalone app under **`./<appName>`** (MongoDB/Mongoose or SQL/TypeORM preset). Prompts for the app name if omitted (default suggestion **`my-bananajs-app`**) and for the preset in a TTY.
 
-The tool will prompt you to input the name of your app and select a configuration type.
+Skip prompts with **`bananajs new <appName> --preset mongodb`** or **`--preset sql`**. In non-interactive environments, pass **`--preset`** explicitly; if omitted, the CLI defaults to **`sql`**.
 
-**Prompt Flow:**
+### **`bananajs generate [type] [name]`** (alias **`g`**)
 
-- **App Name:** You will be asked to provide a name for your app. The default name is my-bananajs-app.
-- **Configuration Type:** You can choose between the following configurations:
-  - **MongoDB**: Use this configuration to set up an app with MongoDB as the backend.
-  - **SQL**: Choose this configuration if you prefer an SQL-based backend.
+**Types:** **`controller`** | **`dto`** | **`middleware`** | **`module`**
 
-Once you have selected the configuration, the CLI will create the app directory and set up the project for you.
+- In a **TTY**, you can run **`bjs g`** alone: the CLI prompts for **type** and **name**.
+- **`module`** writes a DDD feature under **`src/modules/<feature>/`** (or **`--out`** + **`modules/<feature>/`**), aligned with **`bananajs new`**: **`createModule`** in **`index.ts`**, repository token in **`domain/`**, **`application/`** services with tsyringe, **`infrastructure/`** adapters, **`<Entity>.dto.ts`** and **`<Entity>.controller.ts`** at the module root.
+- After writing files (unless **`--dry-run`** or **`--skip-bootstrap`**), the CLI **adds the module** to **`defineBananaAppOptions({ modules: [...] })`** in your bootstrap file (from **`.bananarc.json`** **`project.bootstrap`**, or **`src/bootstrap.ts`**, or auto-discovery). For **TypeORM**, it tries to append the **`OrmEntity`** class to an existing **`entities: [...]`** array under **`src/`**.
+- **`--orm typeorm|mongoose|none`**, **`--preset mongodb|sql`**, **`--out`**, **`--dry-run`**, **`--skip-bootstrap`**.
 
-## **Available Configurations**
+### **`bananajs routes`**
 
-Currently, the following app configurations are available:
+Scans controllers for decorators and prints routes. **`--root <dir>`** (default **`src`**); in a TTY without **`--root`**, you are prompted.
 
-- MongoDB: A setup for apps using MongoDB as the database.
-- SQL: A setup for apps using a SQL-based database (like MySQL, PostgreSQL, etc.).
+### **`bananajs migrate`**
 
-More configurations can be added in the future based on user demand.
+Express → BananaJS codemod. Confirms in a TTY.
 
-## **Example**
+### **`bananajs db`**
 
-Here’s an example of how to create a new app with the bananajs-cli:
+**`--status`** for TypeORM migration status. In a TTY with no flags, a short menu is shown.
 
-1. Run the command:
+### **`bananajs openapi export`**
 
-```
-bananajs new
-```
+Copies or writes OpenAPI JSON; optional **`--client typescript`**. In a TTY, optional prompts for output path and whether to generate TS types.
 
-2. You will be prompted to enter the name of the app and choose the configuration:
+### **`bananajs ai`**
 
-```
-What is the name of your app? (default: my-bananajs-app)
+- **`ai setup`** — configure LLM and **`.bananarc.json`**.
+- **`ai generate`** — flat files (**`--from-schema`** / **`--from-prompt`**) or DDD **`--module`**. With **no arguments** in a TTY, choose **DDD module** vs **flat** scaffold, then follow prompts (schema path vs description, ORM, optional second pass, `--dry-run`, `--skip-bootstrap`). The former **`ai wizard`** command was removed; use **`ai generate`** interactively instead.
+- **`ai review`**, **`ai wire`**, **`ai test`**, **`ai explain`**, **`ai doc`** — see the [documentation site](https://surya-manne.github.io/banana-universe/tooling/cli).
 
-Which app configuration do you want? (choices: MongoDB, SQL)
-```
+Full reference: [CLI reference](https://surya-manne.github.io/banana-universe/tooling/cli) and [AI commands](https://surya-manne.github.io/banana-universe/tooling/ai-commands).
 
-3. Once you’ve entered your app name and chosen a configuration, the tool will create the app directory and set it up based on your selection.
-4. You should see success messages like:
+## **What `bananajs new` scaffolds**
 
-```
-App "my-new-app" has been successfully created.
-```
+Generated projects are **standalone** (ESLint flat config + Prettier in-repo). Typical layout:
 
-5. If an app already exists with the provided name, the CLI will notify you:
+| Area                  | Details                                                                                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Lint & format**     | ESLint 9 (type-aware TypeScript) + **`eslint-config-prettier`**; Prettier with **tab width 4**; **`.editorconfig`** and **`.prettierignore`**. Scripts: `npm run lint`, `npm run format`. |
+| **OpenAPI / Swagger** | **`swagger.enabled: true`** in bootstrap; UI at **`/api-docs`**, JSON at **`/api-docs.json`**. **`swagger-ui-express`** in **`dependencies`**.                                            |
+| **Database**          | **MongoDB:** `src/db/mongo.ts`. **SQL:** `src/db/typeorm-options.ts` and **`DATABASE_URL`**.                                                                                              |
+| **Modules**           | Feature folders under **`src/modules/<feature>/`** using **`createModule`** (BananaJS v0.6+).                                                                                             |
 
-```
-An app with the name "my-new-app" already exists.
-```
-
-6. If you select an unsupported configuration, it will show an error message like:
-
-```
-Unsupported app configuration: SQL.
-```
+After generation: **`cd <appName> && npm install && npm run build && npm start`**. Copy **`.env.example`** to **`.env`** and set **`DATABASE_URL`** (and **`PORT`** if needed).
 
 ## **License**
 

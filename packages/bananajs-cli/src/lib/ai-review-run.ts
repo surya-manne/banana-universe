@@ -21,6 +21,29 @@ export interface AiReviewCliOptions {
   dryRun?: boolean
 }
 
+/**
+ * Resolve a module directory for review: explicit path first, then `src/modules/<name>` when the
+ * input is a single path segment (e.g. `widgets` -> `<cwd>/src/modules/widgets`).
+ */
+export async function resolveModuleReviewDir(cwd: string, input: string): Promise<string | null> {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+
+  const direct = path.resolve(cwd, trimmed)
+  let st = await fs.stat(direct).catch(() => null)
+  if (st?.isDirectory()) return direct
+
+  const normalized = path.normalize(trimmed)
+  const isBare = !/[\\/]/.test(normalized)
+  if (isBare) {
+    const underModules = path.join(cwd, 'src', 'modules', normalized)
+    st = await fs.stat(underModules).catch(() => null)
+    if (st?.isDirectory()) return underModules
+  }
+
+  return null
+}
+
 async function collectTsFilesUnder(dir: string): Promise<string[]> {
   const out: string[] = []
   let entries: Awaited<ReturnType<typeof fs.readdir>>
@@ -42,19 +65,26 @@ async function collectTsFilesUnder(dir: string): Promise<string[]> {
 }
 
 function buildReviewPayload(files: Array<{ path: string; content: string }>): string {
-  return files
-    .map((f) => `// FILE: ${f.path}\n${f.content}`)
-    .join('\n\n// ---\n\n')
+  return files.map((f) => `// FILE: ${f.path}\n${f.content}`).join('\n\n// ---\n\n')
 }
 
 export async function runAiReview(opts: AiReviewCliOptions): Promise<void> {
   let filesToRead: Array<{ path: string; abs: string }> = []
 
   if (opts.module) {
-    const modDir = path.resolve(process.cwd(), opts.module)
-    const stat = await fs.stat(modDir).catch(() => null)
-    if (!stat?.isDirectory()) {
-      console.error(chalk.red(`Not a directory: ${modDir}`))
+    const cwd = process.cwd()
+    const modDir = await resolveModuleReviewDir(cwd, opts.module)
+    if (!modDir) {
+      const tried = path.resolve(cwd, opts.module)
+      const bare = !/[\\/]/.test(path.normalize(opts.module.trim()))
+      console.error(chalk.red(`Module directory not found: ${opts.module}`))
+      console.error(
+        chalk.gray(
+          bare
+            ? `Looked for: ${tried} and ${path.join(cwd, 'src', 'modules', opts.module.trim())}`
+            : `Looked for: ${tried}`,
+        ),
+      )
       process.exit(1)
     }
     const ts = await collectTsFilesUnder(modDir)
@@ -66,7 +96,11 @@ export async function runAiReview(opts: AiReviewCliOptions): Promise<void> {
   } else if (opts.file) {
     filesToRead = [{ path: opts.file, abs: path.resolve(process.cwd(), opts.file) }]
   } else {
-    console.error(chalk.red('Specify --file <path> or --module <dir> to review.'))
+    console.error(
+      chalk.red(
+        'Specify --file <path>, --module <dir>, or a positional path (e.g. bananajs ai review src/foo.ts).',
+      ),
+    )
     process.exit(1)
   }
 
@@ -133,15 +167,25 @@ export async function runAiReview(opts: AiReviewCliOptions): Promise<void> {
   }
 
   const scope =
-    filesToRead.length === 1 ? filesToRead[0].path : `${opts.module ?? ''} (${filesToRead.length} files)`
+    filesToRead.length === 1
+      ? filesToRead[0].path
+      : `${opts.module ?? ''} (${filesToRead.length} files)`
   console.log(chalk.bold.blue(`\nAI Review: ${scope}\n`))
-  console.log(chalk.yellow(`schemaVersion: ${review.schemaVersion} (CLI expects ${AI_REVIEW_JSON_SCHEMA_VERSION})`))
+  console.log(
+    chalk.yellow(
+      `schemaVersion: ${review.schemaVersion} (CLI expects ${AI_REVIEW_JSON_SCHEMA_VERSION})`,
+    ),
+  )
   console.log(chalk.bold('Summary:'), review.summary)
   console.log('')
   for (const f of review.findings) {
     const tag =
       f.severity === 'error' ? chalk.red : f.severity === 'warn' ? chalk.yellow : chalk.gray
-    console.log(tag(`[${f.severity}]`), f.message, f.file ? chalk.gray(`(${f.file}${f.line ? `:${f.line}` : ''})`) : '')
+    console.log(
+      tag(`[${f.severity}]`),
+      f.message,
+      f.file ? chalk.gray(`(${f.file}${f.line ? `:${f.line}` : ''})`) : '',
+    )
   }
 
   if (opts.fix) {

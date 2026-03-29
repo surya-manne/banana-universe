@@ -3,10 +3,23 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "../../packages/bananajs" },
-    { "path": "../../packages/ddd" },
-    { "path": "../../packages/plugin-typeorm" },
-    { "path": "../../packages/plugin-otel" },
-    { "path": "./tsconfig.app.json" }
+    {
+      "path": "../../packages/plugin-typeorm"
+    },
+    {
+      "path": "../../packages/plugin-otel"
+    },
+    {
+      "path": "../../packages/ddd"
+    },
+    {
+      "path": "../../packages/bananajs"
+    },
+    {
+      "path": "../../packages/bananajs-cli"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
   ]
 }

@@ -12,7 +12,7 @@ import { migrateCodemod } from './lib/migrate'
 import { dbStatus } from './lib/db'
 import { openapiExport } from './lib/openapi'
 import { aiGenerate, aiDoc, runAiReview } from './lib/ai.js'
-import { runAiWizard } from './lib/ai-wizard.js'
+import { loadBananarc } from './lib/llm/bananarc.js'
 import { runAiWire } from './lib/ai-wire.js'
 import { runAiTestScaffold } from './lib/ai-test-scaffold.js'
 import { runAiExplain } from './lib/ai-explain.js'
@@ -21,6 +21,17 @@ import { aiSetup } from './lib/ai-setup.js'
 import { writeScaffoldedApp } from './lib/create-app.js'
 import { APP_PRESETS, getPresetById, type AppPreset } from './lib/create-app-presets.js'
 import { PRESET_ORM_HELP, presetIdToOrm } from './lib/preset-orm.js'
+import {
+  findBootstrapRelativePath,
+  patchTypeormEntitiesArray,
+  registerModuleInBootstrap,
+} from './lib/bootstrap-patch.js'
+import {
+  moduleExportName,
+  moduleOutputBase,
+  toKebabCase,
+  toPascalCase,
+} from './lib/generate-module.js'
 
 /** Keep in sync with packages/bananajs-cli/package.json */
 const CLI_VERSION = '0.3.0'
@@ -45,10 +56,10 @@ program
   })
 
 program
-  .command('generate <type> <name>')
+  .command('generate [type] [name]')
   .alias('g')
   .description(
-    'Generate a BananaJS resource (controller | dto | middleware | module — DDD layered module)',
+    'Generate a BananaJS resource (controller | dto | middleware | module — DDD layered module). Omit args in a TTY to be prompted.',
   )
   .option('--dry-run', 'Print files that would be created without writing them')
   .option(
@@ -60,29 +71,55 @@ program
     `For type module: ${PRESET_ORM_HELP} — overrides non-interactive default; use --orm to force a specific adapter`,
   )
   .option('--out <dir>', 'Output base directory (for type module; default: ./src)')
-  .action(
-    (
-      type: string,
-      name: string,
-      options: { dryRun?: boolean; orm?: string; preset?: string; out?: string },
-    ) => {
-      generateResource(type, name, {
-        dryRun: options.dryRun ?? false,
-        orm: options.orm,
-        preset: options.preset,
-        out: options.out,
-      }).catch((err: unknown) => {
+  .option(
+    '--skip-bootstrap',
+    'For type module: do not register in bootstrap or patch TypeORM entities[]',
+  )
+  .action(function (this: Command, typeArg?: string, nameArg?: string) {
+    const options = this.opts() as {
+      dryRun?: boolean
+      orm?: string
+      preset?: string
+      out?: string
+      skipBootstrap?: boolean
+    }
+    resolveGenerateArgs(typeArg, nameArg)
+      .then(({ type, name }) =>
+        generateResource(type, name, {
+          dryRun: options.dryRun ?? false,
+          orm: options.orm,
+          preset: options.preset,
+          out: options.out,
+          skipBootstrap: options.skipBootstrap ?? false,
+        }),
+      )
+      .catch((err: unknown) => {
         console.error('Unexpected error:', err)
         process.exit(1)
       })
-    },
-  )
+  })
 
 program
   .command('routes')
-  .description('List registered routes (static scan of src/ directory)')
-  .action(() => {
-    listRoutes().catch((err: unknown) => {
+  .description('List registered routes (static scan; TTY prompts for directory)')
+  .option('--root <dir>', 'Directory to scan (default: src)')
+  .action((opts: { root?: string }) => {
+    const run = async (): Promise<void> => {
+      let root = opts.root
+      if (!root && process.stdin.isTTY) {
+        const { dir } = await inquirer.prompt<{ dir: string }>([
+          {
+            type: 'input',
+            name: 'dir',
+            message: 'Directory to scan for controllers:',
+            default: 'src',
+          },
+        ])
+        root = dir.trim() || 'src'
+      }
+      await listRoutes(root ?? 'src')
+    }
+    run().catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })
@@ -92,7 +129,21 @@ program
   .command('migrate')
   .description('Express → BananaJS route codemod (generates controller files from Express routes)')
   .action(() => {
-    migrateCodemod().catch((err: unknown) => {
+    const run = async (): Promise<void> => {
+      if (process.stdin.isTTY) {
+        const { ok } = await inquirer.prompt<{ ok: boolean }>([
+          {
+            type: 'confirm',
+            name: 'ok',
+            message: 'Run the Express → BananaJS codemod in the current directory?',
+            default: true,
+          },
+        ])
+        if (!ok) return
+      }
+      await migrateCodemod()
+    }
+    run().catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })
@@ -103,14 +154,32 @@ program
   .description('Database tools')
   .option('--status', 'Show ORM migration status (TypeORM); Mongoose has no migrate CLI')
   .action((opts: { status?: boolean }) => {
-    if (opts.status) {
-      dbStatus().catch((err: unknown) => {
-        console.error('Unexpected error:', err)
-        process.exit(1)
-      })
-    } else {
-      console.log(chalk.yellow('No action specified. Use --status to check migration status.'))
+    const run = async (): Promise<void> => {
+      let status = opts.status
+      if (status === undefined && process.stdin.isTTY) {
+        const { action } = await inquirer.prompt<{ action: 'status' | 'exit' }>([
+          {
+            type: 'list',
+            name: 'action',
+            message: 'Database tools:',
+            choices: [
+              { name: 'Show TypeORM migration status', value: 'status' },
+              { name: 'Exit', value: 'exit' },
+            ],
+          },
+        ])
+        if (action === 'status') status = true
+      }
+      if (status) {
+        await dbStatus()
+        return
+      }
+      console.log(chalk.yellow('No action specified. Use --status or run interactively in a TTY.'))
     }
+    run().catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
   })
 
 const openapiCmd = program.command('openapi').description('OpenAPI tools')
@@ -121,7 +190,44 @@ openapiCmd
   .option('--out <path>', 'Output path for the spec file')
   .option('--client <type>', 'Generate client SDK (supported: typescript)')
   .action((opts: { out?: string; client?: string }) => {
-    openapiExport(opts).catch((err: unknown) => {
+    const run = async (): Promise<void> => {
+      let out = opts.out
+      let client = opts.client
+      if (process.stdin.isTTY && !out) {
+        const { useDefault } = await inquirer.prompt<{ useDefault: boolean }>([
+          {
+            type: 'confirm',
+            name: 'useDefault',
+            message: 'Export OpenAPI JSON to ./openapi.json in the project root?',
+            default: true,
+          },
+        ])
+        if (!useDefault) {
+          const { path: custom } = await inquirer.prompt<{ path: string }>([
+            {
+              type: 'input',
+              name: 'path',
+              message: 'Output path (relative to cwd):',
+              default: 'openapi.json',
+            },
+          ])
+          out = custom.trim() || 'openapi.json'
+        }
+      }
+      if (process.stdin.isTTY && !client) {
+        const { gen } = await inquirer.prompt<{ gen: boolean }>([
+          {
+            type: 'confirm',
+            name: 'gen',
+            message: 'Also generate TypeScript types (openapi-typescript)?',
+            default: false,
+          },
+        ])
+        if (gen) client = 'typescript'
+      }
+      await openapiExport({ out, client })
+    }
+    run().catch((err: unknown) => {
       console.error('Unexpected error:', err)
       process.exit(1)
     })
@@ -133,6 +239,7 @@ const aiCmd = program
 
 aiCmd
   .command('setup')
+  .alias('s')
   .description('Interactive wizard: choose LLM provider and write .bananarc.json')
   .action(() => {
     aiSetup().catch((err: unknown) => {
@@ -143,8 +250,9 @@ aiCmd
 
 aiCmd
   .command('generate')
+  .alias('g')
   .description(
-    'Generate BananaJS files: flat scaffold (--from-schema / --from-prompt) or full DDD module (--module)',
+    'Generate BananaJS files: flat scaffold (--from-schema / --from-prompt) or full DDD module (--module); TTY prompts when args omitted',
   )
   .option(
     '--module [description]',
@@ -183,9 +291,85 @@ aiCmd
       debug?: boolean
     }) => {
       const run = async (): Promise<void> => {
-        if (opts.module !== undefined) {
+        const wantDdd = opts.module !== undefined
+        const wantFlat = Boolean(opts.fromSchema || opts.fromPrompt)
+        if (!wantDdd && !wantFlat && process.stdin.isTTY) {
+          const { mode } = await inquirer.prompt<{ mode: 'ddd' | 'flat' }>([
+            {
+              type: 'list',
+              name: 'mode',
+              message: 'What should the AI generate?',
+              choices: [
+                { name: 'Full DDD module under src/modules/ (LLM extraction)', value: 'ddd' },
+                { name: 'Flat controller + dto + service (legacy scaffold)', value: 'flat' },
+              ],
+            },
+          ])
+          if (mode === 'ddd') {
+            await aiGenerateModule({
+              module: true,
+              orm: opts.orm,
+              preset: opts.preset,
+              out: opts.out,
+              dryRun: opts.dryRun,
+              detailed: opts.detailed,
+              debug: opts.debug,
+            })
+            return
+          }
+          const flat = await inquirer.prompt<{
+            kind: 'schema' | 'prompt'
+            path?: string
+            text?: string
+          }>([
+            {
+              type: 'list',
+              name: 'kind',
+              message: 'Flat codegen from:',
+              choices: [
+                { name: 'JSON Schema / OpenAPI file', value: 'schema' },
+                { name: 'Natural language (LLM)', value: 'prompt' },
+              ],
+            },
+            {
+              type: 'input',
+              name: 'path',
+              message: 'Path to schema file (relative to cwd):',
+              when: (a) => a.kind === 'schema',
+            },
+            {
+              type: 'input',
+              name: 'text',
+              message: 'Describe the API slice:',
+              when: (a) => a.kind === 'prompt',
+            },
+          ])
+          if (flat.kind === 'schema') {
+            const p = flat.path?.trim()
+            if (!p) {
+              console.error(chalk.red('Schema path is required.'))
+              process.exit(1)
+            }
+            await aiGenerate({ fromSchema: p, out: opts.out, dryRun: opts.dryRun })
+            return
+          }
+          const text = flat.text?.trim()
+          if (!text) {
+            console.error(chalk.red('Prompt text is required.'))
+            process.exit(1)
+          }
+          await aiGenerate({ fromPrompt: text, out: opts.out, dryRun: opts.dryRun })
+          return
+        }
+
+        if (wantDdd) {
           await aiGenerateModule({
-            module: typeof opts.module === 'string' ? opts.module : undefined,
+            module:
+              typeof opts.module === 'string'
+                ? opts.module
+                : opts.module === true
+                ? true
+                : undefined,
             fromSchema: opts.fromSchema,
             orm: opts.orm,
             preset: opts.preset,
@@ -211,17 +395,8 @@ aiCmd
   )
 
 aiCmd
-  .command('wizard')
-  .description('Interactive wizard: DDD module from schema or description (TTY; flags preferred for CI)')
-  .action(() => {
-    runAiWizard().catch((err: unknown) => {
-      console.error('Unexpected error:', err)
-      process.exit(1)
-    })
-  })
-
-aiCmd
   .command('doc')
+  .alias('d')
   .description('Generate JSDoc for existing controllers using AI')
   .option('--file <path>', 'Path to controller file (default: scan src/)')
   .option('--dry-run', 'Print changes without writing')
@@ -233,38 +408,74 @@ aiCmd
   })
 
 aiCmd
-  .command('review')
-  .description('Structured AI review (JSON + summary); supports single file or whole module directory')
+  .command('review [target]')
+  .alias('r')
+  .description(
+    'Structured AI review (JSON + summary); non-interactive — pass --file, --module, or a positional path',
+  )
   .option('--file <path>', 'Path to a TypeScript file to review')
   .option('--module <path>', 'Directory (e.g. src/modules/foo) — all .ts files')
   .option('--format <fmt>', 'text | json (default: text)', 'text')
   .option('--sarif', 'Emit SARIF 2.1.0 instead of text/json')
   .option('--fix', 'Reserved: safe auto-fix is not applied; shows policy message')
-  .action(
-    (opts: {
-      file?: string
-      module?: string
-      format?: string
-      sarif?: boolean
-      fix?: boolean
-    }) => {
+  .action(function (this: Command, target: string | undefined) {
+    const run = async (): Promise<void> => {
+      const opts = this.opts() as {
+        file?: string
+        module?: string
+        format?: string
+        sarif?: boolean
+        fix?: boolean
+      }
+      let file = opts.file
+      let modulePath = opts.module
+      if (!file && !modulePath && target?.trim()) {
+        const rel = target.trim()
+        const abs = path.resolve(process.cwd(), rel)
+        const st = await fs.stat(abs).catch(() => null)
+        if (st?.isFile()) {
+          file = rel
+        } else if (st?.isDirectory()) {
+          modulePath = rel
+        } else {
+          const bare = !/[\\/]/.test(path.normalize(rel))
+          if (bare) {
+            modulePath = rel
+          } else {
+            console.error(chalk.red(`Not found: ${rel}`))
+            process.exit(1)
+          }
+        }
+      }
+      if (!file && !modulePath) {
+        console.error(
+          chalk.red(
+            'Pass --file <path>, --module <dir>, or a positional path (e.g. bananajs ai review src/modules/widgets).',
+          ),
+        )
+        process.exit(1)
+      }
       const fmt = opts.format === 'json' ? 'json' : 'text'
-      runAiReview({
-        file: opts.file,
-        module: opts.module,
+      await runAiReview({
+        file,
+        module: modulePath,
         format: fmt,
         sarif: opts.sarif ?? false,
         fix: opts.fix ?? false,
-      }).catch((err: unknown) => {
-        console.error('Unexpected error:', err)
-        process.exit(1)
       })
-    },
-  )
+    }
+    run().catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
 
 aiCmd
   .command('wire')
-  .description('Suggest bootstrap wiring for discovered feature modules (dry-run; validates against .bananarc)')
+  .alias('w')
+  .description(
+    'Suggest bootstrap wiring for discovered feature modules (dry-run; validates against .bananarc)',
+  )
   .option('--llm', 'Optional LLM narrative (still does not modify files)')
   .action((opts: { llm?: boolean }) => {
     runAiWire({ llm: opts.llm ?? false }).catch((err: unknown) => {
@@ -275,6 +486,7 @@ aiCmd
 
 aiCmd
   .command('test')
+  .alias('t')
   .description('Scaffold a minimal node:test + supertest file (BananaTestApp-style recipes)')
   .option('--out <path>', 'Output path (default: src/__tests__/ai-scaffold.test.ts)')
   .action((opts: { out?: string }) => {
@@ -286,6 +498,7 @@ aiCmd
 
 aiCmd
   .command('explain [file]')
+  .alias('e')
   .description('Short LLM summary of a TypeScript file (for humans / PR notes)')
   .action((file: string | undefined) => {
     runAiExplain(file).catch((err: unknown) => {
@@ -386,10 +599,60 @@ async function createApp(
   }
 }
 
+async function resolveGenerateArgs(
+  typeArg?: string,
+  nameArg?: string,
+): Promise<{ type: string; name: string }> {
+  let type = typeArg?.trim()
+  let name = nameArg?.trim()
+  if (process.stdin.isTTY) {
+    if (!type) {
+      const { t } = await inquirer.prompt<{ t: string }>([
+        {
+          type: 'list',
+          name: 't',
+          message: 'What do you want to generate?',
+          choices: [
+            { name: 'module (DDD feature under src/modules/)', value: 'module' },
+            { name: 'controller', value: 'controller' },
+            { name: 'dto', value: 'dto' },
+            { name: 'middleware', value: 'middleware' },
+          ],
+        },
+      ])
+      type = t
+    }
+    if (!name) {
+      const { n } = await inquirer.prompt<{ n: string }>([
+        {
+          type: 'input',
+          name: 'n',
+          message: 'Name (e.g. Product or order-item):',
+          validate: (v) => (v && v.trim().length > 0 ? true : 'Enter a name'),
+        },
+      ])
+      name = n.trim()
+    }
+  }
+  if (!type || !name) {
+    console.error(
+      chalk.red('Usage: bananajs generate <type> <name> — or omit args in a TTY to be prompted.'),
+    )
+    process.exit(1)
+  }
+  return { type, name }
+}
+
 async function generateResource(
   type: string,
   name: string,
-  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string },
+  opts: {
+    dryRun: boolean
+    orm?: string
+    preset?: string
+    out?: string
+    skipBootstrap?: boolean
+  },
 ): Promise<void> {
   const validTypes = ['controller', 'dto', 'middleware', 'module']
   if (!validTypes.includes(type)) {
@@ -432,7 +695,7 @@ async function generateResource(
 
 async function generateModuleResource(
   name: string,
-  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string },
+  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string; skipBootstrap?: boolean },
 ): Promise<void> {
   let ormChoice: OrmChoice
   const raw = opts.orm?.toLowerCase()
@@ -467,7 +730,8 @@ async function generateModuleResource(
     ormChoice = 'typeorm'
   }
 
-  const outBase = path.join(process.cwd(), opts.out ?? 'src')
+  const cwd = process.cwd()
+  const outBase = path.join(cwd, opts.out ?? 'src')
   const files = buildDddModuleFiles(name, ormChoice)
 
   for (const f of files) {
@@ -481,5 +745,38 @@ async function generateModuleResource(
     await fs.mkdir(path.dirname(outputPath), { recursive: true })
     await fs.writeFile(outputPath, f.content, 'utf-8')
     console.log(chalk.green(`Created: ${outputPath}`))
+  }
+
+  if (opts.dryRun || opts.skipBootstrap) {
+    return
+  }
+
+  const config = await loadBananarc(cwd)
+  const kebab = toKebabCase(name)
+  const Pascal = toPascalCase(name)
+  const discovered = await findBootstrapRelativePath(cwd)
+  const bootstrapRel = discovered ?? config.project?.bootstrap ?? 'src/bootstrap.ts'
+
+  await registerModuleInBootstrap({
+    cwd,
+    bootstrapRelative: bootstrapRel,
+    moduleFolderKebab: kebab,
+    moduleExportName: moduleExportName(kebab),
+    dryRun: false,
+  })
+
+  if (ormChoice === 'typeorm') {
+    const entityAbs = path.join(
+      outBase,
+      moduleOutputBase(kebab),
+      'infrastructure',
+      `${Pascal}.orm-entity.ts`,
+    )
+    await patchTypeormEntitiesArray({
+      cwd,
+      entityFileAbs: path.resolve(entityAbs),
+      entityClassName: `${Pascal}OrmEntity`,
+      dryRun: false,
+    })
   }
 }

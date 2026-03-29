@@ -61,9 +61,28 @@ const STANDALONE_PRETTIERRC = `{
   "semi": false,
   "printWidth": 100,
   "useTabs": false,
-  "tabWidth": 2,
+  "tabWidth": 4,
   "trailingComma": "all"
 }
+`
+
+const STANDALONE_PRETTIERIGNORE = `dist
+node_modules
+coverage
+`
+
+const STANDALONE_EDITORCONFIG = `root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
 `
 
 export type AppPresetId = 'mongodb' | 'sql'
@@ -111,7 +130,9 @@ const sharedGitignore = (): string =>
 const sharedDevDependencies = () => ({
   '@banana-universe/bananajs-cli': SCAFFOLD_VERSIONS.bananajsCli,
   '@eslint/js': '^9.8.0',
+  '@types/express': '^4.17.21',
   '@types/node': '^22.0.0',
+  '@types/swagger-ui-express': '^4.1.8',
   eslint: '^9.8.0',
   'eslint-config-prettier': '^9.0.0',
   prettier: '^2.6.2',
@@ -134,8 +155,8 @@ function mongoPackageJson(ctx: ScaffoldContext): string {
         start: 'node dist/main.js',
         lint: 'eslint src',
         'lint:fix': 'eslint src --fix',
-        format: 'prettier --write "src/**/*.ts"',
-        'format:check': 'prettier --check "src/**/*.ts"',
+        format: 'prettier --write "src/**/*.ts" ".prettierrc" "eslint.config.mjs"',
+        'format:check': 'prettier --check "src/**/*.ts" ".prettierrc" "eslint.config.mjs"',
       },
       dependencies: {
         dotenv: '^16.4.5',
@@ -147,6 +168,7 @@ function mongoPackageJson(ctx: ScaffoldContext): string {
         mongoose: '^8.9.0',
         'reflect-metadata': '^0.2.2',
         zod: '^3.24.0',
+        'swagger-ui-express': '^5.0.1',
       },
       devDependencies: sharedDevDependencies(),
     },
@@ -169,8 +191,8 @@ function sqlPackageJson(ctx: ScaffoldContext): string {
         start: 'node dist/main.js',
         lint: 'eslint src',
         'lint:fix': 'eslint src --fix',
-        format: 'prettier --write "src/**/*.ts"',
-        'format:check': 'prettier --check "src/**/*.ts"',
+        format: 'prettier --write "src/**/*.ts" ".prettierrc" "eslint.config.mjs"',
+        'format:check': 'prettier --check "src/**/*.ts" ".prettierrc" "eslint.config.mjs"',
       },
       dependencies: {
         dotenv: '^16.4.5',
@@ -183,6 +205,7 @@ function sqlPackageJson(ctx: ScaffoldContext): string {
         'reflect-metadata': '^0.2.2',
         typeorm: '^0.3.20',
         zod: '^3.24.0',
+        'swagger-ui-express': '^5.0.1',
       },
       devDependencies: sharedDevDependencies(),
     },
@@ -217,6 +240,10 @@ npm run dev
 # or: npm run build && npm start
 \`\`\`
 
+## API docs
+
+- **Swagger UI** — \`/api-docs\` (OpenAPI JSON at \`/api-docs.json\`)
+
 ## Endpoints
 
 - \`GET /articles/healthz\` — liveness
@@ -250,6 +277,10 @@ npm run dev
 # or: npm run build && npm start
 \`\`\`
 
+## API docs
+
+- **Swagger UI** — \`/api-docs\` (OpenAPI JSON at \`/api-docs.json\`)
+
 ## Endpoints
 
 - \`GET /healthz\` — liveness
@@ -264,6 +295,8 @@ function buildMongoFiles(ctx: ScaffoldContext): ScaffoldFile[] {
     { relativePath: 'tsconfig.json', content: sharedTsconfig() },
     { relativePath: '.gitignore', content: sharedGitignore() },
     { relativePath: '.prettierrc', content: STANDALONE_PRETTIERRC },
+    { relativePath: '.prettierignore', content: STANDALONE_PRETTIERIGNORE },
+    { relativePath: '.editorconfig', content: STANDALONE_EDITORCONFIG },
     { relativePath: 'eslint.config.mjs', content: STANDALONE_ESLINT_CONFIG_MJS },
     {
       relativePath: '.env.example',
@@ -277,10 +310,42 @@ import 'reflect-metadata'
 import { createMongoApp } from './bootstrap.js'
 
 const port = Number(process.env.PORT ?? 3000)
-const banana = await createMongoApp()
-banana.getInstance().listen(port, () => {
-  console.log(\`${ctx.appName} listening on \${port}\`)
-})
+
+try {
+    const banana = await createMongoApp()
+    banana.getInstance().listen(port, () => {
+        console.log(\`${ctx.appName} listening on \${port}\`)
+    })
+} catch (err) {
+    console.error('Failed to start application:', err)
+    process.exit(1)
+}
+`,
+    },
+    {
+      relativePath: 'src/db/mongo.ts',
+      content: `import mongoose from 'mongoose'
+
+function redactConnectionString(uri: string): string {
+    try {
+        const u = new URL(uri)
+        if (u.password) u.password = '***'
+        return u.toString()
+    } catch {
+        return '<invalid DATABASE_URL>'
+    }
+}
+
+/** Connects Mongoose and returns the mongoose module (connection on \`mongoose.connection\`). */
+export async function connectMongo(uri: string): Promise<typeof mongoose> {
+    try {
+        return await mongoose.connect(uri)
+    } catch (cause) {
+        const message = \`MongoDB connection failed: \${redactConnectionString(uri)}\`
+        console.error(message, cause)
+        throw new Error(message, { cause })
+    }
+}
 `,
     },
     {
@@ -288,28 +353,35 @@ banana.getInstance().listen(port, () => {
       content: `import 'reflect-metadata'
 import mongoose from 'mongoose'
 import {
-  BananaApp,
-  type BananaPlugin,
-  defineBananaAppOptions,
+    BananaApp,
+    type BananaPlugin,
+    defineBananaAppOptions,
 } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
+import { connectMongo } from './db/mongo.js'
 import { articlesModule } from './modules/articles/index.js'
 
 export async function createMongoApp(): Promise<BananaApp> {
-  const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/bananajs_app'
-  await mongoose.connect(uri)
+    const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/bananajs_app'
+    await connectMongo(uri)
 
-  return BananaApp.create(
-    defineBananaAppOptions({
-      modules: [articlesModule],
-      plugins: [MongoosePlugin(mongoose.connection) as BananaPlugin],
-      logger: false,
-      gracefulShutdown: false,
-      rateLimit: false,
-      requestId: false,
-      security: { helmet: false, cors: false },
-    }),
-  )
+    return BananaApp.create(
+        defineBananaAppOptions({
+            modules: [articlesModule],
+            plugins: [MongoosePlugin(mongoose.connection) as BananaPlugin],
+            logger: false,
+            gracefulShutdown: false,
+            rateLimit: false,
+            requestId: false,
+            security: { helmet: false, cors: false },
+            swagger: {
+                enabled: true,
+                path: '/api-docs',
+                title: '${ctx.appName} API',
+                version: '0.1.0',
+            },
+        }),
+    )
 }
 `,
     },
@@ -376,26 +448,27 @@ export const CreateArticleSchema = z.object({
       relativePath: 'src/modules/articles/domain/Article.entity.ts',
       content: `import { Entity } from '@banana-universe/ddd'
 
+/** \`createdAt\` / \`updatedAt\` are set by Mongoose (\`timestamps: true\`) after save. */
 export interface ArticleProps {
-  id: string
-  title: string
-  body: string
-  createdAt: Date
-  updatedAt: Date
+    id: string
+    title: string
+    body: string
+    createdAt?: Date
+    updatedAt?: Date
 }
 
 export class Article extends Entity<ArticleProps> {
-  constructor(props: ArticleProps) {
-    super(props)
-  }
+    constructor(props: ArticleProps) {
+        super(props)
+    }
 
-  get title(): string {
-    return this.props.title
-  }
+    get title(): string {
+        return this.props.title
+    }
 
-  get body(): string {
-    return this.props.body
-  }
+    get body(): string {
+        return this.props.body
+    }
 }
 `,
     },
@@ -428,13 +501,10 @@ export class ArticleAppService {
   ) {}
 
   async create(title: string, body: string): Promise<Article> {
-    const now = new Date()
     const entity = new Article({
       id: randomUUID(),
       title,
       body,
-      createdAt: now,
-      updatedAt: now,
     })
     return this.articleRepository.save(entity)
   }
@@ -456,14 +526,12 @@ export type ArticleDoc = HydratedDocument<{
 }>
 
 export const articleSchema = new Schema(
-  {
-    _id: { type: String, required: true },
-    title: { type: String, required: true },
-    body: { type: String, required: true },
-    createdAt: { type: Date, required: true },
-    updatedAt: { type: Date, required: true },
-  },
-  { collection: 'articles' },
+    {
+        _id: { type: String, required: true },
+        title: { type: String, required: true },
+        body: { type: String, required: true },
+    },
+    { collection: 'articles', timestamps: true },
 )
 
 /** Registers or reuses the Article model on the given connection. */
@@ -502,8 +570,6 @@ export class ArticleMongooseRepository extends MongooseRepositoryAdapter<Article
       _id: domain.id,
       title: domain.title,
       body: domain.body,
-      createdAt: domain.createdAt,
-      updatedAt: domain.updatedAt,
     }
   }
 }
@@ -518,6 +584,8 @@ function buildSqlFiles(ctx: ScaffoldContext): ScaffoldFile[] {
     { relativePath: 'tsconfig.json', content: sharedTsconfig() },
     { relativePath: '.gitignore', content: sharedGitignore() },
     { relativePath: '.prettierrc', content: STANDALONE_PRETTIERRC },
+    { relativePath: '.prettierignore', content: STANDALONE_PRETTIERIGNORE },
+    { relativePath: '.editorconfig', content: STANDALONE_EDITORCONFIG },
     { relativePath: 'eslint.config.mjs', content: STANDALONE_ESLINT_CONFIG_MJS },
     {
       relativePath: '.env.example',
@@ -531,52 +599,75 @@ import 'reflect-metadata'
 import { createSqlApp } from './bootstrap.js'
 
 const port = Number(process.env.PORT ?? 3000)
-const banana = await createSqlApp()
-banana.getInstance().listen(port, () => {
-  console.log(\`${ctx.appName} listening on \${port}\`)
-})
+
+try {
+    const banana = await createSqlApp()
+    banana.getInstance().listen(port, () => {
+        console.log(\`${ctx.appName} listening on \${port}\`)
+    })
+} catch (err) {
+    console.error('Failed to start application:', err)
+    process.exit(1)
+}
+`,
+    },
+    {
+      relativePath: 'src/db/typeorm-options.ts',
+      content: `import { NoteEntity } from '../modules/health/Note.entity.js'
+
+/** TypeORM DataSource options for PostgreSQL (used by \`TypeOrmPlugin\`). */
+export function buildTypeOrmOptions(): Record<string, unknown> {
+    const url =
+        process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/bananajs_app'
+    if (typeof url !== 'string' || url.trim() === '') {
+        throw new Error('DATABASE_URL must be a non-empty string')
+    }
+    return {
+        type: 'postgres',
+        url,
+        entities: [NoteEntity],
+        synchronize: true,
+    }
+}
 `,
     },
     {
       relativePath: 'src/bootstrap.ts',
       content: `import 'reflect-metadata'
 import {
-  BananaApp,
-  type BananaPlugin,
-  createModule,
-  defineBananaAppOptions,
+    BananaApp,
+    type BananaPlugin,
+    createModule,
+    defineBananaAppOptions,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
+import { buildTypeOrmOptions } from './db/typeorm-options.js'
 import { HealthController } from './modules/health/Health.controller.js'
-import { NoteEntity } from './modules/health/Note.entity.js'
 
 const healthModule = createModule({
-  id: 'health',
-  controller: HealthController,
-  providers: [],
+    id: 'health',
+    controller: HealthController,
+    providers: [],
 })
 
 export async function createSqlApp(): Promise<BananaApp> {
-  return BananaApp.create(
-    defineBananaAppOptions({
-      modules: [healthModule],
-      plugins: [TypeOrmPlugin(buildTypeOrmOptions()) as BananaPlugin],
-      logger: false,
-      gracefulShutdown: false,
-      rateLimit: false,
-      requestId: false,
-      security: { helmet: false, cors: false },
-    }),
-  )
-}
-
-function buildTypeOrmOptions(): Record<string, unknown> {
-  return {
-    type: 'postgres',
-    url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/bananajs_app',
-    entities: [NoteEntity],
-    synchronize: true,
-  }
+    return BananaApp.create(
+        defineBananaAppOptions({
+            modules: [healthModule],
+            plugins: [TypeOrmPlugin(buildTypeOrmOptions()) as BananaPlugin],
+            logger: false,
+            gracefulShutdown: false,
+            rateLimit: false,
+            requestId: false,
+            security: { helmet: false, cors: false },
+            swagger: {
+                enabled: true,
+                path: '/api-docs',
+                title: '${ctx.appName} API',
+                version: '0.1.0',
+            },
+        }),
+    )
 }
 `,
     },
@@ -588,26 +679,38 @@ import { BaseController, Controller, Get, Public } from '@banana-universe/banana
 
 @Controller('')
 export class HealthController extends BaseController {
-  @Get('healthz')
-  @Public()
-  health(_req: Request, res: Response) {
-    return this.ok(res, 'ok', { status: 'up' })
-  }
+    @Get('healthz')
+    @Public()
+    health(_req: Request, res: Response) {
+        return this.ok(res, 'ok', { status: 'up' })
+    }
 }
 `,
     },
     {
       relativePath: 'src/modules/health/Note.entity.ts',
       content: `import 'reflect-metadata'
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+} from 'typeorm'
 
 @Entity({ name: 'notes' })
 export class NoteEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string
+    @PrimaryGeneratedColumn('uuid')
+    id!: string
 
-  @Column({ type: 'varchar', length: 200 })
-  title!: string
+    @Column({ type: 'varchar', length: 200 })
+    title!: string
+
+    @CreateDateColumn({ type: 'timestamptz' })
+    createdAt!: Date
+
+    @UpdateDateColumn({ type: 'timestamptz' })
+    updatedAt!: Date
 }
 `,
     },

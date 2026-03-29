@@ -39,12 +39,12 @@ Hand-written overview; generated signatures live under [**TypeDoc API**](/api/) 
 
 ## Auth & security
 
-| Export                    | Role                     |
-| ------------------------- | ------------------------ |
-| `Auth`, `Roles`, `Public` | Auth decorators          |
-| `RateLimit`, `Throttle`   | Rate limiting            |
-| `Sanitize`, `Can`         | Input sanitization, ABAC |
-| `Upload`                  | Multipart uploads        |
+| Export                    | Role                                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Auth`, `Roles`, `Public` | Auth decorators — see [**Authentication** integration](/integrations/auth) ( **`AuthGuard`**, **`@Public`**, **`@Roles`**, OpenAPI ) |
+| `RateLimit`, `Throttle`   | Rate limiting                                                                                                                        |
+| `Sanitize`, `Can`         | Input sanitization, ABAC                                                                                                             |
+| `Upload`                  | Multipart uploads                                                                                                                    |
 
 ## Tenancy & cache
 

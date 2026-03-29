@@ -4,6 +4,23 @@ import { withMermaid } from 'vitepress-plugin-mermaid'
 // Versioning strategy note: a docs version dropdown (tied to git tags) can be added when
 // multi-package doc versioning needs coordinating (e.g. vitepress-plugin-versions).
 
+/** Handwritten reference pages + TypeDoc — shared by `/reference/*` and `/api/*` sidebars. */
+const referenceApiSidebar = [
+  {
+    text: 'Framework reference',
+    items: [
+      { text: 'Decorators', link: '/reference/decorators' },
+      { text: 'BananaAppOptions', link: '/reference/bananaapp-options' },
+      { text: 'Error Types', link: '/reference/error-types' },
+      { text: 'Config Module', link: '/reference/config-module' },
+    ],
+  },
+  {
+    text: 'TypeDoc API',
+    items: [{ text: 'Browse generated API', link: '/api/' }],
+  },
+]
+
 export default withMermaid(
   defineConfig({
     title: 'BananaJS',
@@ -16,7 +33,16 @@ export default withMermaid(
     // GitHub Pages deployment base
     base: '/banana-universe/',
 
-    head: [['link', { rel: 'icon', href: '/banana-universe/favicon.ico' }]],
+    head: [
+      [
+        'link',
+        {
+          rel: 'icon',
+          type: 'image/svg+xml',
+          href: '/banana-universe/favicon.svg',
+        },
+      ],
+    ],
 
     themeConfig: {
       logo: '/logo.svg',
@@ -24,13 +50,20 @@ export default withMermaid(
       nav: [
         { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },
         { text: 'Philosophy', link: '/guide/philosophy' },
+        {
+          text: 'AI',
+          link: '/ai/',
+          activeMatch: '^/(ai/|tooling/(ai-commands|ai-module-generation))',
+        },
         { text: 'Recipes', link: '/recipes/', activeMatch: '/recipes/' },
-        { text: 'Reference', link: '/reference/decorators', activeMatch: '/reference/' },
+        {
+          text: 'Reference',
+          link: '/reference/decorators',
+          activeMatch: '^/(reference|api)(/|$)',
+        },
         { text: 'Integrations', link: '/integrations/typeorm', activeMatch: '/integrations/' },
         { text: 'Plugins', link: '/plugins/overview', activeMatch: '/plugins/' },
         { text: 'Tooling', link: '/tooling/cli', activeMatch: '/tooling/' },
-        { text: 'AI', link: '/ai/', activeMatch: '/ai/' },
-        { text: 'API', link: '/api/', activeMatch: '/api/' },
       ],
 
       sidebar: {
@@ -67,21 +100,8 @@ export default withMermaid(
           },
         ],
 
-        '/reference/': [
-          {
-            text: 'API Reference',
-            items: [
-              { text: 'Decorators', link: '/reference/decorators' },
-              { text: 'BananaAppOptions', link: '/reference/bananaapp-options' },
-              { text: 'Error Types', link: '/reference/error-types' },
-              { text: 'Config Module', link: '/reference/config-module' },
-            ],
-          },
-          {
-            text: 'Auto-generated',
-            items: [{ text: 'TypeDoc API Docs', link: '/api/' }],
-          },
-        ],
+        '/reference/': referenceApiSidebar,
+        '/api/': referenceApiSidebar,
 
         '/integrations/': [
           {
@@ -89,6 +109,7 @@ export default withMermaid(
             items: [
               { text: 'TypeORM', link: '/integrations/typeorm' },
               { text: 'Mongoose', link: '/integrations/mongoose' },
+              { text: 'Authentication', link: '/integrations/auth' },
               { text: 'OpenTelemetry', link: '/integrations/opentelemetry' },
               { text: 'Zod', link: '/integrations/zod' },
             ],
@@ -121,10 +142,23 @@ export default withMermaid(
         '/ai/': [
           {
             text: 'AI',
+            items: [{ text: 'Overview', link: '/ai/' }],
+          },
+          {
+            text: 'Reference in Tooling',
             items: [
-              { text: 'Overview', link: '/ai/' },
-              { text: 'AI Commands', link: '/tooling/ai-commands' },
-              { text: 'AI module generation', link: '/tooling/ai-module-generation' },
+              {
+                text: 'AI commands — flags & examples',
+                link: '/tooling/ai-commands',
+              },
+              {
+                text: 'AI module generation — DDD flow',
+                link: '/tooling/ai-module-generation',
+              },
+              {
+                text: 'CLI reference — `bjs ai`',
+                link: '/tooling/cli#bjs-ai',
+              },
             ],
           },
         ],
@@ -132,7 +166,13 @@ export default withMermaid(
         '/recipes/': [
           {
             text: 'Recipes',
-            items: [{ text: 'Overview', link: '/recipes/index' }],
+            items: [
+              { text: 'Overview', link: '/recipes/' },
+              { text: 'How to pick a recipe', link: '/recipes/#how-to-pick-a-recipe' },
+              { text: 'Soft architecture', link: '/recipes/#soft-architecture-what-stays-stable' },
+              { text: 'Conventions', link: '/recipes/#conventions-shared-across-recipes' },
+              { text: 'Catalog', link: '/recipes/#catalog' },
+            ],
           },
         ],
       },
