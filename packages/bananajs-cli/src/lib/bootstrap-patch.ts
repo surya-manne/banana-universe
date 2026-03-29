@@ -80,8 +80,10 @@ export function insertIntoModulesArray(source: string, moduleName: string): stri
   const re = new RegExp(`\\b${escapeRegex(moduleName)}\\b`)
   if (re.test(inner)) return source
   const trimmed = inner.trim()
+  // Strip trailing comma before appending to avoid double-comma (Prettier often writes trailing commas)
+  const trimmedClean = trimmed.replace(/,\s*$/, '')
   const newInner =
-    trimmed.length === 0 ? `\n    ${moduleName}\n  ` : `${trimmed},\n    ${moduleName}\n  `
+    trimmedClean.length === 0 ? `\n    ${moduleName}\n  ` : `${trimmedClean},\n    ${moduleName}\n  `
   return source.slice(0, bracketStart + 1) + newInner + source.slice(i)
 }
 
@@ -97,6 +99,8 @@ export interface RegisterModuleInBootstrapOptions {
   /** e.g. productsModule */
   moduleExportName: string
   dryRun?: boolean
+  /** Absolute path to the generated module's index.ts — used to compute the correct relative import regardless of where bootstrap.ts lives. */
+  moduleIndexAbs?: string
 }
 
 /** Adds import and registers module in `modules: [...]` inside bootstrap. */
@@ -114,7 +118,11 @@ export async function registerModuleInBootstrap(
     return false
   }
 
-  const importLine = `import { ${opts.moduleExportName} } from './modules/${opts.moduleFolderKebab}/index.js'`
+  const bootstrapAbs = path.join(opts.cwd, opts.bootstrapRelative)
+  const moduleIndexTs =
+    opts.moduleIndexAbs ??
+    path.join(opts.cwd, 'src', 'modules', opts.moduleFolderKebab, 'index.ts')
+  const importLine = `import { ${opts.moduleExportName} } from '${esmRelativeImport(bootstrapAbs, moduleIndexTs)}'`
   const withImport = appendImportAfterLastImportBlock(source, importLine)
   const withModules = insertIntoModulesArray(withImport, opts.moduleExportName)
   if (!withModules) {
@@ -202,8 +210,9 @@ export async function patchTypeormEntitiesArray(
     const importPath = esmRelativeImport(file, opts.entityFileAbs)
     const importLine = `import { ${opts.entityClassName} } from '${importPath}'`
 
+    const innerTrimmed = inner.trim().replace(/,\s*$/, '')
     const newInner =
-      inner.trim() === '' ? opts.entityClassName : `${inner.trim()}, ${opts.entityClassName}`
+      innerTrimmed === '' ? opts.entityClassName : `${innerTrimmed}, ${opts.entityClassName}`
     let updated = content.replace(entitiesMatch[0], `entities: [${newInner}]`)
     if (!updated.includes(`import { ${opts.entityClassName} }`)) {
       updated = appendImportAfterLastImportBlock(updated, importLine)
@@ -219,6 +228,8 @@ export async function patchTypeormEntitiesArray(
         `Registered ${opts.entityClassName} in TypeORM entities (${path.relative(opts.cwd, file)})`,
       ),
     )
+    const fmtEntities = await tryFormatFileWithPrettier(file, opts.cwd)
+    if (fmtEntities) console.log(chalk.gray('Formatted with Prettier.'))
     return true
   }
 

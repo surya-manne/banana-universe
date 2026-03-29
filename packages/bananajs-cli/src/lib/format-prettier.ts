@@ -9,12 +9,19 @@ const execFileAsync = promisify(execFile)
 async function findPrettierBin(startDir: string): Promise<string | null> {
   let dir = path.resolve(startDir)
   for (;;) {
-    const candidate = path.join(dir, 'node_modules', 'prettier', 'bin', 'prettier.cjs')
-    try {
-      await fs.access(candidate)
-      return candidate
-    } catch {
-      /* continue */
+    // Try multiple Prettier binary locations: 3.x (.cjs), 3.x alt (.js), 2.x
+    const candidates = [
+      path.join(dir, 'node_modules', 'prettier', 'bin', 'prettier.cjs'),
+      path.join(dir, 'node_modules', 'prettier', 'bin', 'prettier.js'),
+      path.join(dir, 'node_modules', 'prettier', 'bin-prettier.js'),
+    ]
+    for (const candidate of candidates) {
+      try {
+        await fs.access(candidate)
+        return candidate
+      } catch {
+        /* continue */
+      }
     }
     const parent = path.dirname(dir)
     if (parent === dir) break

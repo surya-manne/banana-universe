@@ -262,7 +262,7 @@ aiCmd
     '--from-schema <file>',
     'JSON Schema, OpenAPI spec (flat codegen), or DDD module when used with --module',
   )
-  .option(
+    .option(
     '--from-prompt <text>',
     'Natural language for flat controller+dto+service (uses .bananarc.json LLM)',
   )
@@ -327,8 +327,8 @@ aiCmd
               name: 'kind',
               message: 'Flat codegen from:',
               choices: [
-                { name: 'JSON Schema / OpenAPI file', value: 'schema' },
                 { name: 'Natural language (LLM)', value: 'prompt' },
+                { name: 'JSON Schema / OpenAPI file', value: 'schema' },
               ],
             },
             {
@@ -418,6 +418,7 @@ aiCmd
   .option('--format <fmt>', 'text | json (default: text)', 'text')
   .option('--sarif', 'Emit SARIF 2.1.0 instead of text/json')
   .option('--fix', 'Reserved: safe auto-fix is not applied; shows policy message')
+  .option('--debug', 'Print raw LLM output for each attempt (useful when JSON parse fails)')
   .action(function (this: Command, target: string | undefined) {
     const run = async (): Promise<void> => {
       const opts = this.opts() as {
@@ -426,6 +427,7 @@ aiCmd
         format?: string
         sarif?: boolean
         fix?: boolean
+        debug?: boolean
       }
       let file = opts.file
       let modulePath = opts.module
@@ -462,6 +464,7 @@ aiCmd
         format: fmt,
         sarif: opts.sarif ?? false,
         fix: opts.fix ?? false,
+        debug: opts.debug ?? false,
       })
     }
     run().catch((err: unknown) => {
@@ -762,6 +765,7 @@ async function generateModuleResource(
     bootstrapRelative: bootstrapRel,
     moduleFolderKebab: kebab,
     moduleExportName: moduleExportName(kebab),
+    moduleIndexAbs: path.join(outBase, 'modules', kebab, 'index.ts'),
     dryRun: false,
   })
 

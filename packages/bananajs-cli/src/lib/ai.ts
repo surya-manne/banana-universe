@@ -114,11 +114,39 @@ async function generateFromPrompt(opts: AiGenerateOptions): Promise<void> {
     return
   }
 
-  const codeBlockRegex = /```typescript\n([\s\S]*?)```/g
-  const blocks: string[] = []
-  let match: RegExpExecArray | null
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    blocks.push(match[1])
+  // Try single-block named-delimiter format first: one code block with // === FILE: <name> === markers
+  const outerBlockRe = /```(?:typescript|ts)\n([\s\S]*?)```/
+  const outerMatch = outerBlockRe.exec(text)
+  let controllerSrc: string | undefined
+  let dtoSrc: string | undefined
+  let serviceSrc: string | undefined
+
+  if (outerMatch) {
+    const body = outerMatch[1]
+    const sectionRe = /\/\/ === FILE: (controller|dto|service) ===\n([\s\S]*?)(?=\/\/ === FILE:|$)/g
+    let sec: RegExpExecArray | null
+    while ((sec = sectionRe.exec(body)) !== null) {
+      const secName = sec[1]
+      const secContent = (sec[2] ?? '').trim()
+      if (secName === 'controller') controllerSrc = secContent
+      else if (secName === 'dto') dtoSrc = secContent
+      else if (secName === 'service') serviceSrc = secContent
+    }
+  }
+
+  // Legacy fallback: 3 separate code blocks (old prompt format)
+  if (!controllerSrc || !dtoSrc || !serviceSrc) {
+    const codeBlockRegex = /```(?:typescript|ts)\n([\s\S]*?)```/g
+    const blocks: string[] = []
+    let match: RegExpExecArray | null
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      blocks.push(match[1])
+    }
+    if (blocks.length >= 3) {
+      controllerSrc = blocks[0]
+      dtoSrc = blocks[1]
+      serviceSrc = blocks[2]
+    }
   }
 
   const promptWords = (opts.fromPrompt ?? '').split(/\s+/)
@@ -126,20 +154,20 @@ async function generateFromPrompt(opts: AiGenerateOptions): Promise<void> {
   const outDir = opts.out ?? process.cwd()
   const dryRun = opts.dryRun ?? false
 
-  if (blocks.length >= 3) {
+  if (controllerSrc && dtoSrc && serviceSrc) {
     await writeOrPrint(
       path.join(outDir, `${entityName.toLowerCase()}.controller.ts`),
-      blocks[0],
+      controllerSrc,
       dryRun,
     )
-    await writeOrPrint(path.join(outDir, `${entityName.toLowerCase()}.dto.ts`), blocks[1], dryRun)
+    await writeOrPrint(path.join(outDir, `${entityName.toLowerCase()}.dto.ts`), dtoSrc, dryRun)
     await writeOrPrint(
       path.join(outDir, `${entityName.toLowerCase()}.service.ts`),
-      blocks[2],
+      serviceSrc,
       dryRun,
     )
   } else {
-    console.log(chalk.yellow('AI returned fewer than 3 code blocks; using fallback templates.'))
+    console.log(chalk.yellow('AI returned fewer than 3 code sections; using fallback templates.'))
     await writeOrPrint(
       path.join(outDir, `${entityName.toLowerCase()}.controller.ts`),
       generateControllerTemplate(entityName, []),
@@ -215,7 +243,14 @@ export async function aiDoc(opts: AiDocOptions): Promise<void> {
     try {
       resultText = await provider.generate(content, {
         system: appendBananaJsAiRules(
-          'You are a BananaJS expert. Add JSDoc comments to each method in this controller. Return ONLY the updated file content.',
+          'You are a BananaJS expert technical writer. Add comprehensive JSDoc comments to every public method in this TypeScript controller file.\n\n' +
+          'For each route method, write:\n' +
+          '- @description \u2014 a clear one-sentence explanation of what the route does and its business purpose\n' +
+          '- @param \u2014 for each method argument; for @Body(Schema)/@Query(Schema)/@Params(Schema) parameters list each Zod schema key as `@param {type} body.fieldName description` (or @query / @param prefix matching the decorator)\n' +
+          '- @returns \u2014 for `this.ok(data)` describe the shape as `SuccessResponse<EntityType>` with `{ success: true, data: EntityType }`; for `this.error(err)` document the `ApiError` shape\n' +
+          '- @throws \u2014 list known error cases with HTTP status codes: BadRequestError (400), NotFoundError (404), ConflictError (409), UnauthorizedError (401), ForbiddenError (403)\n' +
+          '- @example \u2014 for the primary POST/create endpoint include a minimal valid request body JSON example\n\n' +
+          'CRITICAL: Return ONLY the complete updated TypeScript source file. Do NOT wrap the output in markdown code fences (no ```typescript, no ``` of any kind). No commentary before or after.',
         ),
         temperature: 0.2,
       })

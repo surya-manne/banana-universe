@@ -91,11 +91,17 @@ export async function runAiWire(opts: AiWireOptions): Promise<void> {
   if (opts.llm) {
     const provider = resolveLlmProvider(config)
     const system = appendBananaJsAiRules(
-      'You are a BananaJS wiring assistant. Given bootstrap source and a list of modules to wire, respond with a SHORT bullet list of exact code edits (imports + modules array). Do not repeat full files.',
+      'You are a BananaJS bootstrap wiring assistant. Given the current bootstrap file and a list of unwired modules, produce ONLY copy-pasteable code edits:\n' +
+      '1. The exact import line to add for each missing module (e.g. import { FooModule } from "./modules/foo/index.js")\n' +
+      '2. The updated modules: [...] array with each new module inserted\n' +
+      '3. CRITICAL ordering: plugins: [] MUST appear before modules: [] in defineBananaAppOptions / BananaApp.create so plugin-registered tokens (DataSource, Mongoose connection) are available when modules resolve\n' +
+      '4. Bootstrap async rule: BananaApp.create(options) is required when plugins are present (async lifecycle). If the current bootstrap uses `new BananaApp(options)` and plugins are being added, note that it must change to `await BananaApp.create(options)` and the containing function must be async\n' +
+      '5. If BananaApp.create or defineBananaAppOptions is absent, note the correct insertion point\n' +
+      'Be precise and brief — show snippets, not full file rewrites. No markdown fences.',
     )
     try {
       const prose = await provider.generate(
-        `Bootstrap file (${bootstrapRel}):\n\n${bootstrapText}\n\nModules to wire:\n${missing.map((m) => `- ${m.name} from ${m.importPath}`).join('\n')}`,
+        `Bootstrap file (${bootstrapRel}):\n\n${bootstrapText}\n\nModules missing from bootstrap:\n${missing.map((m) => `- import { ${m.name} } from '${m.importPath}'`).join('\n')}`,
         { system, temperature: 0.1 },
       )
       console.log(chalk.bold('\nLLM wiring notes:\n'))

@@ -19,6 +19,7 @@ export interface AiReviewCliOptions {
   sarif?: boolean
   fix?: boolean
   dryRun?: boolean
+  debug?: boolean
 }
 
 /**
@@ -123,22 +124,56 @@ export async function runAiReview(opts: AiReviewCliOptions): Promise<void> {
   const userPrompt = buildReviewPayload(parts)
   const system = buildAiReviewJsonSystem()
 
-  let raw: string
-  try {
-    raw = await provider.generate(userPrompt, {
-      system,
-      temperature: 0.2,
-    })
-  } catch (err) {
-    console.error(chalk.red('AI review failed:'), err)
-    return
+  let raw = ''
+  let parsedObj: unknown
+  let lastParseErr: unknown
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      raw = await provider.generate(userPrompt, { system, temperature: 0.2 })
+    } catch (err) {
+      console.error(chalk.red('AI review request failed:'), err)
+      return
+    }
+
+    if (opts.debug) {
+      console.error(chalk.gray(`--- LLM raw review output (attempt ${attempt}) ---`))
+      console.error(chalk.gray(raw || '(empty)'))
+      console.error(chalk.gray('--- end ---'))
+    }
+
+    if (!raw.trim()) {
+      console.error(
+        chalk.red(
+          attempt === 1
+            ? 'LLM returned an empty response (attempt 1). Retrying…'
+            : 'LLM returned an empty response on both attempts. Check your API key, model name, or context-window limits.',
+        ),
+      )
+      if (attempt === 1) continue
+      process.exit(1)
+    }
+
+    try {
+      parsedObj = tryParseJsonObject(raw)
+      break
+    } catch (e) {
+      lastParseErr = e
+      if (attempt === 1) {
+        console.error(chalk.yellow('Review JSON parse failed (attempt 1). Retrying…'))
+        continue
+      }
+    }
   }
 
-  let parsedObj: unknown
-  try {
-    parsedObj = tryParseJsonObject(raw)
-  } catch {
-    console.error(chalk.red('Review output was not valid JSON. Raw output:\n'), raw)
+  if (parsedObj === undefined) {
+    console.error(chalk.red('Review output was not valid JSON after 2 attempts.'))
+    console.error(chalk.yellow('Raw output (last attempt):'))
+    console.error(raw || chalk.gray('(empty)'))
+    if (!opts.debug) {
+      console.error(chalk.gray('Tip: re-run with --debug to see raw LLM output for each attempt.'))
+    }
+    console.error(chalk.gray('Parse error:'), lastParseErr)
     process.exit(1)
   }
 
