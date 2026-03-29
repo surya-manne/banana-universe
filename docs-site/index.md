@@ -10,11 +10,11 @@ hero:
     alt: BananaJS — Express, plugins, CLI, AI
   actions:
     - theme: brand
+      text: Quickstart — 5 min
+      link: /guide/quickstart
+    - theme: brand
       text: Get Started
       link: /guide/getting-started
-    - theme: brand
-      text: Philosophy
-      link: /guide/philosophy
     - theme: alt
       text: Recipes
       link: /recipes/
@@ -60,5 +60,53 @@ features:
 **Not a thin wrapper around Express** — a deliberate stack for teams who want **great DX**, **structure**, **automation**, and **maintainable domains** without adopting a monolithic platform. Invest in **tooling** so you spend time on product behavior, not repetitive files. **Plugins** let capabilities grow without bloating the core.
 
 [Philosophy](/guide/philosophy) · [Layered architecture](/guide/layered-architecture) · [Recipes](/recipes/)
+
+</div>
+
+<div class="home-learning-path">
+
+## Learning path
+
+<div class="tracks">
+<div class="track track-beginner">
+
+**🐣 New to BananaJS**
+
+Ship something in your first session.
+
+- [Quickstart](/guide/quickstart) — a running API in 5 min
+- [Full setup & CLI](/guide/getting-started) — scaffold and project layout
+- [Core concepts](/guide/basic-concepts) — controllers, validation, responses
+- [Error types](/reference/error-types) — the typed error toolkit
+
+</div>
+<div class="track track-builder">
+
+**🔨 Building a real feature**
+
+Make it production-shaped.
+
+- [Modules & DI](/guide/dependency-injection) — `createModule`, scoped containers
+- [Authentication](/integrations/auth) — guards, `@Auth`, `@Roles`
+- [Caching](/reference/caching) — `@Cache`, `@CacheEvict`, custom store
+- [Security](/reference/security) — rate limiting, ABAC, sanitization
+- [Recipes](/recipes/) — runnable example apps
+
+</div>
+<div class="track track-deep">
+
+**🏗️ Going deep**
+
+Architecture, performance, plugin authoring.
+
+- [Advanced concepts](/guide/advanced-concepts) — full `BananaAppOptions` surface
+- [Layered architecture](/guide/layered-architecture) — DDD modules, CLI scaffold
+- [Domain & persistence](/guide/domain-and-persistence) — ports, adapters, ORMs
+- [Testing](/reference/testing) — `BananaTestApp`, `testOverrides`
+- [Multi-tenancy](/reference/multi-tenancy) — tenant isolation patterns
+- [Writing a plugin](/plugins/writing-a-plugin) — async lifecycle, DI integration
+
+</div>
+</div>
 
 </div>

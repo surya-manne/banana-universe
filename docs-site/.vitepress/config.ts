@@ -16,6 +16,15 @@ const referenceApiSidebar = [
     ],
   },
   {
+    text: 'Features',
+    items: [
+      { text: 'Testing', link: '/reference/testing' },
+      { text: 'Caching', link: '/reference/caching' },
+      { text: 'Security', link: '/reference/security' },
+      { text: 'Multi-tenancy', link: '/reference/multi-tenancy' },
+    ],
+  },
+  {
     text: 'TypeDoc API',
     items: [{ text: 'Browse generated API', link: '/api/' }],
   },
@@ -48,7 +57,7 @@ export default withMermaid(
       logo: '/logo.svg',
 
       nav: [
-        { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },
+        { text: 'Guide', link: '/guide/quickstart', activeMatch: '/guide/' },
         { text: 'Philosophy', link: '/guide/philosophy' },
         {
           text: 'AI',
@@ -69,11 +78,17 @@ export default withMermaid(
       sidebar: {
         '/guide/': [
           {
-            text: 'Introduction',
+            text: 'Getting Started',
             items: [
-              { text: 'Getting Started', link: '/guide/getting-started' },
+              { text: '5-min Quickstart', link: '/guide/quickstart' },
+              { text: 'Full Setup & CLI', link: '/guide/getting-started' },
               { text: 'Philosophy', link: '/guide/philosophy' },
-              { text: 'Basic Concepts', link: '/guide/basic-concepts' },
+            ],
+          },
+          {
+            text: 'Learning',
+            items: [
+              { text: 'Core Concepts', link: '/guide/basic-concepts' },
               { text: 'Advanced Concepts', link: '/guide/advanced-concepts' },
             ],
           },
@@ -81,16 +96,16 @@ export default withMermaid(
             text: 'Architecture',
             items: [
               {
+                text: 'Dependency Injection',
+                link: '/guide/dependency-injection',
+              },
+              {
                 text: 'Layered Architecture & DDD',
                 link: '/guide/layered-architecture',
               },
               {
-                text: 'Domain & persistence',
+                text: 'Domain & Persistence',
                 link: '/guide/domain-and-persistence',
-              },
-              {
-                text: 'Dependency injection',
-                link: '/guide/dependency-injection',
               },
             ],
           },

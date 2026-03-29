@@ -4,29 +4,24 @@ outline: [2, 3]
 
 # AI with BananaJS
 
-Most teams try AI once: a blob of code in a chat window, hard to review and impossible to script. BananaJS turns that story around. The **`bjs ai`** commands are a **contract**: the CLI talks to your LLM, but what lands on disk stays **ordinary TypeScript**—diffable in PRs, repeatable in CI, and aligned with the same DDD layout you get from **`bjs new`** and **`bjs generate module`**.
+Most AI workflows follow the same rut: a blob of code from a chat window, hard to review and impossible to script. BananaJS turns that around. The **`bjs ai`** commands are a **contract**: the CLI talks to your LLM, but what lands on disk stays **ordinary TypeScript**—diffable in PRs, repeatable in CI, and aligned with the same DDD layout you get from **`bjs new`** and **`bjs generate module`**.
 
-This page is the **story and the map**. Every flag, edge case, and subcommand reference lives under **Tooling**—use the left sidebar here to jump straight there, or follow the links below.
+This page is the **story and the overview**. Every flag, edge case, and subcommand reference lives under **Tooling**—use the left sidebar to jump straight there.
 
 ## The arc: from blank repo to reviewable output
 
 You are not “vibe coding” a monolith. You are **configuring a tool**, **generating a slice**, **checking wiring**, then **reviewing** before merge.
 
-```mermaid
-flowchart LR
-  S["ai setup"] --> G["ai generate"]
-  G --> W["ai wire"]
-  W --> R["ai review"]
-  style S fill:#0f2440,stroke:#fdb913,color:#f8fafc
-  style G fill:#132a45,stroke:#fdb913,color:#f8fafc
-  style W fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style R fill:#0a1628,stroke:#fdb913,color:#f8fafc
-```
 
-1. **Configure** — One wizard writes **`.bananarc.json`**: provider, model, defaults, and optional **`project`** hints (bootstrap path, API prefix). _Details: [AI commands → setup](/tooling/ai-commands#bjs-ai-setup-bjs-ai-s), [CLI reference](/tooling/cli#bjs-ai)._
-2. **Generate** — Flat scaffold from a schema, or a full **`src/modules/<feature>/`** tree from text or OpenAPI. _Details: [AI module generation](/tooling/ai-module-generation), [AI commands → generate](/tooling/ai-commands#bjs-ai-generate-bjs-ai-g)._
-3. **Wire** — After hand edits or merges, **`ai wire`** compares **`src/modules/*/index.ts`** to your bootstrap file and prints **dry-run** import hints (optional **`--llm`** prose). _Details: [AI commands → wire](/tooling/ai-commands#bjs-ai-wire-bjs-ai-w)._
-4. **Review** — Structured JSON (or SARIF) for CI, or human-readable findings. _Details: [AI commands → review](/tooling/ai-commands#bjs-ai-review-bjs-ai-r)._
+<div class="ai-steps">
+<div class="ai-step"><div class="step-badge">1</div><code class="step-cmd">ai setup</code><p>Configure provider, model and project hints in <code>.bananarc.json</code></p></div>
+<div class="step-arrow">→</div>
+<div class="ai-step"><div class="step-badge">2</div><code class="step-cmd">ai generate</code><p>Scaffold a flat bundle or full DDD module tree — text or OpenAPI in, TypeScript out</p></div>
+<div class="step-arrow">→</div>
+<div class="ai-step"><div class="step-badge">3</div><code class="step-cmd">ai wire</code><p>Dry-run check — which new modules aren't registered in bootstrap yet?</p></div>
+<div class="step-arrow">→</div>
+<div class="ai-step"><div class="step-badge">4</div><code class="step-cmd">ai review</code><p>Structured findings for CI — JSON, SARIF, or human-readable summary</p></div>
+</div>
 
 ## Where the deep docs live (Tooling)
 
@@ -43,23 +38,11 @@ The sidebar under **AI** lists the same destinations so one click always lands i
 - **`bjs`** — short name (used in these docs)
 - **`bananajs`** — full name
 
-## Command aliases (`bjs ai …`)
-
-Each subcommand has a **one-letter alias** (see **`bjs ai --help`**):
-
-| Subcommand     | Alias   | Example           |
-| -------------- | ------- | ----------------- |
-| **`setup`**    | **`s`** | `bjs ai s`        |
-| **`generate`** | **`g`** | `bjs ai g`        |
-| **`doc`**      | **`d`** | `bjs ai d`        |
-| **`review`**   | **`r`** | `bjs ai r`        |
-| **`wire`**     | **`w`** | `bjs ai w`        |
-| **`test`**     | **`t`** | `bjs ai t`        |
-| **`explain`**  | **`e`** | `bjs ai e <file>` |
-
 ::: tip Two different `g` commands
 **`bjs ai g`** runs **AI** codegen. **`bjs g`** (top-level) runs **`bjs generate`** (controller, dto, **non-AI** module scaffold). Same letter, different verbs.
 :::
+
+For the full alias table and all flags, see [AI commands](/tooling/ai-commands).
 
 ## Guided examples
 
@@ -70,6 +53,8 @@ Each scenario has a **short story** (who you are, what you need), a **command** 
 :::
 
 <div class="ai-guided-examples">
+
+<div class="ai-scenario">
 
 ### 1 · First run: introduce the CLI to your LLM
 
@@ -93,7 +78,9 @@ bjs ai s
 
 **You get:** a **`.bananarc.json`** with provider, model, retries/timeouts, and optional **`project`** hints (`bootstrap`, `apiPrefix`, …) that **`ai generate`** and **`ai wire`** reuse later.
 
----
+</div>
+
+<div class="ai-scenario">
 
 ### 2 · From a backlog line to a DDD module tree
 
@@ -115,7 +102,9 @@ bjs ai g --module "Product catalog with SKU, price, and stock" --orm typeorm
 
 **You get:** generated files under **`src/modules/<kebab>/`**, plus—when not **`--dry-run`**—bootstrap registration and a best-effort TypeORM **`entities[]`** patch, same contract as **`bjs generate module`**. Deeper pipeline notes: [**AI module generation**](/tooling/ai-module-generation).
 
----
+</div>
+
+<div class="ai-scenario">
 
 ### 3 · OpenAPI in hand; ship a flat scaffold
 
@@ -129,7 +118,9 @@ bjs ai generate --from-schema ./openapi/petstore.yaml
 
 **You get:** deterministic **flat** files next to your workflow (see [**generate**](/tooling/ai-commands#bjs-ai-generate-bjs-ai-g))—use **`--dry-run`** first if you only want a preview.
 
----
+</div>
+
+<div class="ai-scenario">
 
 ### 4 · Review before the PR lands (or in CI)
 
@@ -160,7 +151,9 @@ bjs ai r widgets --format json
 
 **You get:** structured findings with **`schemaVersion`**; optional [**`--sarif`**](/tooling/ai-commands#bjs-ai-review-bjs-ai-r) for tools that speak SARIF.
 
----
+</div>
+
+<div class="ai-scenario">
 
 ### 5 · After a merge: did bootstrap fall behind?
 
@@ -182,7 +175,9 @@ bjs ai w --llm
 
 **You get:** **dry-run** text only—the CLI **never** edits files. It tells you what import and **`modules: [...]`** lines to consider. Optional **`--llm`** adds a short narrative; still no writes.
 
----
+</div>
+
+<div class="ai-scenario">
 
 ### 6 · One file, one paragraph for reviewers
 
@@ -202,7 +197,9 @@ bjs ai e src/modules/orders/Order.controller.ts
 
 **You get:** a concise LLM summary of that file—handy for descriptions and onboarding notes.
 
----
+</div>
+
+<div class="ai-scenario">
 
 ### 7 · Smoke-test scaffold
 
@@ -224,17 +221,19 @@ bjs ai t --out src/__tests__/api-smoke.test.ts
 
 </div>
 
+</div>
+
 ## Command index (at a glance)
 
-| Command                 | Role                                                                                   |
-| ----------------------- | -------------------------------------------------------------------------------------- |
-| **`ai setup`**          | Create **`.bananarc.json`** and provider defaults                                      |
-| **`ai generate`**       | Flat or DDD codegen; optional **`--detailed`** second pass                             |
-| **`ai review`**         | Structured findings; **`--format json`**, **`--sarif`**, module or file scope          |
-| **`ai wire`**           | Dry-run bootstrap hints; optional **`--llm`**                                          |
-| **`ai test`**           | **`node:test` + supertest** scaffold                                                   |
-| **`ai explain [file]`** | Short LLM summary of one file                                                          |
-| **`ai doc`**            | Legacy JSDoc path — prefer **OpenAPI** + docs ([CLI](/tooling/cli#bjs-openapi-export)) |
+<div class="ai-cmd-grid">
+<div class="ai-cmd-card"><code class="cmd-name">ai setup</code><p>Create <code>.bananarc.json</code> and provider defaults</p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai generate</code><p>Flat or DDD codegen; optional <code>--detailed</code> second pass</p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai review</code><p>Structured findings; <code>--format json</code>, <code>--sarif</code>, module or file scope</p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai wire</code><p>Dry-run bootstrap hints; optional <code>--llm</code></p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai test</code><p><code>node:test</code> + supertest scaffold</p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai explain [file]</code><p>Short LLM summary of one file</p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai doc</code><p>Legacy JSDoc path — prefer OpenAPI + <a href="/tooling/cli#bjs-openapi-export">docs</a></p></div>
+</div>
 
 ## Shared LLM rules
 

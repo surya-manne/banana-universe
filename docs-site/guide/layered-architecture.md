@@ -45,11 +45,28 @@ flowchart LR
   style M fill:#0f2440,stroke:#fdb913,color:#f8fafc
 ```
 
-## Manual layout
+## Standard folder layout
 
-You can structure code as **domain / application / infrastructure** without the package—BananaJS does not force a flat layout. **Plugins** (`TypeOrmPlugin`, `MongoosePlugin`, …) attach **infrastructure** at the edges while **controllers** stay thin.
+Feature modules live under `src/modules/<feature>/`. Inside each slice, files use **dotted role names** (`PascalCase` entity or feature prefix + `.` + role):
 
-Feature folders use **lowercase** names. Preset apps and recipes use **`src/modules/<feature>/`** (e.g. **`src/modules/articles/`**). Inside a slice, files use **dotted role names** (PascalCase feature or entity prefix + `.` + role): **`Article.controller.ts`**, **`CatalogItem.entity.ts`**, **`Article.service.ts`**.
+```
+src/
+  modules/
+    article/
+      domain/
+        Article.entity.ts           # extends Entity<ArticleProps> from @banana-universe/ddd
+        Article.repository.ts       # Repository<Article> interface + InjectionToken
+      application/
+        Article.service.ts          # @injectable() orchestration class
+      infrastructure/
+        Article.mongoose-model.ts   # Mongoose schema + model
+        Article.mongoose-repo.ts    # @injectable() adapter — implements port
+      Article.controller.ts         # @Controller + HTTP methods
+      Article.dto.ts                # Zod schemas for request/response
+      index.ts                      # createModule({ id, controller, providers })
+```
+
+For TypeORM the `infrastructure/` subfolder contains `Article.orm-entity.ts` (TypeORM `@Entity`) and `Article.typeorm-repository.ts` instead.
 
 ## CLI scaffold (`bjs generate module`)
 
@@ -111,19 +128,147 @@ Example apps follow the same **layered** idea with small **naming/layout** diffe
 
 Use these as **copy-paste** references for **`createModule`**, **tsyringe** **`@inject`**, and plugin bootstrap.
 
-## Principles
+## Layer responsibilities
 
-- **Domain** — business rules and model; **no Express**, **no ORM entities** in this layer
-- **Application** — orchestration, use cases, DTOs at the boundary
-- **Infrastructure** — TypeORM / Mongoose / messaging / external APIs; **mappers** `toDomain` / `toPersistence` keep persistence honest
+| Layer | Files | Rules |
+|---|---|---|
+| **Domain** | `*.entity.ts`, `*.repository.ts` | No Express, no ORM, no HTTP imports — pure business logic |
+| **Application** | `*.service.ts` | Orchestrates domain + ports; receives validated DTOs; no Express `req`/`res` |
+| **Infrastructure** | `*.typeorm-repository.ts`, `*.mongoose-repository.ts` | Implements port; maps ORM ↔ domain objects; knows about DB |
+| **Delivery** | `*.controller.ts`, `*.dto.ts` | Thin; validates input with Zod; delegates to application service; returns response |
+
+### Domain entity
+
+```typescript
+// domain/Article.entity.ts
+import { Entity } from '@banana-universe/ddd'
+
+export interface ArticleProps {
+  id: string
+  title: string
+  body: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export class Article extends Entity<ArticleProps> {
+  constructor(props: ArticleProps) { super(props) }
+
+  get title() { return this.props.title }
+  get body()  { return this.props.body  }
+}
+```
+
+### Port (repository interface + token)
+
+```typescript
+// domain/Article.repository.ts
+import type { Repository } from '@banana-universe/ddd'
+import type { InjectionToken } from 'tsyringe'
+import type { Article } from './Article.entity.js'
+
+export type ArticleRepository = Repository<Article>
+
+export const ArticleRepositoryToken = Symbol(
+  'ArticleRepository',
+) as InjectionToken<ArticleRepository>
+```
+
+### Application service
+
+```typescript
+// application/Article.service.ts
+import { randomUUID } from 'node:crypto'
+import { injectable, inject } from 'tsyringe'
+import type { ArticleRepository } from '../domain/Article.repository.js'
+import { ArticleRepositoryToken } from '../domain/Article.repository.js'
+import { Article } from '../domain/Article.entity.js'
+
+@injectable()
+export class ArticleAppService {
+  constructor(
+    @inject(ArticleRepositoryToken)
+    private readonly repo: ArticleRepository,
+  ) {}
+
+  async create(title: string, body: string): Promise<Article> {
+    const now = new Date()
+    return this.repo.save(new Article({ id: randomUUID(), title, body, createdAt: now, updatedAt: now }))
+  }
+}
+```
+
+### Module wiring (`index.ts`)
+
+```typescript
+// index.ts
+import { createModule } from '@banana-universe/bananajs'
+import { ArticleController } from './Article.controller.js'
+import { ArticleAppService } from './application/Article.service.js'
+import { ArticleMongooseRepository } from './infrastructure/Article.mongoose-repository.js'
+import { ArticleRepositoryToken } from './domain/Article.repository.js'
+
+export const articlesModule = createModule({
+  id: 'articles',
+  controller: ArticleController,
+  providers: [
+    { token: ArticleRepositoryToken, useClass: ArticleMongooseRepository },
+    ArticleAppService,
+  ],
+})
+```
 
 ## Repository model
 
-**`FindCriteria<T>`** (eq / in / like / gt / lt, sorting, paging) keeps queries **explicit and testable**—not a vague `Partial<T>`.
+`Repository<T>` from `@banana-universe/ddd` defines four methods:
+
+```typescript
+interface Repository<T, ID = string> {
+  findById(id: ID): Promise<T | null>
+  findAll(criteria?: FindCriteria<T>): Promise<T[]>
+  save(entity: T): Promise<T>
+  delete(id: ID): Promise<void>
+}
+```
+
+`FindCriteria<T>` keeps queries **explicit and testable** — no raw SQL leaking into application code:
+
+```typescript
+import type { FindCriteria } from '@banana-universe/ddd'
+import type { Article } from './Article.entity.js'
+
+// In application service:
+const recent = await this.repo.findAll({
+  where:   { title: { like: 'BananaJS' } },
+  orderBy: { field: 'createdAt', direction: 'desc' },
+  limit:   20,
+  offset:  0,
+})
+```
+
+Supported operators: `eq`, `in`, `like`, `gt`, `lt`.
 
 ## Transactions
 
-**`UnitOfWork`** plus ORM-specific implementations align application services that touch multiple aggregates; **`@Transactional()`** in plugins exists at the persistence layer for TypeORM and Mongoose.
+Keep transaction boundaries in the **application** or **infrastructure** layer — not in controllers. With TypeORM or Mongoose, use `UnitOfWork` from `@banana-universe/ddd` and the ORM-level `@Transactional()` decorator the plugin provides:
+
+```typescript
+// application/Order.service.ts
+@injectable()
+export class OrderAppService {
+  constructor(
+    @inject(OrderRepositoryToken) private readonly orders: OrderRepository,
+    @inject(PaymentRepositoryToken) private readonly payments: PaymentRepository,
+  ) {}
+
+  async placeOrder(dto: PlaceOrderDto): Promise<Order> {
+    // Both writes must succeed or both must fail — handled at infrastructure layer
+    const order   = await this.orders.save(Order.create(dto))
+    await this.payments.save(Payment.pending(order.id, dto.amount))
+    return order
+  }
+}
+```
 
 ## Learn more
 

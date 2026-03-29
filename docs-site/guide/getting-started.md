@@ -24,6 +24,8 @@ flowchart TB
 
 Pick **one** path below.
 
+<div class="guide-steps">
+
 ## 1. New app — CLI
 
 The CLI creates a **new folder** from **built-in presets** (**`sql`** → TypeORM / PostgreSQL-shaped, **`mongodb`** → Mongoose). Everything is written to disk—**no git clone**, no external template repo.
@@ -151,6 +153,8 @@ new BananaApp({
 For incremental adoption and Express migration, see [From Express](/migration/from-express). Concepts and options: [Basic concepts](/guide/basic-concepts), [Advanced concepts](/guide/advanced-concepts), [Dependency injection](/guide/dependency-injection).
 
 Install **`@banana-universe/bananajs-cli`** in the repo if you want **`bjs`** helpers (**`generate`**, **`routes`**, **`openapi`**, **`ai`**) without a global install.
+
+</div>
 
 ## Next
 

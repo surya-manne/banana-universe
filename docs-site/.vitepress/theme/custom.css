@@ -162,6 +162,113 @@
   color: var(--vp-c-text-1);
 }
 
+/* Learning path — three-track card grid */
+.vp-doc .home-learning-path {
+  max-width: min(1080px, 100%);
+  margin: 0 auto 3rem;
+  padding: 0 1.25rem;
+}
+
+.vp-doc .home-learning-path h2 {
+  text-align: center;
+  border: none;
+  color: var(--vp-c-text-1);
+  font-size: 1.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.vp-doc .home-learning-path .tracks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.vp-doc .home-learning-path .track {
+  padding: 1.5rem 1.5rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  border-top-width: 3px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.vp-doc .home-learning-path .track strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+
+.vp-doc .home-learning-path .track:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+/* Track 1 — teal/cyan: beginner */
+.vp-doc .home-learning-path .track-beginner {
+  background: linear-gradient(155deg, rgba(14, 58, 72, 0.55) 0%, rgba(10, 22, 40, 0.7) 100%);
+  border-color: rgba(100, 210, 210, 0.2);
+  border-top-color: #4ecdc4;
+}
+.vp-doc .home-learning-path .track-beginner strong {
+  color: #4ecdc4;
+}
+.vp-doc .home-learning-path .track-beginner a {
+  color: #7eddd8;
+}
+.vp-doc .home-learning-path .track-beginner a:hover {
+  color: #4ecdc4;
+}
+
+/* Track 2 — gold: builder */
+.vp-doc .home-learning-path .track-builder {
+  background: linear-gradient(155deg, rgba(60, 44, 8, 0.55) 0%, rgba(10, 22, 40, 0.7) 100%);
+  border-color: rgba(253, 185, 19, 0.2);
+  border-top-color: #fdb913;
+}
+.vp-doc .home-learning-path .track-builder strong {
+  color: #fdb913;
+}
+.vp-doc .home-learning-path .track-builder a {
+  color: #ffd060;
+}
+.vp-doc .home-learning-path .track-builder a:hover {
+  color: #fdb913;
+}
+
+/* Track 3 — purple: deep */
+.vp-doc .home-learning-path .track-deep {
+  background: linear-gradient(155deg, rgba(52, 22, 72, 0.55) 0%, rgba(10, 22, 40, 0.7) 100%);
+  border-color: rgba(167, 119, 227, 0.2);
+  border-top-color: #a777e3;
+}
+.vp-doc .home-learning-path .track-deep strong {
+  color: #a777e3;
+}
+.vp-doc .home-learning-path .track-deep a {
+  color: #c4a0ed;
+}
+.vp-doc .home-learning-path .track-deep a:hover {
+  color: #a777e3;
+}
+
+.vp-doc .home-learning-path .track > p {
+  font-size: 0.88rem;
+  color: var(--vp-c-text-2);
+  margin: 0 0 0.85rem;
+  line-height: 1.5;
+}
+
+.vp-doc .home-learning-path .track ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+
+.vp-doc .home-learning-path .track li {
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: var(--vp-c-text-2);
+}
+
 /* Feature grid — subtle lift */
 .dark .VPFeatures .item {
   background: rgba(15, 36, 64, 0.4);
@@ -190,27 +297,246 @@
   }
 }
 
-/* AI hub — guided examples: rhythm between scenarios */
-.ai-guided-examples h3 {
-  margin-top: 1.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--vp-c-divider);
+/* Philosophy page */
+.vp-doc .phil-lead {
   font-size: 1.05rem;
-  letter-spacing: -0.01em;
+  line-height: 1.8;
+  color: var(--vp-c-text-2);
+  border-left: 3px solid var(--vp-c-brand-1);
+  padding-left: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.ai-guided-examples h3:first-of-type {
-  margin-top: 0.5rem;
-  padding-top: 0;
-  border-top: none;
+.vp-doc .phil-principles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 2rem;
 }
 
-.ai-guided-examples hr {
-  margin: 1.25rem 0;
-  border: none;
-  border-top: 1px dashed var(--vp-c-divider);
+.vp-doc .phil-card {
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  border-left-width: 3px;
 }
 
+.vp-doc .phil-card strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.vp-doc .phil-card p {
+  font-size: 0.88rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.vp-doc .phil-teal {
+  background: rgba(14, 58, 72, 0.35);
+  border-color: rgba(78, 205, 196, 0.18);
+  border-left-color: #4ecdc4;
+}
+.vp-doc .phil-teal strong { color: #4ecdc4; }
+
+.vp-doc .phil-gold {
+  background: rgba(60, 44, 8, 0.35);
+  border-color: rgba(253, 185, 19, 0.18);
+  border-left-color: #fdb913;
+}
+.vp-doc .phil-gold strong { color: #fdb913; }
+
+.vp-doc .phil-purple {
+  background: rgba(52, 22, 72, 0.35);
+  border-color: rgba(167, 119, 227, 0.18);
+  border-left-color: #a777e3;
+}
+.vp-doc .phil-purple strong { color: #a777e3; }
+
+.vp-doc .phil-coral {
+  background: rgba(60, 28, 8, 0.35);
+  border-color: rgba(255, 140, 66, 0.18);
+  border-left-color: #ff8c42;
+}
+.vp-doc .phil-coral strong { color: #ff8c42; }
+
+.vp-doc .phil-nolist {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: rgba(15, 36, 64, 0.4);
+  border: 1px solid rgba(160, 169, 184, 0.12);
+}
+
+.vp-doc .phil-nolist li {
+  font-size: 0.92rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.75;
+}
+
+/* AI hub — guided examples wrapper */
 .ai-guided-examples .vp-code-group {
   margin-top: 0.75rem;
+}
+
+/* ──── Guide & AI: global doc heading accent colors ───────────────── */
+
+/* h2: warm the natural VitePress bottom divider to gold */
+.dark .vp-doc h2 {
+  border-bottom-color: rgba(253, 185, 19, 0.28);
+}
+
+/* h3: muted teal — second accent hue */
+.dark .vp-doc h3 {
+  color: #7dccd8;
+}
+
+/* Table header cells: soft gold tint */
+.dark .vp-doc table th {
+  background-color: rgba(253, 185, 19, 0.07);
+  color: var(--vp-c-brand-1);
+  border-bottom-color: rgba(253, 185, 19, 0.2);
+}
+
+/* ──── Guide: numbered tutorial step sections ─────────────────────── */
+
+.dark .vp-doc .guide-steps h2 {
+  border-bottom-color: rgba(253, 185, 19, 0.5);
+}
+
+/* ──── AI: 4-step workflow strip ────────────────────────────────── */
+
+.ai-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 1.5rem 0 2rem;
+  flex-wrap: wrap;
+}
+
+.ai-step {
+  flex: 1;
+  min-width: 130px;
+  background: rgba(15, 36, 64, 0.75);
+  border: 1px solid rgba(253, 185, 19, 0.14);
+  border-top: 3px solid var(--vp-c-brand-1);
+  border-radius: 0 0 10px 10px;
+  padding: 1rem 0.875rem 0.875rem;
+  text-align: center;
+}
+
+.step-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--vp-c-brand-1);
+  color: #0a1628;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+}
+
+.step-cmd {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #7dccd8;
+  padding: 0.2rem 0.5rem;
+  background: rgba(125, 204, 216, 0.1);
+  border-radius: 4px;
+  margin: 0 auto 0.5rem;
+  width: fit-content;
+  font-family: var(--vp-font-family-mono);
+}
+
+.ai-step p {
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.step-arrow {
+  align-self: center;
+  color: rgba(253, 185, 19, 0.35);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  padding-bottom: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .step-arrow { display: none; }
+}
+
+/* ──── AI: guided example scenario cards ────────────────────────── */
+
+.ai-scenario {
+  background: rgba(12, 26, 46, 0.65);
+  border: 1px solid rgba(160, 169, 184, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  margin: 0.875rem 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-scenario:hover {
+  border-color: rgba(253, 185, 19, 0.2);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+}
+
+.dark .vp-doc .ai-scenario h3 {
+  color: var(--vp-c-brand-1);
+  font-size: 1rem;
+  margin-top: 0;
+  padding-bottom: 0.625rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(253, 185, 19, 0.12);
+}
+
+/* ──── AI: command card grid ─────────────────────────────────────── */
+
+.ai-cmd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.ai-cmd-card {
+  background: rgba(15, 36, 64, 0.6);
+  border: 1px solid rgba(160, 169, 184, 0.1);
+  border-radius: 10px;
+  padding: 0.875rem 1rem 0.75rem;
+  transition: border-color 0.18s, transform 0.18s;
+}
+
+.ai-cmd-card:hover {
+  border-color: rgba(78, 205, 196, 0.3);
+  transform: translateY(-2px);
+}
+
+.ai-cmd-card .cmd-name {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #7dccd8;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 0.35rem;
+  font-family: var(--vp-font-family-mono);
+}
+
+.ai-cmd-card p {
+  font-size: 0.82rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.ai-cmd-card p code {
+  font-size: 0.78rem;
 }

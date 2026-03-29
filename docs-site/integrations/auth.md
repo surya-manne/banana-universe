@@ -148,11 +148,61 @@ If you need **resource/action** checks (e.g. “can delete **this** document”)
 
 ## Testing
 
-Swap or override the guard in **`testOverrides`** on **`BananaAppOptions`** (or use **`BananaTestApp`** patterns) so tests use a **fake guard** that always returns **`true`** and sets **`req.user`** with fixture roles—no network calls.
+### Option 1 — Fake guard via `auth` option
+
+Provide an always-pass guard in `BananaTestApp.create`:
+
+```typescript
+import { BananaTestApp } from '@banana-universe/bananajs/testing'
+import type { AuthGuard, RolesGuard } from '@banana-universe/bananajs'
+
+const testGuard: AuthGuard & RolesGuard = {
+  async canActivate(req) {
+    ;(req as any).user = { id: 'test-user-1', roles: ['admin'] }
+    return true
+  },
+  async extractRoles(req) {
+    return (req as any).user?.roles ?? []
+  },
+}
+
+const app = await BananaTestApp.create({
+  controllers: defineBananaControllers(ApiController),
+  auth: { guard: testGuard },
+})
+```
+
+### Option 2 — Real JWT token with test secret
+
+If your guard verifies JWTs, sign a test token with your test key:
+
+```typescript
+import jwt from 'jsonwebtoken'
+
+const TEST_SECRET = process.env.JWT_SECRET ?? 'test-only'
+const token = jwt.sign({ sub: 'user-42', roles: ['editor'] }, TEST_SECRET, { expiresIn: '1h' })
+
+app.withAuth(token)
+const res = await app.request().get('/api/profile')
+expect(res.status).toBe(200)
+```
+
+### Option 3 — Test unauthenticated behavior
+
+```typescript
+app.clearHeaders()  // remove any Bearer token set by withAuth
+
+const res = await app.request().get('/api/admin')
+expect(res.status).toBe(401)
+expect(res.body.statusCode).toBe('error')
+```
+
+Full testing guide: [Testing](/reference/testing).
 
 ## Related
 
 - [Decorators — Auth & security](/reference/decorators#auth-security)
+- [Security](/reference/security) — ABAC (`@Can`), rate limiting, input sanitization
+- [Testing](/reference/testing) — `BananaTestApp`, `testOverrides`, auth helpers
 - [BananaAppOptions — `auth`](/reference/bananaapp-options#auth-docs)
-- [Advanced concepts](/guide/advanced-concepts)
 - TypeDoc: [`AuthGuard`](/api/interfaces/AuthGuard), [`RolesGuard`](/api/interfaces/RolesGuard)
