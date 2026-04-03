@@ -6,8 +6,8 @@ export const AI_REVIEW_JSON_SCHEMA_VERSION = '1.0.0'
 export const findingSchema = z.object({
   severity: z.enum(['info', 'warn', 'error']),
   message: z.string(),
-  file: z.string().optional(),
-  line: z.number().int().optional(),
+  file: z.string().nullable().optional(),
+  line: z.number().int().nullable().optional(),
 })
 
 export const aiReviewJsonSchema = z.object({

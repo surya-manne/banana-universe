@@ -2,7 +2,7 @@
  * Canonical BananaJS AI rules — versioned with the CLI. Prepended or injected into every
  * LLM-backed operation (generate, review, wire, etc.) so behavior stays consistent.
  */
-export const BANANAJS_AI_RULES_VERSION = '1.1.0'
+export const BANANAJS_AI_RULES_VERSION = '1.2.0'
 
 /** Markdown-shaped rules block (also used in contract tests for required section headers). */
 export const BANANAJS_AI_RULES_MARKDOWN = `## TypeScript conventions
@@ -29,7 +29,7 @@ export const BANANAJS_AI_RULES_MARKDOWN = `## TypeScript conventions
 - Add \`.describe('...')\` to fields with non-obvious semantics or enum variants.
 
 ## HTTP and API
-- Use BananaJS decorators (\`@Controller\`, \`@Get\`, etc.) with Zod-backed \`@Body\`/\`@Params\`/\`@Query\` where applicable.
+- Use BananaJS decorators (\`@Controller\`, \`@Get\`, \`@Post\`, \`@Put\`, \`@Patch\`, \`@Delete\`, etc.) with Zod-backed \`@Body\`/\`@Params\`/\`@Query\` where applicable.
 - Success responses use \`SuccessResponse\` patterns via \`BaseController\` helpers (\`this.ok(data)\`, \`this.error(err)\`); errors use \`ApiError\` subclasses.
 - Prefer URI-first versioning (e.g. \`/v1/...\`) or app \`apiPrefix\` when applicable.
 - GET list endpoints accept \`@Query(PaginationQuerySchema) query\` and return \`{ items: T[]; total: number }\`.

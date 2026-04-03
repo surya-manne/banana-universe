@@ -6,11 +6,66 @@ import { loadBananarc } from './llm/bananarc.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
 import { buildAiReviewJsonSystem } from './llm/prompts/review-json.js'
 import {
-  AI_REVIEW_JSON_SCHEMA_VERSION,
   parseAiReviewJson,
   type AiReviewJson,
 } from './ai-review-schema.js'
 import { findingsToSarif } from './ai-review-sarif.js'
+
+const SEV_ICON: Record<string, string> = { error: '✖', warn: '⚠', info: 'ℹ' }
+const SEV_ORDER: Record<string, number> = { error: 0, warn: 1, info: 2 }
+const BAR = chalk.gray('─'.repeat(60))
+
+function sevColor(s: string) {
+  return s === 'error' ? chalk.red : s === 'warn' ? chalk.yellow : chalk.cyan
+}
+
+/** Render review findings grouped by file in a diff-style terminal layout. */
+function renderDiffOutput(review: AiReviewJson, scope: string): void {
+  console.log(chalk.bold.blue(`\nAI Review: ${scope}`))
+  console.log(
+    chalk.dim(
+      `  schema ${review.schemaVersion}  ·  ${review.findings.length} finding${review.findings.length !== 1 ? 's' : ''}`,
+    ),
+  )
+  console.log(chalk.bold('\nSummary: ') + review.summary)
+  console.log('')
+
+  if (review.findings.length === 0) {
+    console.log(chalk.green('  ✔ No findings — code looks clean.'))
+    return
+  }
+
+  // Group by file; undefined/null → null bucket (general / cross-file findings)
+  const groups = new Map<string | null, AiReviewJson['findings']>()
+  for (const f of review.findings) {
+    const key = f.file ?? null
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(f)
+  }
+
+  // Sort each group: errors → warns → info
+  for (const [, arr] of groups) {
+    arr.sort((a, b) => (SEV_ORDER[a.severity] ?? 2) - (SEV_ORDER[b.severity] ?? 2))
+  }
+
+  const fileKeys = [...groups.keys()].filter((k): k is string => k !== null)
+  const renderOrder: Array<string | null> = [...fileKeys, ...(groups.has(null) ? [null] : [])]
+
+  for (const key of renderOrder) {
+    const findings = groups.get(key)!
+    console.log(BAR)
+    console.log(chalk.bold.white(` ${key ?? '(general)'}`))
+    console.log(BAR)
+    for (const f of findings) {
+      const color = sevColor(f.severity)
+      const icon = SEV_ICON[f.severity] ?? '·'
+      const location = f.line != null ? chalk.dim(` @@ line ${f.line}`) : ''
+      console.log(color(`  ${icon} [${f.severity}]`) + location)
+      console.log(`     ${f.message}`)
+      console.log('')
+    }
+  }
+}
 
 export interface AiReviewCliOptions {
   file?: string
@@ -205,28 +260,13 @@ export async function runAiReview(opts: AiReviewCliOptions): Promise<void> {
     filesToRead.length === 1
       ? filesToRead[0].path
       : `${opts.module ?? ''} (${filesToRead.length} files)`
-  console.log(chalk.bold.blue(`\nAI Review: ${scope}\n`))
-  console.log(
-    chalk.yellow(
-      `schemaVersion: ${review.schemaVersion} (CLI expects ${AI_REVIEW_JSON_SCHEMA_VERSION})`,
-    ),
-  )
-  console.log(chalk.bold('Summary:'), review.summary)
-  console.log('')
-  for (const f of review.findings) {
-    const tag =
-      f.severity === 'error' ? chalk.red : f.severity === 'warn' ? chalk.yellow : chalk.gray
-    console.log(
-      tag(`[${f.severity}]`),
-      f.message,
-      f.file ? chalk.gray(`(${f.file}${f.line ? `:${f.line}` : ''})`) : '',
-    )
-  }
+
+  renderDiffOutput(review, scope)
 
   if (opts.fix) {
     console.log(
       chalk.cyan(
-        '[--fix] Safe auto-fix is not applied automatically. Review findings above; ambiguous changes require a manual patch.',
+        '\n[--fix] Safe auto-fix is not applied automatically. Review findings above; ambiguous changes require a manual patch.',
       ),
     )
   }

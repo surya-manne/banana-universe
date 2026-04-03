@@ -21,11 +21,11 @@ const LEGACY_FLAT_GENERATE_CORE =
   DELIMITER_HINT +
   '\n\n' +
   'File 1 — Controller:\n' +
-  '  • Extends BaseController\n' +
-  '  • Uses @Controller, @Get, @Post, @Put, @Delete decorators (no leading slash on path segments)\n' +
+  '  • Extends BaseController; injects the service via constructor, e.g. constructor(@inject(\'EntityService\') private service: EntityService) { super() }\n' +
+  '  • Uses @Controller, @Get, @Post, @Put, @Patch, @Delete decorators (no leading slash on path segments)\n' +
   '  • Uses @Body, @Query, @Params with Zod schemas for ALL external input validation\n' +
   '  • GET list endpoint uses @Query(PaginationQuerySchema) and returns { items: T[]; total: number }\n' +
-  "  • Exact imports: import { Controller, Get, Post, Put, Delete, Body, Query, Params, BaseController, PaginationQuerySchema } from '@banana-universe/bananajs'\n" +
+  "  • Exact imports: import { Controller, Get, Post, Put, Patch, Delete, Body, Query, Params, BaseController, PaginationQuerySchema, inject } from '@banana-universe/bananajs'\n" +
   '\n' +
   'File 2 — DTO:\n' +
   '  • Exports CreateSchema and UpdateSchema as Zod schemas\n' +
