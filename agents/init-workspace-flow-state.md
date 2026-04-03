@@ -2,12 +2,13 @@
 
 ## State
 
-- **mode**: install
+- **mode**: upgrade (R1 → R2)
 - **plugin_active**: false
 - **composite**: false
-- **phase**: COMPLETE
+- **phase**: COMPLETE — R2 upgrade finished 2026-04-03
 - **file_count**: ~200+ source files (large workspace)
 - **copilot_init**: 2026-03-29
+- **r2_upgrade_started**: 2026-04-03
 
 ## File Inventory
 
@@ -27,7 +28,7 @@
 | docs/PATTERNS/decorator-http-method.md    | ✅ created                                  |
 | docs/PATTERNS/decorator-validation.md     | ✅ created                                  |
 | docs/PATTERNS/decorator-factory.md        | ✅ created                                  |
-| docs/PATTERNS/dto-class-validator.md      | ✅ created                                  |
+| docs/PATTERNS/dto-zod.md                  | ✅ created                                  |
 | docs/PATTERNS/success-response.md         | ✅ created                                  |
 | docs/PATTERNS/api-error-typed.md          | ✅ created                                  |
 | docs/PATTERNS/express-error-middleware.md | ✅ created                                  |
@@ -50,6 +51,17 @@
 - Phase 6 (documentation): ✅ complete — CONTEXT.md, ARCHITECTURE.md, IMPLEMENTATION.md, ASSUMPTIONS.md, MEMORY.md created
 - Phase 7 (questions): ✅ complete — testing (none yet), CLI scope (scaffold+codegen+deploy), validation fix (YES), Node.js ≥20
 - Phase 8 (verification): ✅ complete — all files verified
+
+## R2 Upgrade — 2026-04-03
+
+- Phase 1 (context): ✅ complete — mode=upgrade (R1 → R2), non-composite, ~200+ files
+- Phase 2 (shells): ✅ complete — 9 GitHub Copilot agents R2 converted, 1 new (prompt-engineer); 25 new skill/workflow shells; 3 new Cursor shells; R2 bootstrap added to copilot-instructions.md
+- Phase 3 (discovery): ✅ complete — TECHSTACK.md, CODEMAP.md, DEPENDENCIES.md fully rewritten for v0.6.0 + 9 packages
+- Phase 4 (rules): ✅ complete — 39 .github/instructions/ files created (full Rosetta R2 content locally cached)
+- Phase 5 (patterns): ✅ complete — 5 new patterns (di-module, base-controller, banana-plugin, cache-decorator, multi-tenancy); INDEX.md + CHANGES.md updated
+- Phase 6 (documentation): ✅ complete — CONTEXT.md rewritten for v0.6 feature set; ARCHITECTURE.md Module Boundaries + Testing + Build updated; ASSUMPTIONS.md emitDecoratorMetadata + CLI scope resolved
+- Phase 7 (questions): ✅ complete — testing=future milestone (A), FileUpload=leave open (A), state label fix (A), append upgrade log (A)
+- Phase 8 (verification): ✅ complete — all files verified 2026-04-03
 
 ## GitHub Copilot Init (2026-03-29)
 

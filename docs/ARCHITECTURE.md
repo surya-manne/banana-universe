@@ -96,21 +96,33 @@ All error responses extend `ApiResponse` directly (no data payload).
 
 ## Module Boundaries
 
-| Module               | Public API                                                                                                                                                                                           | Internal Only                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `packages/bananajs`  | `BananaApp`, `createBananaApplication`, `BaseController`, `@Controller`, `@Get/Post/...`, `@Body/Params/Query/Headers` (Zod), `SuccessResponse`, `ApiError` + subclasses, all error response classes | `initializeControllers`, `joinRouteSegments`, `MetadataKeys` |
-| `apps/bananajs-demo` | N/A (application)                                                                                                                                                                                    | All                                                          |
+| Module                       | Public API                                                                                                                                                                                                               | Internal Only                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `packages/bananajs`          | `BananaApp`, `createBananaApplication`, `BaseController`, `@Controller`, `@Get/Post/...`, `@Body/Params/Query/Headers` (Zod), `SuccessResponse`, `ApiError` + subclasses, `createModule`, `BananaPlugin`, `AppContext`, `Cache`, `CacheEvict`, `Tenant`, `Can`, `Auth`, `Roles`, `BananaConfig` | `initializeControllers`, `joinRouteSegments`, `MetadataKeys` |
+| `packages/ddd`               | `Entity`, `ValueObject`, `Aggregate`, `DomainEvent`, `Repository` base classes                                                                                                                                           | All implementation details                                   |
+| `packages/bananajs-cli`      | `bananajs` CLI binary — `routes`, `migrate`, `db`, `openapi`, `ai generate`, `ai doc`, `ai review`                                                                                                                      | LLM provider adapters, AST scanner internals                 |
+| `packages/plugin-typeorm`    | `TypeOrmPlugin()`, `@Transactional()`                                                                                                                                                                                    | All                                                          |
+| `packages/plugin-mongoose`   | `MongoosePlugin()`, `@Transactional()`                                                                                                                                                                                   | All                                                          |
+| `packages/plugin-otel`       | `OpenTelemetryPlugin()`                                                                                                                                                                                                  | All                                                          |
+| `packages/plugin-websocket`  | `WebSocketPlugin()`, `@WsController`, `@OnConnect`, `@OnDisconnect`, `@OnMessage`, `@WsBody`                                                                                                                             | All                                                          |
+| `packages/plugin-zod`        | `ZodPlugin()`, `@ZodBody/@ZodQuery/@ZodParams` (compat shim)                                                                                                                                                             | All                                                          |
+| `packages/adapter-fastify`   | `FastifyAdapter` (stub — not production-ready)                                                                                                                                                                           | All                                                          |
+| `apps/example-*`             | N/A (applications)                                                                                                                                                                                                       | All                                                          |
 
 ## Build System
 
 - **Nx** orchestrates builds, enforces module boundaries, and provides `@nx/js:verdaccio` for local registry.
 - **SWC** (`@swc-node/register`, `@swc/core`) for fast TypeScript transpilation.
 - **Webpack** for `bananajs-demo` app bundling.
-- TypeScript `experimentalDecorators: true` required for decorators. `emitDecoratorMetadata` is **not** enabled workspace-wide — all decorators use explicit `Reflect.defineMetadata` calls instead of relying on emitted metadata.
+TypeScript `experimentalDecorators: true` required for decorators. `emitDecoratorMetadata: false` (confirmed) — all decorators use explicit `Reflect.defineMetadata` calls instead of relying on emitted metadata.
 
 ## Testing Architecture
 
-No tests present in current state. Not planned for this iteration — will be addressed in a future milestone. The **modular DI** roadmap ([EnterpriseRoadmapV6.md](../plans/EnterpriseRoadmapV6.md)) calls for **integration tests** that compose **`modules`** and **override DI tokens** (e.g. in-memory repositories) via **`BananaTestApp`** or documented equivalents.
+No automated tests (spec/test files) currently exist in the workspace. Testing is tracked as a future milestone in `docs/TODO.md`.
+
+**Planned approach** (from [EnterpriseRoadmapV6.md](../plans/EnterpriseRoadmapV6.md)): integration tests that compose **`modules`** and override DI tokens (e.g. in-memory repositories) via **`BananaTestApp`** / `testOverrides` option.
+
+**`BananaTestApp`** is available now as a testing subpath export (`@banana-universe/bananajs/testing`) with `.withAuth(token)`, `.withHeaders(headers)`, `.clearHeaders()` fluent API and `rateLimit: false` default.
 
 ## BananaJS CLI and `.bananarc.json`
 

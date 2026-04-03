@@ -12,13 +12,12 @@ Unknowns, assumptions, and open questions tracked here. Each entry has a confide
 ### bananajs-cli Scope [RESOLVED]
 
 - **Assumption:** `packages/bananajs-cli` is a planned CLI tool but currently a placeholder.
-- **Resolution:** Confirmed scope — project scaffolding (generate controller/DTO/app), code generation from specs/schemas, and deployment/publish tooling. Currently in early development.
+- **Resolution:** Significantly implemented at v0.3.0. Commands: `routes` (static AST scan), `migrate` (Express codemods), `db --status` (ORM migration status), `openapi export`, `ai generate` (schema/LLM), `ai doc`, `ai review`. Reads `.bananarc.json` for LLM provider config.
 
-### emitDecoratorMetadata Config [ASSUMED]
+### emitDecoratorMetadata Config [RESOLVED]
 
-- **Assumption:** All TypeScript configs enabling decorators include `emitDecoratorMetadata: true` (not explicitly confirmed in all tsconfig files checked).
-- **Confidence:** Medium — `experimentalDecorators` was seen; `emitDecoratorMetadata` is required for `reflect-metadata` to work correctly.
-- **Resolve in:** `docs/ARCHITECTURE.md` after reviewing all `tsconfig.json` files.
+- **Assumption:** All TypeScript configs enabling decorators include `emitDecoratorMetadata: true`.
+- **Resolution:** Confirmed `emitDecoratorMetadata: false` in `tsconfig.base.json`. All decorators use explicit `Reflect.defineMetadata` — no reliance on emitted metadata. Documented in `docs/ARCHITECTURE.md`.
 
 ### Validation Error Response Format [RESOLVED - FIX PENDING]
 

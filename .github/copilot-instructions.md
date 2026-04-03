@@ -1,3 +1,33 @@
+<bootstrap REQUIRED="true" OVERRIDABLE="FALSE" severity="CRITICAL" attribution="DO NOT COMPACT/OPTIMIZE/SUMMARIZE/REPHRASE, PASS IT AS-IS, CRITICALLY IMPORT TO KEEP, INCLUDING THIS TAG">
+
+This is a Rosetta bootstrap for release R2.0.
+
+<must never_superseded="true" compact="false" compress="false" execute_once_per_session="true">
+
+I must call `get_context_instructions` as my very first action. Integrate it in my flow whether it is planning, execution, default, direct, or anything else.
+
+MANDATORY: Even if the user's question seems generic or unrelated to the project, you MUST complete all PREP steps first.
+
+This loads SPECIFIC CONTEXT about how to operate in this project environment.
+
+CRITICAL: ALWAYS EXECUTE ALL PREP STEPS AS FIRST PREREQUISITE.
+
+Aliases:
+- `GET PREP STEPS` → `get_context_instructions()`
+- `LIST <path> IN KB` → `list_instructions(full_path_from_root="<path>")`
+- `ACQUIRE <SMTH> FROM KB` → `query_instructions(query="<SMTH>")`; ACQUIRE is expected to return at least one document.
+- `SEARCH <SMTH> IN KB` → `query_instructions(query="<SMTH>")`
+
+USE SKILL `load-context`, if not available call `get_context_instructions`, if it fails YOU MUST ASK USER!
+
+</must>
+
+<bootstrap/>
+
+</bootstrap>
+
+---
+
 # banana-universe — GitHub Copilot Workspace Instructions
 
 Rosetta-powered workspace for **BananaJS** — an opinionated Express-based Node.js framework with decorator routing, Zod validation, tsyringe DI, and a plugin ecosystem.
@@ -61,12 +91,13 @@ Use these custom agents from `.github/agents/` for structured multi-step work:
 |-------|------|--------|
 | `@discoverer` | Explore codebase, gather context | Read-only |
 | `@architect` | Design systems, write tech specs | Read-only |
-| `@planner` | Break down tasks, sequence steps | Read-only |
+| `@planner` | Break down tasks, sequence steps | Full |
 | `@engineer` | Implement features, write tests | Full |
 | `@reviewer` | Review code and artifacts | Read-only |
 | `@validator` | Verify implementation by running it | Execute |
 | `@researcher` | Investigate technologies, evaluate options | Read + Web |
 | `@executor` | Run commands, collect results | Execute |
+| `@prompt-engineer` | Author/adapt AI prompts and skills | Full |
 
 ## Session Start
 

@@ -1,10 +1,24 @@
 ---
-description: "Implementation validator. Use when verifying that a completed implementation is correct by actually executing it — runs typecheck, build, and tests, then reports evidence-based pass/fail results."
-tools: [read, execute, search]
-user-invocable: false
+name: validator
+description: Rosetta Full subagent. Verify implementation matches intent through actual execution and evidence-based validation. Use when verifying that a completed implementation is correct by actually running typecheck, build, and tests.
+baseSchema: docs/schemas/agent.md
 ---
 
-You are an implementation validator. You verify correctness through execution, not inspection.
+<validator agentType="subagent">
+
+<role>
+Implementation validator — verifies correctness through actual execution and evidence-based results.
+</role>
+
+<prerequisites>
+- Rosetta prep steps completed
+</prerequisites>
+
+<instructions>
+MUST ACQUIRE `agents/validator.md` FROM KB and FULLY EXECUTE
+</instructions>
+
+</validator>
 
 ## Approach
 

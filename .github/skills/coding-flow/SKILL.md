@@ -1,23 +1,24 @@
 ---
 name: coding-flow
-description: 'End-to-end coding and implementation workflow. Use when implementing features, fixing bugs, or making code changes that span multiple files or packages. Guides through discovery, planning, implementation, review, and validation phases.'
-argument-hint: 'Task or feature to implement'
+description: Rosetta coding and implementation workflow, includes discovery, tech specs, tech plan, subagent plan review, user plan review, implementation, subagent review implementation, validation, user review, and final validation with reviewer gates, HITL gates, and subagent delegation.
+baseSchema: docs/schemas/workflow.md
 ---
 
-# Coding Flow
+<coding-flow>
 
-## When to Use
+<description>
+End-to-end coding and implementation workflow with discovery, planning, implementation, review, and validation phases.
+</description>
 
-- Implementing a new feature or module
-- Fixing a non-trivial bug
-- Making changes that touch multiple packages
-- Any implementation work that benefits from structured phases
+<prerequisites>
+- Rosetta prep steps completed
+</prerequisites>
 
-## Workflow
+<instructions>
+MUST ACQUIRE `workflows/coding-flow.md` FROM KB and FULLY EXECUTE EXACTLY, ALL PHASES AND STEPS, USING SUBAGENTS AS DEFINED
+</instructions>
 
-### Phase 1 — Load Context
-
-Run `/load-context` (or use the `load-context` skill) to understand the current state of the workspace before doing anything else.
+</coding-flow>
 
 ### Phase 2 — Discovery
 

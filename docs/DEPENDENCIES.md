@@ -1,6 +1,6 @@
 # Dependencies
 
-This file lists all dependencies for each module in the banana-universe monorepo.
+Direct dependencies for each module in the banana-universe monorepo.
 
 ## Root Workspace (package.json)
 
@@ -37,44 +37,135 @@ This file lists all dependencies for each module in the banana-universe monorepo
 
 ---
 
-## packages/bananajs
+## packages/bananajs v0.6.0
 
 ### Runtime Dependencies
 
-| Package            | Version | Purpose                        |
-| ------------------ | ------- | ------------------------------ |
-| cors               | ^2.8.5  | CORS middleware                |
-| helmet             | ^8.1.0  | Security headers               |
-| reflect-metadata   | ^0.2.2  | Decorator metadata polyfill    |
-| tslib              | ^2.3.0  | TypeScript helpers             |
-| zod                | ^3.24.0 | Request validation schemas     |
-| zod-to-json-schema | ^3.24.0 | OpenAPI JSON Schema from Zod   |
-| tsyringe           | ^4.8.0  | Dependency injection container |
+| Package            | Version  | Purpose                            |
+| ------------------ | -------- | ---------------------------------- |
+| cors               | ^2.8.5   | CORS middleware                    |
+| helmet             | ^8.1.0   | Security headers                   |
+| pino               | ^9.6.0   | Structured JSON logger             |
+| reflect-metadata   | ^0.2.2   | Decorator metadata polyfill        |
+| tsyringe           | ^4.8.0   | Dependency injection container     |
+| tslib              | ^2.3.0   | TypeScript helpers                 |
+| uuid               | ^8.3.2   | Unique ID generation               |
+| zod                | ^3.24.0  | Request validation schemas         |
+| zod-to-json-schema | ^3.24.0  | OpenAPI JSON Schema from Zod       |
 
-### Peer Dependencies (required by consumers)
+### Peer Dependencies (optional unless noted)
 
-| Package | Version | Purpose                         |
-| ------- | ------- | ------------------------------- |
-| express | ^4.21.2 | HTTP server (peer, not bundled) |
+| Package                      | Version  | Purpose                         |
+| ---------------------------- | -------- | ------------------------------- |
+| express                      | ^4.21.2  | HTTP server (required)          |
+| express-rate-limit           | >=7.0.0  | Rate limiting (`@Throttle`)     |
+| multer                       | >=1.4.0  | File uploads                    |
+| prom-client                  | >=15.0.0 | Prometheus metrics              |
+| sanitize-html                | >=2.0.0  | HTML sanitization (`@Sanitize`) |
+| swagger-ui-express           | >=5.0.0  | Swagger UI endpoint             |
+| @scalar/express-api-reference | >=0.8.0 | Scalar API reference UI         |
 
 ---
 
-## packages/bananajs-cli
+## packages/bananajs-cli v0.3.0
 
-### Dependencies
+### Runtime Dependencies
 
-- None beyond workspace shared devDependencies (TypeScript, Nx tooling)
+| Package                   | Version   | Purpose                             |
+| ------------------------- | --------- | ----------------------------------- |
+| @banana-universe/bananajs | *         | Framework peer                      |
+| chalk                     | 4.1.2     | Terminal color output               |
+| commander                 | ^7.2.0    | CLI argument parsing                |
+| inquirer                  | ^12.5.2   | Interactive prompts                 |
+| openapi-typescript        | >=7.0.0   | OpenAPI → TypeScript type generation|
+| tslib                     | ^2.3.0    | TypeScript helpers                  |
+| zod                       | ^3.22.0   | Schema validation                   |
+
+### Peer Dependencies (optional AI features)
+
+| Package           | Version  | Purpose                  |
+| ----------------- | -------- | ------------------------ |
+| @ai-sdk/anthropic | >=1.0.0  | Anthropic LLM provider   |
+| @ai-sdk/openai    | >=1.0.0  | OpenAI LLM provider      |
+| ai                | >=4.0.0  | Vercel AI SDK core       |
 
 ---
 
-## apps/bananajs-demo
+## packages/ddd v0.1.0
 
-### Key Dependencies (inherited from workspace)
+### Peer Dependencies
 
-| Package                   | Purpose                   |
-| ------------------------- | ------------------------- |
-| @banana-universe/bananajs | Local framework package   |
-| express                   | HTTP server               |
-| zod                       | Request validation        |
-| reflect-metadata          | Decorator support         |
-| webpack                   | Bundler (via @nx/webpack) |
+| Package                   | Version | Purpose             |
+| ------------------------- | ------- | ------------------- |
+| @banana-universe/bananajs | *       | DI container access |
+| reflect-metadata          | ^0.2.2  | Decorator support   |
+
+---
+
+## packages/plugin-mongoose v0.1.0
+
+### Peer Dependencies
+
+| Package                   | Version | Purpose             |
+| ------------------------- | ------- | ------------------- |
+| @banana-universe/bananajs | *       | Plugin interface    |
+| @banana-universe/ddd      | *       | Repository adapters |
+| mongoose                  | *       | MongoDB ODM         |
+
+---
+
+## packages/plugin-typeorm v0.1.0
+
+### Peer Dependencies
+
+| Package                   | Version | Purpose             |
+| ------------------------- | ------- | ------------------- |
+| @banana-universe/bananajs | *       | Plugin interface    |
+| @banana-universe/ddd      | *       | Repository adapters |
+| typeorm                   | *       | SQL ORM             |
+
+---
+
+## packages/plugin-otel v0.1.0
+
+### Peer Dependencies
+
+| Package                                   | Version | Purpose                |
+| ----------------------------------------- | ------- | ---------------------- |
+| @banana-universe/bananajs                 | *       | Plugin interface       |
+| @opentelemetry/api                        | *       | OTel API               |
+| @opentelemetry/auto-instrumentations-node | *       | Auto-instrumentation   |
+| @opentelemetry/sdk-node                   | *       | OTel Node.js SDK       |
+
+---
+
+## packages/plugin-websocket v0.1.0
+
+### Peer Dependencies
+
+| Package                   | Version | Purpose           |
+| ------------------------- | ------- | ----------------- |
+| @banana-universe/bananajs | *       | Plugin interface  |
+| ws                        | *       | WebSocket library |
+| zod                       | *       | Message validation|
+
+---
+
+## packages/plugin-zod v0.1.0
+
+### Peer Dependencies
+
+| Package                   | Version | Purpose          |
+| ------------------------- | ------- | ---------------- |
+| @banana-universe/bananajs | *       | Plugin interface |
+| zod                       | *       | Zod schema core  |
+
+---
+
+## packages/adapter-fastify v0.0.1
+
+### Peer Dependencies
+
+| Package                   | Version | Purpose         |
+| ------------------------- | ------- | --------------- |
+| @banana-universe/bananajs | *       | Framework types |
