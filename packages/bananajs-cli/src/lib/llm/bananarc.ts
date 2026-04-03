@@ -2,7 +2,18 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import { presetIdToOrm } from '../preset-orm.js'
 
-export type LlmProviderKind = 'ollama' | 'llamacpp' | 'openai' | 'anthropic'
+export type LlmProviderKind = 'ollama' | 'llamacpp' | 'openai' | 'anthropic' | 'gemini' | 'mistral' | 'groq'
+
+/** Default model ID per provider — used by setup wizard and mergeBananarc fallback. */
+export const PROVIDER_DEFAULT_MODELS: Record<LlmProviderKind, string> = {
+  ollama: 'llama3.2',
+  llamacpp: 'default',
+  openai: 'gpt-4o-mini',
+  anthropic: 'claude-3-5-sonnet-20241022',
+  gemini: 'gemini-2.0-flash',
+  mistral: 'mistral-large-latest',
+  groq: 'llama-3.3-70b-versatile',
+}
 export type OrmPreference = 'typeorm' | 'mongoose' | 'none'
 
 /** Optional project context for codegen, wire hints, and AI rubrics (minimal schema; extend with care). */
@@ -72,13 +83,18 @@ export async function loadBananarc(cwd: string): Promise<BananarcConfig> {
   }
 }
 
-function mergeBananarc(parsed: BananarcConfig): BananarcConfig {
+export function mergeBananarc(parsed: BananarcConfig): BananarcConfig {
   const d = DEFAULT_BANANARC
   const llm = { ...d.llm }
   if (parsed.llm) {
     for (const [k, v] of Object.entries(parsed.llm)) {
       if (v !== undefined) (llm as Record<string, unknown>)[k] = v
     }
+  }
+  // Provider-aware model fallback: if no model was explicitly set, use the correct default for the provider
+  const resolvedProvider = (llm as { provider?: LlmProviderKind }).provider
+  if (resolvedProvider && resolvedProvider !== 'ollama' && !(parsed.llm?.model)) {
+    ;(llm as Record<string, unknown>)['model'] = PROVIDER_DEFAULT_MODELS[resolvedProvider]
   }
   const generate = { ...d.generate }
   if (parsed.generate) {

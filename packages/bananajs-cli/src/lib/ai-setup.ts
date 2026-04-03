@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises'
 import * as path from 'path'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
@@ -5,9 +6,19 @@ import { fetchWithTimeout } from './llm/fetch-with-retry.js'
 import {
   saveBananarc,
   loadBananarc,
+  PROVIDER_DEFAULT_MODELS,
   type BananarcConfig,
   type LlmProviderKind,
 } from './llm/bananarc.js'
+
+/** Required environment variable name per cloud provider */
+const CLOUD_API_KEYS: Partial<Record<LlmProviderKind, string>> = {
+  openai: 'OPENAI_API_KEY',
+  anthropic: 'ANTHROPIC_API_KEY',
+  gemini: 'GOOGLE_GENERATIVE_AI_API_KEY',
+  mistral: 'MISTRAL_API_KEY',
+  groq: 'GROQ_API_KEY',
+}
 
 async function probeOllama(baseUrl: string): Promise<boolean> {
   const url = `${baseUrl.replace(/\/$/, '')}/api/tags`
@@ -16,6 +27,62 @@ async function probeOllama(baseUrl: string): Promise<boolean> {
     return res.ok
   } catch {
     return false
+  }
+}
+
+async function writeEnvExample(cwd: string, envKey: string): Promise<void> {
+  const examplePath = path.join(cwd, '.env.example')
+  const line = `${envKey}=your-api-key-here\n`
+  let existing = ''
+  try {
+    existing = await fs.readFile(examplePath, 'utf-8')
+  } catch {
+    // file not yet created — will create it
+  }
+  if (existing.includes(envKey)) {
+    console.log(chalk.gray(`  ${envKey} already present in .env.example`))
+    return
+  }
+  await fs.writeFile(examplePath, existing + line, 'utf-8')
+  console.log(chalk.green(`  Wrote .env.example with ${envKey} placeholder`))
+}
+
+async function printCloudKeyGuidance(cwd: string, provider: LlmProviderKind): Promise<void> {
+  const envKey = CLOUD_API_KEYS[provider]
+  if (!envKey) return
+
+  if (process.env[envKey]) {
+    console.log(chalk.green(`  ${envKey} is already set in your environment.`))
+    return
+  }
+
+  console.log(chalk.yellow(`\n  API key required: ${envKey}`))
+  console.log(chalk.gray('  Option 1 — shell profile (~/.zshrc, ~/.bashrc):'))
+  console.log(chalk.white(`    export ${envKey}=<your-key>`))
+  console.log(chalk.gray('  Option 2 — .env file in your project root (loaded automatically):'))
+  console.log(chalk.white(`    echo '${envKey}=<your-key>' >> .env`))
+
+  // Warn about .gitignore only when .env is not already listed
+  let gitignoreContent = ''
+  try {
+    gitignoreContent = await fs.readFile(path.join(cwd, '.gitignore'), 'utf-8')
+  } catch {
+    // no .gitignore yet
+  }
+  if (!gitignoreContent.includes('.env')) {
+    console.log(chalk.yellow('  Make sure .env is listed in .gitignore to avoid leaking secrets.'))
+  }
+
+  const { writeExample } = await inquirer.prompt<{ writeExample: boolean }>([
+    {
+      type: 'confirm',
+      name: 'writeExample',
+      message: 'Create / update .env.example with this key placeholder?',
+      default: true,
+    },
+  ])
+  if (writeExample) {
+    await writeEnvExample(cwd, envKey)
   }
 }
 
@@ -31,7 +98,10 @@ export async function aiSetup(cwd: string = process.cwd()): Promise<void> {
         { name: 'Ollama (recommended, offline, no API keys)', value: 'ollama' },
         { name: 'llama.cpp HTTP server', value: 'llamacpp' },
         { name: 'OpenAI (cloud)', value: 'openai' },
-        { name: 'Anthropic (cloud)', value: 'anthropic' },
+        { name: 'Anthropic / Claude (cloud)', value: 'anthropic' },
+        { name: 'Google Gemini (cloud)', value: 'gemini' },
+        { name: 'Mistral (cloud)', value: 'mistral' },
+        { name: 'Groq (cloud, fast inference)', value: 'groq' },
       ],
       default: existing.llm?.provider ?? 'ollama',
     },
@@ -52,7 +122,7 @@ export async function aiSetup(cwd: string = process.cwd()): Promise<void> {
         type: 'input',
         name: 'model',
         message: 'Default model name',
-        default: model ?? 'llama3.2',
+        default: model ?? PROVIDER_DEFAULT_MODELS.ollama,
       },
     ])
     baseUrl = ans.baseUrl
@@ -94,35 +164,20 @@ export async function aiSetup(cwd: string = process.cwd()): Promise<void> {
       },
     ])
     baseUrl = ans.baseUrl
-    model = model ?? 'default'
-  } else if (provider === 'openai') {
-    const ans = await inquirer.prompt<{ model: string }>([
-      {
-        type: 'input',
-        name: 'model',
-        message: 'OpenAI model id',
-        default: model ?? 'gpt-4o-mini',
-      },
-    ])
-    model = ans.model
-    baseUrl = undefined
-    if (!process.env['OPENAI_API_KEY']) {
-      console.log(chalk.yellow('Set OPENAI_API_KEY in your environment for cloud generation.'))
-    }
+    model = model ?? PROVIDER_DEFAULT_MODELS.llamacpp
   } else {
+    // All cloud providers: openai, anthropic, gemini, mistral, groq
+    baseUrl = undefined
+    const providerLabel = provider.charAt(0).toUpperCase() + provider.slice(1)
     const ans = await inquirer.prompt<{ model: string }>([
       {
         type: 'input',
         name: 'model',
-        message: 'Anthropic model id',
-        default: model ?? 'claude-3-5-sonnet-20241022',
+        message: `${providerLabel} model id`,
+        default: model ?? PROVIDER_DEFAULT_MODELS[provider],
       },
     ])
     model = ans.model
-    baseUrl = undefined
-    if (!process.env['ANTHROPIC_API_KEY']) {
-      console.log(chalk.yellow('Set ANTHROPIC_API_KEY in your environment for cloud generation.'))
-    }
   }
 
   const next: BananarcConfig = {
@@ -137,5 +192,9 @@ export async function aiSetup(cwd: string = process.cwd()): Promise<void> {
   }
 
   await saveBananarc(cwd, next)
-  console.log(chalk.green(`Wrote ${path.join(cwd, '.bananarc.json')}`))
+  console.log(chalk.green(`\nWrote ${path.join(cwd, '.bananarc.json')}`))
+
+  if (provider in CLOUD_API_KEYS) {
+    await printCloudKeyGuidance(cwd, provider)
+  }
 }

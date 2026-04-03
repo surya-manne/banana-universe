@@ -18,6 +18,7 @@ import { runAiTestScaffold } from './lib/ai-test-scaffold.js'
 import { runAiExplain } from './lib/ai-explain.js'
 import { aiGenerateModule } from './lib/ai-module.js'
 import { aiSetup } from './lib/ai-setup.js'
+import { loadEnvFile } from './lib/llm/env-loader.js'
 import { writeScaffoldedApp } from './lib/create-app.js'
 import { APP_PRESETS, getPresetById, type AppPreset } from './lib/create-app-presets.js'
 import { PRESET_ORM_HELP, presetIdToOrm } from './lib/preset-orm.js'
@@ -34,7 +35,7 @@ import {
 } from './lib/generate-module.js'
 
 /** Keep in sync with packages/bananajs-cli/package.json */
-const CLI_VERSION = '0.3.0'
+const CLI_VERSION = '0.4.0'
 
 const program = new Command()
 
@@ -524,7 +525,13 @@ if (argv.length === 1) {
   }
 }
 
-program.parse(process.argv)
+;(async () => {
+  await loadEnvFile(process.cwd())
+  program.parse(process.argv)
+})().catch((err: unknown) => {
+  console.error('Unexpected error:', err)
+  process.exit(1)
+})
 
 async function createApp(
   appNameArg: string | undefined,
