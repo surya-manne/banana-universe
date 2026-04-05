@@ -8,7 +8,7 @@
 
 > **ApiOperation**(`options`): `MethodDecorator`
 
-Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:29
+Defined in: packages/bananajs/src/lib/OpenAPI/ApiDoc.decorators.ts:31
 
 ## Parameters
 

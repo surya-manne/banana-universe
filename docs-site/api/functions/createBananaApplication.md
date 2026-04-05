@@ -8,7 +8,7 @@
 
 > **createBananaApplication**(`options`): `Promise`\<[`BananaApp`](../classes/BananaApp.md)\>
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:612
+Defined in: packages/bananajs/src/lib/Core/App.ts:613
 
 Async factory: `BananaApp.create` plus optional `listen` in one call for declarative bootstrap.
 

@@ -68,7 +68,8 @@ export interface BananaAppOptions {
     guard: AuthGuard
   }
   swagger?: {
-    enabled: boolean
+    /** Defaults to `true` — omit or set to `false` to disable. */
+    enabled?: boolean
     path?: string
     title?: string
     version?: string
@@ -231,7 +232,7 @@ export class BananaApp {
     }
 
     // [Phase 2] Swagger/OpenAPI endpoint — registered before error middleware
-    if (swagger?.enabled) {
+    if (swagger != null && swagger.enabled !== false) {
       void this.setupSwagger()
     }
 

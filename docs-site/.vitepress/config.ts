@@ -18,6 +18,7 @@ const referenceApiSidebar = [
   {
     text: 'Features',
     items: [
+      { text: 'OpenAPI / Swagger', link: '/reference/openapi' },
       { text: 'Testing', link: '/reference/testing' },
       { text: 'Caching', link: '/reference/caching' },
       { text: 'Security', link: '/reference/security' },

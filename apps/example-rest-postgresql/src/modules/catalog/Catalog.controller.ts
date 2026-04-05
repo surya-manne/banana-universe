@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import { inject } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 import {
   Auth,
   BaseController,
@@ -21,6 +21,7 @@ import {
   type CatalogListQuery,
 } from './Catalog.dto.js'
 
+@injectable()
 @Controller('catalog')
 @Auth()
 export class CatalogController extends BaseController {

@@ -8,4 +8,4 @@
 
 > **CreateBananaApplicationInput** = [`CreateBananaApplicationOptions`](../interfaces/CreateBananaApplicationOptions.md) & `object` \| [`CreateBananaApplicationOptions`](../interfaces/CreateBananaApplicationOptions.md) & `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:602
+Defined in: packages/bananajs/src/lib/Core/App.ts:603

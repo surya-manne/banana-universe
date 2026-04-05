@@ -39,8 +39,8 @@ features:
     title: Enterprise-ready surface
     details: 'Authentication, authorization, tenancy, safety nets around input and traffic, health signals, and metrics—so production concerns are part of the story, not an afterthought.'
   - icon: 📄
-    title: API clarity
-    details: 'Consumers get predictable JSON and up-to-date contract docs from the same place your server code lives—no separate spec that drifts from reality.'
+    title: Automatic Swagger docs
+    details: 'Your decorators are the spec. The OpenAPI doc your consumers read is built live from the same code your server runs—so the contract never drifts, and you never write YAML.'
 ---
 
 <div class="home-hero-section">

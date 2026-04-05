@@ -6,7 +6,7 @@
 
 # Interface: CreateBananaApplicationOptions
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:595
+Defined in: packages/bananajs/src/lib/Core/App.ts:596
 
 Options for [createBananaApplication](../functions/createBananaApplication.md) — extends [BananaAppOptions](BananaAppOptions.md) with optional listen helpers.
 
@@ -20,7 +20,7 @@ Options for [createBananaApplication](../functions/createBananaApplication.md) �
 
 > `optional` **abac?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:100
+Defined in: packages/bananajs/src/lib/Core/App.ts:101
 
 #### guard
 
@@ -66,7 +66,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:67
 
 > `optional` **cache?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:91
+Defined in: packages/bananajs/src/lib/Core/App.ts:92
 
 #### store?
 
@@ -96,7 +96,7 @@ Root tsyringe container; optional — created when using `modules` without an ex
 
 > `optional` **devTools?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:94
+Defined in: packages/bananajs/src/lib/Core/App.ts:95
 
 #### Inherited from
 
@@ -120,7 +120,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:65
 
 > `optional` **health?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:84
+Defined in: packages/bananajs/src/lib/Core/App.ts:85
 
 #### checks?
 
@@ -144,7 +144,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:84
 
 > `optional` **hostname?**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:598
+Defined in: packages/bananajs/src/lib/Core/App.ts:599
 
 ***
 
@@ -152,7 +152,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:598
 
 > `optional` **lazyControllers?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:104
+Defined in: packages/bananajs/src/lib/Core/App.ts:105
 
 #### Inherited from
 
@@ -176,7 +176,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:54
 
 > `optional` **metrics?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:95
+Defined in: packages/bananajs/src/lib/Core/App.ts:96
 
 #### enabled
 
@@ -208,7 +208,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:48
 
 > `optional` **onListening?**: (`info`) => `void`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:599
+Defined in: packages/bananajs/src/lib/Core/App.ts:600
 
 #### Parameters
 
@@ -232,7 +232,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:599
 
 > `optional` **plugins?**: [`BananaPlugin`](BananaPlugin.md)[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:90
+Defined in: packages/bananajs/src/lib/Core/App.ts:91
 
 #### Inherited from
 
@@ -244,7 +244,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:90
 
 > `optional` **port?**: `number`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:597
+Defined in: packages/bananajs/src/lib/Core/App.ts:598
 
 When set, calls `Application.listen` after the app is created.
 
@@ -254,7 +254,7 @@ When set, calls `Application.listen` after the app is created.
 
 > `optional` **rateLimit?**: `false` \| \{ `max?`: `number`; `message?`: `string`; `windowMs?`: `number`; \}
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:77
+Defined in: packages/bananajs/src/lib/Core/App.ts:78
 
 #### Inherited from
 
@@ -304,9 +304,11 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:70
 
 > `optional` **description?**: `string`
 
-#### enabled
+#### enabled?
 
-> **enabled**: `boolean`
+> `optional` **enabled?**: `boolean`
+
+Defaults to `true` — omit or set to `false` to disable.
 
 #### path?
 
@@ -330,7 +332,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:70
 
 > `optional` **tenant?**: [`TenantOptions`](TenantOptions.md)
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:103
+Defined in: packages/bananajs/src/lib/Core/App.ts:104
 
 #### Inherited from
 

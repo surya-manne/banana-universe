@@ -18,7 +18,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:47
 
 > `optional` **abac?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:100
+Defined in: packages/bananajs/src/lib/Core/App.ts:101
 
 #### guard
 
@@ -52,7 +52,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:67
 
 > `optional` **cache?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:91
+Defined in: packages/bananajs/src/lib/Core/App.ts:92
 
 #### store?
 
@@ -74,7 +74,7 @@ Root tsyringe container; optional — created when using `modules` without an ex
 
 > `optional` **devTools?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:94
+Defined in: packages/bananajs/src/lib/Core/App.ts:95
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:65
 
 > `optional` **health?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:84
+Defined in: packages/bananajs/src/lib/Core/App.ts:85
 
 #### checks?
 
@@ -110,7 +110,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:84
 
 > `optional` **lazyControllers?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:104
+Defined in: packages/bananajs/src/lib/Core/App.ts:105
 
 ***
 
@@ -126,7 +126,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:54
 
 > `optional` **metrics?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:95
+Defined in: packages/bananajs/src/lib/Core/App.ts:96
 
 #### enabled
 
@@ -150,7 +150,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:48
 
 > `optional` **plugins?**: [`BananaPlugin`](BananaPlugin.md)[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:90
+Defined in: packages/bananajs/src/lib/Core/App.ts:91
 
 ***
 
@@ -158,7 +158,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:90
 
 > `optional` **rateLimit?**: `false` \| \{ `max?`: `number`; `message?`: `string`; `windowMs?`: `number`; \}
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:77
+Defined in: packages/bananajs/src/lib/Core/App.ts:78
 
 ***
 
@@ -196,9 +196,11 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:70
 
 > `optional` **description?**: `string`
 
-#### enabled
+#### enabled?
 
-> **enabled**: `boolean`
+> `optional` **enabled?**: `boolean`
+
+Defaults to `true` — omit or set to `false` to disable.
 
 #### path?
 
@@ -218,7 +220,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:70
 
 > `optional` **tenant?**: [`TenantOptions`](TenantOptions.md)
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:103
+Defined in: packages/bananajs/src/lib/Core/App.ts:104
 
 ***
 

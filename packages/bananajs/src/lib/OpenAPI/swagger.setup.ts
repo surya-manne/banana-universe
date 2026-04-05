@@ -3,7 +3,7 @@ import type { ZodType } from 'zod'
 import type { RouteInfo, Constructor, BananaAppOptions } from '../Core/App'
 import { MetadataKeys } from '../Router/MetaData.constants'
 import { ValidationSource } from '../Validator/Validator.decorator.js'
-import { extractJsonSchema } from './schema.extractor'
+import { extractJsonSchema, type JsonSchema } from './schema.extractor'
 import type { ApiOperationOptions, ApiBodyOptions, ApiResponseOptions } from './ApiDoc.decorators'
 
 export interface OpenApiDocument {
@@ -16,6 +16,14 @@ export interface OpenApiDocument {
   }
 }
 
+interface OpenApiParameter {
+  name: string
+  in: 'query' | 'path' | 'header'
+  required: boolean
+  description?: string
+  schema: JsonSchema
+}
+
 interface OpenApiOperation {
   tags?: string[]
   summary?: string
@@ -24,7 +32,46 @@ interface OpenApiOperation {
   security?: unknown[]
   requestBody?: unknown
   responses: Record<string, { description: string; content?: unknown }>
-  parameters?: unknown[]
+  parameters?: OpenApiParameter[]
+}
+
+/** Converts `getUser` → `Get User`, `listUserOrders` → `List User Orders`. */
+function camelToTitleCase(name: string): string {
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim()
+}
+
+/** Strips the `Controller` suffix for use as an OpenAPI tag. */
+function controllerTag(className: string): string {
+  return className.replace(/Controller$/i, '') || className
+}
+
+/**
+ * Converts a Zod object schema to OpenAPI parameter entries for query, path, or header.
+ * Non-object or unrecognised schemas produce an empty array.
+ */
+export function extractZodParameters(
+  schema: ZodType,
+  location: 'query' | 'path' | 'header',
+): OpenApiParameter[] {
+  const jsonSchema = extractJsonSchema(schema) as JsonSchema & {
+    properties?: Record<string, JsonSchema>
+    required?: string[]
+  }
+
+  if (jsonSchema.type === 'object' && jsonSchema.properties) {
+    const requiredFields = new Set(jsonSchema.required ?? [])
+    return Object.entries(jsonSchema.properties).map(([name, fieldSchema]) => ({
+      name,
+      in: location,
+      required: location === 'path' || requiredFields.has(name),
+      schema: fieldSchema,
+    }))
+  }
+
+  return []
 }
 
 export function buildOpenApiSpec(
@@ -97,12 +144,49 @@ export function buildOpenApiSpec(
       | boolean
       | undefined
 
+    // --- Auto-infer parameters from @Query, @Params, @Headers Zod schemas ---
+    const parameters: OpenApiParameter[] = []
+
+    const zodQuery = Reflect.getMetadata(
+      ValidationSource.QUERY,
+      controllerClass.prototype,
+      route.handler,
+    ) as ZodType | undefined
+    if (zodQuery) {
+      parameters.push(...extractZodParameters(zodQuery, 'query'))
+    }
+
+    const zodParams = Reflect.getMetadata(
+      ValidationSource.PARAM,
+      controllerClass.prototype,
+      route.handler,
+    ) as ZodType | undefined
+    if (zodParams) {
+      parameters.push(...extractZodParameters(zodParams, 'path'))
+    } else {
+      // Fallback: extract path param names from the URL pattern when no @Params schema is set
+      const pathParamNames = [...pathKey.matchAll(/\{(\w+)\}/g)].map((m) => m[1])
+      for (const name of pathParamNames) {
+        parameters.push({ name, in: 'path', required: true, schema: { type: 'string' } })
+      }
+    }
+
+    const zodHeaders = Reflect.getMetadata(
+      ValidationSource.HEADER,
+      controllerClass.prototype,
+      route.handler,
+    ) as ZodType | undefined
+    if (zodHeaders) {
+      parameters.push(...extractZodParameters(zodHeaders, 'header'))
+    }
+
     const op: OpenApiOperation = {
-      tags: tags ?? [route.controller],
-      summary: operation?.summary,
+      tags: tags ?? [controllerTag(route.controller)],
+      summary: operation?.summary ?? camelToTitleCase(route.handler),
       description: operation?.description,
       deprecated: operation?.deprecated,
       responses: {},
+      ...(parameters.length > 0 ? { parameters } : {}),
     }
 
     if (authOpts && (isAuthMethod || isAuthClass) && !isPublic) {
@@ -122,7 +206,15 @@ export function buildOpenApiSpec(
 
     if (responses && responses.length > 0) {
       for (const r of responses) {
-        op.responses[String(r.status)] = { description: r.description }
+        const responseEntry: { description: string; content?: unknown } = {
+          description: r.description,
+        }
+        if (r.schema) {
+          responseEntry.content = {
+            'application/json': { schema: extractJsonSchema(r.schema) },
+          }
+        }
+        op.responses[String(r.status)] = responseEntry
       }
     } else {
       op.responses['200'] = { description: 'Success' }

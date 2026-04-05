@@ -59,6 +59,8 @@ Hand-written overview; generated signatures live under [**TypeDoc API**](/api/) 
 | ------------------------------------------------------ | -------------------------- |
 | `ApiTags`, `ApiOperation`, `ApiBody`, `ApiResponseDoc` | Swagger / OpenAPI metadata |
 
+Full usage, inferred-schema details, and screenshots: **[OpenAPI / Swagger reference](/reference/openapi)**.
+
 ## DI & app wiring
 
 | Export                       | Role                                            |

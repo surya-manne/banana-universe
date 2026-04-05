@@ -6,7 +6,7 @@
 /** Keep dependency ranges aligned with published @banana-universe packages. */
 export const SCAFFOLD_VERSIONS = {
   bananajs: '^0.6.0',
-  bananajsCli: '^0.3.0',
+  bananajsCli: '^0.4.0',
   ddd: '^0.1.0',
   pluginMongoose: '^0.1.0',
   pluginTypeorm: '^0.1.0',
@@ -109,14 +109,14 @@ const sharedTsconfig = (): string =>
     {
       compilerOptions: {
         target: 'ES2022',
-        module: 'NodeNext',
-        moduleResolution: 'NodeNext',
-        outDir: 'dist',
-        rootDir: 'src',
+        module: 'ESNext',
+        moduleResolution: 'bundler',
         strict: true,
         experimentalDecorators: true,
+        emitDecoratorMetadata: true,
         skipLibCheck: true,
         types: ['node'],
+        noEmit: true,
       },
       include: ['src/**/*.ts'],
     },
@@ -136,7 +136,6 @@ const sharedDevDependencies = () => ({
   eslint: '^9.8.0',
   'eslint-config-prettier': '^9.0.0',
   prettier: '^2.6.2',
-  tsx: '^4.19.2',
   typescript: '~5.7.2',
   'typescript-eslint': '^8.19.0',
 })
@@ -151,8 +150,8 @@ function mongoPackageJson(ctx: ScaffoldContext): string {
       description: `BananaJS app (${ctx.appName}) — MongoDB / Mongoose`,
       scripts: {
         dev: 'tsx watch src/main.ts',
-        build: 'tsc -p tsconfig.json',
-        start: 'node dist/main.js',
+        build: 'tsc --noEmit',
+        start: 'tsx src/main.ts',
         lint: 'eslint src',
         'lint:fix': 'eslint src --fix',
         format: 'prettier --write "src/**/*.ts" ".prettierrc" "eslint.config.mjs"',
@@ -160,6 +159,7 @@ function mongoPackageJson(ctx: ScaffoldContext): string {
       },
       dependencies: {
         dotenv: '^16.4.5',
+        tsx: '^4.19.2',
         '@banana-universe/bananajs': SCAFFOLD_VERSIONS.bananajs,
         '@banana-universe/ddd': SCAFFOLD_VERSIONS.ddd,
         '@banana-universe/plugin-mongoose': SCAFFOLD_VERSIONS.pluginMongoose,
@@ -187,8 +187,8 @@ function sqlPackageJson(ctx: ScaffoldContext): string {
       description: `BananaJS app (${ctx.appName}) — PostgreSQL / TypeORM`,
       scripts: {
         dev: 'tsx watch src/main.ts',
-        build: 'tsc -p tsconfig.json',
-        start: 'node dist/main.js',
+        build: 'tsc --noEmit',
+        start: 'tsx src/main.ts',
         lint: 'eslint src',
         'lint:fix': 'eslint src --fix',
         format: 'prettier --write "src/**/*.ts" ".prettierrc" "eslint.config.mjs"',
@@ -196,6 +196,7 @@ function sqlPackageJson(ctx: ScaffoldContext): string {
       },
       dependencies: {
         dotenv: '^16.4.5',
+        tsx: '^4.19.2',
         '@banana-universe/bananajs': SCAFFOLD_VERSIONS.bananajs,
         '@banana-universe/ddd': SCAFFOLD_VERSIONS.ddd,
         '@banana-universe/plugin-typeorm': SCAFFOLD_VERSIONS.pluginTypeorm,
@@ -226,8 +227,8 @@ This project was generated with \`bananajs new\` (**MongoDB / Mongoose** preset)
 | Script | Description |
 | ------ | ----------- |
 | \`npm run dev\` | TypeScript + **hot reload** (\`tsx watch\`) |
-| \`npm run build\` | Compile to \`dist/\` |
-| \`npm start\` | Run compiled app |
+| \`npm run build\` | Type-check TypeScript |
+| \`npm start\` | Run app (\`tsx\`) |
 | \`npm run lint\` / \`npm run lint:fix\` | ESLint (type-aware) |
 | \`npm run format\` / \`npm run format:check\` | Prettier |
 
@@ -237,7 +238,6 @@ This project was generated with \`bananajs new\` (**MongoDB / Mongoose** preset)
 npm install
 cp .env.example .env   # set DATABASE_URL
 npm run dev
-# or: npm run build && npm start
 \`\`\`
 
 ## API docs
@@ -263,8 +263,8 @@ This project was generated with \`bananajs new\` (**PostgreSQL / TypeORM** prese
 | Script | Description |
 | ------ | ----------- |
 | \`npm run dev\` | TypeScript + **hot reload** (\`tsx watch\`) |
-| \`npm run build\` | Compile to \`dist/\` |
-| \`npm start\` | Run compiled app |
+| \`npm run build\` | Type-check TypeScript |
+| \`npm start\` | Run app (\`tsx\`) |
 | \`npm run lint\` / \`npm run lint:fix\` | ESLint (type-aware) |
 | \`npm run format\` / \`npm run format:check\` | Prettier |
 
@@ -274,7 +274,6 @@ This project was generated with \`bananajs new\` (**PostgreSQL / TypeORM** prese
 npm install
 cp .env.example .env   # set DATABASE_URL for PostgreSQL
 npm run dev
-# or: npm run build && npm start
 \`\`\`
 
 ## API docs
@@ -307,7 +306,7 @@ function buildMongoFiles(ctx: ScaffoldContext): ScaffoldFile[] {
       relativePath: 'src/main.ts',
       content: `import 'dotenv/config'
 import 'reflect-metadata'
-import { createMongoApp } from './bootstrap.js'
+import { createMongoApp } from './bootstrap'
 
 const port = Number(process.env.PORT ?? 3000)
 
@@ -358,8 +357,8 @@ import {
     defineBananaAppOptions,
 } from '@banana-universe/bananajs'
 import { MongoosePlugin } from '@banana-universe/plugin-mongoose'
-import { connectMongo } from './db/mongo.js'
-import { articlesModule } from './modules/articles/index.js'
+import { connectMongo } from './db/mongo'
+import { articlesModule } from './modules/articles/index'
 
 export async function createMongoApp(): Promise<BananaApp> {
     const uri = process.env.DATABASE_URL ?? 'mongodb://127.0.0.1:27017/bananajs_app'
@@ -388,10 +387,10 @@ export async function createMongoApp(): Promise<BananaApp> {
     {
       relativePath: 'src/modules/articles/index.ts',
       content: `import { createModule } from '@banana-universe/bananajs'
-import { ArticleController } from './Article.controller.js'
-import { ArticleAppService } from './application/Article.service.js'
-import { ArticleMongooseRepository } from './infrastructure/Article.mongoose-repository.js'
-import { ArticleRepositoryToken } from './domain/Article.repository.js'
+import { ArticleController } from './Article.controller'
+import { ArticleAppService } from './application/Article.service'
+import { ArticleMongooseRepository } from './infrastructure/Article.mongoose-repository'
+import { ArticleRepositoryToken } from './domain/Article.repository'
 
 export const articlesModule = createModule({
   id: 'articles',
@@ -407,11 +406,12 @@ export const articlesModule = createModule({
       relativePath: 'src/modules/articles/Article.controller.ts',
       content: `import 'reflect-metadata'
 import type { Request, Response } from 'express'
-import { inject } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
-import { ArticleAppService } from './application/Article.service.js'
-import { CreateArticleSchema } from './Article.dto.js'
+import { ArticleAppService } from './application/Article.service'
+import { CreateArticleSchema } from './Article.dto'
 
+@injectable()
 @Controller('articles')
 export class ArticleController extends BaseController {
   constructor(@inject(ArticleAppService) private readonly articleAppService: ArticleAppService) {
@@ -476,7 +476,7 @@ export class Article extends Entity<ArticleProps> {
       relativePath: 'src/modules/articles/domain/Article.repository.ts',
       content: `import type { Repository } from '@banana-universe/ddd'
 import type { InjectionToken } from 'tsyringe'
-import type { Article } from './Article.entity.js'
+import type { Article } from './Article.entity'
 
 export type ArticleRepository = Repository<Article>
 
@@ -488,9 +488,9 @@ export const ArticleRepositoryToken = Symbol('ArticleRepository') as InjectionTo
       relativePath: 'src/modules/articles/application/Article.service.ts',
       content: `import { randomUUID } from 'node:crypto'
 import { inject, injectable } from 'tsyringe'
-import type { ArticleRepository } from '../domain/Article.repository.js'
-import { ArticleRepositoryToken } from '../domain/Article.repository.js'
-import { Article } from '../domain/Article.entity.js'
+import type { ArticleRepository } from '../domain/Article.repository'
+import { ArticleRepositoryToken } from '../domain/Article.repository'
+import { Article } from '../domain/Article.entity'
 
 /** Application-layer orchestration (DDD); tsyringe constructor injection. */
 @injectable()
@@ -546,8 +546,8 @@ export function getArticleModel(connection: Connection): Model<ArticleDoc> {
       content: `import type { Connection } from 'mongoose'
 import { inject, injectable } from 'tsyringe'
 import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
-import { Article } from '../domain/Article.entity.js'
-import { getArticleModel, type ArticleDoc } from './Article.mongoose-model.js'
+import { Article } from '../domain/Article.entity'
+import { getArticleModel, type ArticleDoc } from './Article.mongoose-model'
 
 @injectable()
 export class ArticleMongooseRepository extends MongooseRepositoryAdapter<Article, ArticleDoc> {
@@ -596,7 +596,7 @@ function buildSqlFiles(ctx: ScaffoldContext): ScaffoldFile[] {
       relativePath: 'src/main.ts',
       content: `import 'dotenv/config'
 import 'reflect-metadata'
-import { createSqlApp } from './bootstrap.js'
+import { createSqlApp } from './bootstrap'
 
 const port = Number(process.env.PORT ?? 3000)
 
@@ -613,7 +613,7 @@ try {
     },
     {
       relativePath: 'src/db/typeorm-options.ts',
-      content: `import { NoteEntity } from '../modules/health/Note.entity.js'
+      content: `import { NoteEntity } from '../modules/health/Note.entity'
 
 /** TypeORM DataSource options for PostgreSQL (used by \`TypeOrmPlugin\`). */
 export function buildTypeOrmOptions(): Record<string, unknown> {
@@ -641,8 +641,8 @@ import {
     defineBananaAppOptions,
 } from '@banana-universe/bananajs'
 import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
-import { buildTypeOrmOptions } from './db/typeorm-options.js'
-import { HealthController } from './modules/health/Health.controller.js'
+import { buildTypeOrmOptions } from './db/typeorm-options'
+import { HealthController } from './modules/health/Health.controller'
 
 const healthModule = createModule({
     id: 'health',
@@ -675,8 +675,10 @@ export async function createSqlApp(): Promise<BananaApp> {
       relativePath: 'src/modules/health/Health.controller.ts',
       content: `import 'reflect-metadata'
 import type { Request, Response } from 'express'
+import { injectable } from 'tsyringe'
 import { BaseController, Controller, Get, Public } from '@banana-universe/bananajs'
 
+@injectable()
 @Controller('')
 export class HealthController extends BaseController {
     @Get('healthz')

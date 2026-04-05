@@ -112,6 +112,8 @@ class UserController extends BaseController {
 
 Apps created with `bananajs new` turn on `swagger.enabled` by default and include `swagger-ui-express` — `GET /api-docs` works out of the box.
 
+For the full decorator reference, inferred-schema details, CLI export, and auth integration, see the dedicated guide: **[OpenAPI / Swagger reference](/reference/openapi)**.
+
 ## Health checks
 
 Implement the `HealthCheck` interface and pass checks under `health.checks`:

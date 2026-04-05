@@ -27,6 +27,9 @@
       "default": "./dist/testing/index.js"
     }
   },
+  "scripts": {
+    "test": "tsc -p tsconfig.lib.json && node --test dist/lib/OpenAPI/__tests__/swagger.setup.test.js"
+  },
   "files": [
     "dist",
     "!**/*.tsbuildinfo"

@@ -52,7 +52,7 @@ export class ${Pascal} extends Entity<${Pascal}Props> {
 
   const domainRepo = `import type { Repository } from '@banana-universe/ddd'
 import type { InjectionToken } from 'tsyringe'
-import type { ${Pascal} } from './${Pascal}.entity.js'
+import type { ${Pascal} } from './${Pascal}.entity'
 
 export type ${Pascal}Repository = Repository<${Pascal}>
 
@@ -75,10 +75,10 @@ export type Update${Pascal}Dto = z.infer<typeof Update${Pascal}Schema>
 
   const appService = `import { randomUUID } from 'node:crypto'
 import { inject, injectable } from 'tsyringe'
-import type { ${Pascal}Repository } from '../domain/${Pascal}.repository.js'
-import { ${Pascal}RepositoryToken } from '../domain/${Pascal}.repository.js'
-import { ${Pascal}, type ${Pascal}Props } from '../domain/${Pascal}.entity.js'
-import type { Create${Pascal}Dto, Update${Pascal}Dto } from '../${Pascal}.dto.js'
+import type { ${Pascal}Repository } from '../domain/${Pascal}.repository'
+import { ${Pascal}RepositoryToken } from '../domain/${Pascal}.repository'
+import { ${Pascal}, type ${Pascal}Props } from '../domain/${Pascal}.entity'
+import type { Create${Pascal}Dto, Update${Pascal}Dto } from '../${Pascal}.dto'
 
 @injectable()
 export class ${Pascal}AppService {
@@ -124,7 +124,7 @@ export class ${Pascal}AppService {
 
   const controller = `import 'reflect-metadata'
 import type { Request, Response } from 'express'
-import { inject } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 import {
   BaseController,
   Body,
@@ -136,11 +136,12 @@ import {
   Put,
 } from '@banana-universe/bananajs'
 import { z } from 'zod'
-import { ${Pascal}AppService } from './application/${Pascal}.service.js'
-import { Create${Pascal}Schema, Update${Pascal}Schema } from './${Pascal}.dto.js'
+import { ${Pascal}AppService } from './application/${Pascal}.service'
+import { Create${Pascal}Schema, Update${Pascal}Schema } from './${Pascal}.dto'
 
 const ${kebab}IdParams = z.object({ id: z.string().min(1) })
 
+@injectable()
 @Controller('${kebab}')
 export class ${Pascal}Controller extends BaseController {
   constructor(@inject(${Pascal}AppService) private readonly app: ${Pascal}AppService) {
@@ -193,10 +194,10 @@ export class ${Pascal}Controller extends BaseController {
   const repoClass = infra.repoClassName
 
   const indexTs = `import { createModule } from '@banana-universe/bananajs'
-import { ${Pascal}Controller } from './${Pascal}.controller.js'
-import { ${Pascal}AppService } from './application/${Pascal}.service.js'
-import { ${Pascal}RepositoryToken } from './domain/${Pascal}.repository.js'
-import { ${repoClass} } from './infrastructure/${infra.repoFileBase}.js'
+import { ${Pascal}Controller } from './${Pascal}.controller'
+import { ${Pascal}AppService } from './application/${Pascal}.service'
+import { ${Pascal}RepositoryToken } from './domain/${Pascal}.repository'
+import { ${repoClass} } from './infrastructure/${infra.repoFileBase}'
 
 export const ${modExport} = createModule({
   id: '${kebab}',
@@ -319,8 +320,8 @@ function typeormRepo(Pascal: string, kebab: string): string {
   return `import type { DataSource } from 'typeorm'
 import { inject, injectable } from 'tsyringe'
 import { TypeOrmRepositoryAdapter } from '@banana-universe/plugin-typeorm'
-import { ${Pascal} } from '../domain/${Pascal}.entity.js'
-import { ${Pascal}OrmEntity } from './${Pascal}.orm-entity.js'
+import { ${Pascal} } from '../domain/${Pascal}.entity'
+import { ${Pascal}OrmEntity } from './${Pascal}.orm-entity'
 
 @injectable()
 export class ${Pascal}TypeOrmRepository extends TypeOrmRepositoryAdapter<${Pascal}, ${Pascal}OrmEntity> {
@@ -379,8 +380,8 @@ function mongooseRepo(Pascal: string, kebab: string): string {
   return `import type { Connection } from 'mongoose'
 import { inject, injectable } from 'tsyringe'
 import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
-import { ${Pascal} } from '../domain/${Pascal}.entity.js'
-import { get${Pascal}Model, type ${Pascal}Doc } from './${Pascal}.mongoose-model.js'
+import { ${Pascal} } from '../domain/${Pascal}.entity'
+import { get${Pascal}Model, type ${Pascal}Doc } from './${Pascal}.mongoose-model'
 
 @injectable()
 export class ${Pascal}MongooseRepository extends MongooseRepositoryAdapter<${Pascal}, ${Pascal}Doc> {
@@ -409,8 +410,8 @@ export class ${Pascal}MongooseRepository extends MongooseRepositoryAdapter<${Pas
 
 function inMemoryRepo(Pascal: string, _kebab: string): string {
   return `import type { FindCriteria } from '@banana-universe/ddd'
-import type { ${Pascal}Repository } from '../domain/${Pascal}.repository.js'
-import { ${Pascal} } from '../domain/${Pascal}.entity.js'
+import type { ${Pascal}Repository } from '../domain/${Pascal}.repository'
+import { ${Pascal} } from '../domain/${Pascal}.entity'
 import { injectable } from 'tsyringe'
 
 @injectable()

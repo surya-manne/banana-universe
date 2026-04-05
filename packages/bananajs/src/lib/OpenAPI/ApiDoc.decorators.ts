@@ -17,6 +17,8 @@ export interface ApiBodyOptions {
 export interface ApiResponseOptions {
   status: number
   description: string
+  /** Optional Zod schema for the response body — auto-included in the generated OpenAPI spec. */
+  schema?: ZodType
   type?: new (...args: unknown[]) => unknown
 }
 
