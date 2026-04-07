@@ -1,0 +1,38 @@
+{
+  "name": "@banana-universe/ai-provider-core",
+  "version": "0.1.0",
+  "description": "Shared LlmProvider interface contract for BananaJS — consumed by bananajs-cli and plugin-ai.",
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/surya-manne/banana-universe.git"
+  },
+  "homepage": "https://github.com/surya-manne/banana-universe/tree/main/packages/ai-provider-core",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.2.2"
+  }
+}

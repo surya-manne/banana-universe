@@ -7,12 +7,15 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
     "types": ["node"],
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022"]
   },
   "include": ["src/**/*.ts"],
   "references": [
     {
       "path": "../ai-provider-core/tsconfig.lib.json"
+    },
+    {
+      "path": "../bananajs/tsconfig.lib.json"
     }
   ]
 }

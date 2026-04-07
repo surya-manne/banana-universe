@@ -1,9 +1,3 @@
-export interface LlmGenerateOptions {
-  model?: string
-  temperature?: number
-  system?: string
-}
-
-export interface LlmProvider {
-  generate(prompt: string, options?: LlmGenerateOptions): Promise<string>
-}
+// Re-export from the shared publishable contract so consumers of bananajs-cli
+// can also import LlmProvider from @banana-universe/ai-provider-core directly.
+export type { LlmGenerateOptions, LlmProvider } from '@banana-universe/ai-provider-core'

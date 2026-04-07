@@ -1,0 +1,50 @@
+{
+  "name": "@banana-universe/plugin-ai",
+  "version": "0.1.0",
+  "description": "BananaAiPlugin — registers a configured LlmProvider on the tsyringe root container for AI-powered BananaJS handlers.",
+  "author": "Surya Prakash Manne",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/surya-manne/banana-universe.git"
+  },
+  "homepage": "https://github.com/surya-manne/banana-universe/tree/main/packages/plugin-ai",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit"
+  },
+  "dependencies": {
+    "@banana-universe/ai-provider-core": "*",
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "@banana-universe/bananajs": ">=0.6.0"
+  },
+  "peerDependenciesMeta": {
+    "@banana-universe/bananajs": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@banana-universe/bananajs": "*",
+    "express": "^4.21.2",
+    "reflect-metadata": "^0.2.2",
+    "typescript": "~5.2.2"
+  }
+}

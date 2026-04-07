@@ -74,6 +74,7 @@ export default withMermaid(
         { text: 'Integrations', link: '/integrations/typeorm', activeMatch: '/integrations/' },
         { text: 'Plugins', link: '/plugins/overview', activeMatch: '/plugins/' },
         { text: 'Tooling', link: '/tooling/cli', activeMatch: '/tooling/' },
+        { text: 'MCP', link: '/mcp/', activeMatch: '/mcp/' },
       ],
 
       sidebar: {
@@ -188,6 +189,19 @@ export default withMermaid(
               { text: 'Soft architecture', link: '/recipes/#soft-architecture-what-stays-stable' },
               { text: 'Conventions', link: '/recipes/#conventions-shared-across-recipes' },
               { text: 'Catalog', link: '/recipes/#catalog' },
+            ],
+          },
+        ],
+
+        '/mcp/': [
+          {
+            text: 'MCP Server',
+            items: [
+              { text: 'Overview', link: '/mcp/' },
+              { text: 'Exposed tools', link: '/mcp/#exposed-tools' },
+              { text: 'Setup per IDE', link: '/mcp/#setup-per-ide' },
+              { text: 'Use cases', link: '/mcp/#use-cases' },
+              { text: 'Security model', link: '/mcp/#security-model' },
             ],
           },
         ],

@@ -18,7 +18,15 @@ import { runAiTestScaffold } from './lib/ai-test-scaffold.js'
 import { runAiExplain } from './lib/ai-explain.js'
 import { aiGenerateModule } from './lib/ai-module.js'
 import { aiSetup } from './lib/ai-setup.js'
+import { runAiContext, type AiContextFormat } from './lib/ai-context.js'
+import { runAiMock } from './lib/ai-mock.js'
+import { runAiOpenApiEnrich } from './lib/ai-openapi-enrich.js'
+import { runAiDebug } from './lib/ai-debug.js'
+import { runAiPerf } from './lib/ai-perf.js'
+import { runAiUpgrade } from './lib/ai-upgrade.js'
+import { runAiChangelog } from './lib/ai-changelog.js'
 import { loadEnvFile } from './lib/llm/env-loader.js'
+import { startMcpServer } from './lib/mcp-server.js'
 import { writeScaffoldedApp } from './lib/create-app.js'
 import { APP_PRESETS, getPresetById, type AppPreset } from './lib/create-app-presets.js'
 import { PRESET_ORM_HELP, presetIdToOrm } from './lib/preset-orm.js'
@@ -511,9 +519,247 @@ aiCmd
     })
   })
 
+aiCmd
+  .command('context')
+  .alias('ctx')
+  .description(
+    'Generate project-tailored AI context files (CLAUDE.md, .cursor/rules/bananajs.mdc, copilot-instructions.md, AGENTS.md)',
+  )
+  .option(
+    '--format <fmt>',
+    'claude | cursor | copilot | agents | all (default: all)',
+    'all',
+  )
+  .option('--out <dir>', 'Output directory (default: project root)')
+  .option('--dry-run', 'Preview files without writing')
+  .action((opts: { format?: string; out?: string; dryRun?: boolean }) => {
+    const validFormats = ['claude', 'cursor', 'copilot', 'agents', 'all']
+    const fmt = opts.format ?? 'all'
+    if (!validFormats.includes(fmt)) {
+      console.error(chalk.red(`Invalid --format "${fmt}". Use: ${validFormats.join(' | ')}`))
+      process.exit(1)
+    }
+    runAiContext({
+      format: fmt as AiContextFormat,
+      out: opts.out,
+      dryRun: opts.dryRun ?? false,
+    }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('mock')
+  .description('Generate TypeScript fixture factories and JSON samples from Zod schemas')
+  .option('--schema <file>', 'Path to a TypeScript file containing a Zod schema')
+  .option('--module <path>', 'Directory — generates fixtures for all Zod schema files found')
+  .option('--out <dir>', 'Output directory for __fixtures__ folder (default: alongside input)')
+  .option('--format <fmt>', 'ts | json (default: ts)', 'ts')
+  .option('--dry-run', 'Preview output without writing')
+  .action((opts: { schema?: string; module?: string; out?: string; format?: string; dryRun?: boolean }) => {
+    const fmt = opts.format ?? 'ts'
+    if (fmt !== 'ts' && fmt !== 'json') {
+      console.error(chalk.red(`Invalid --format "${fmt}". Use: ts | json`))
+      process.exit(1)
+    }
+    runAiMock({
+      schema: opts.schema,
+      module: opts.module,
+      out: opts.out,
+      format: fmt as 'ts' | 'json',
+      dryRun: opts.dryRun ?? false,
+    }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+const aiOpenapiCmd = aiCmd.command('openapi').description('AI-powered OpenAPI tools')
+
+aiOpenapiCmd
+  .command('enrich')
+  .description(
+    'Enrich an OpenAPI spec with missing summaries, descriptions, examples, and tags using AI',
+  )
+  .requiredOption('--in <spec>', 'Input OpenAPI JSON file (from `bananajs openapi export`)')
+  .requiredOption('--out <spec>', 'Output OpenAPI JSON file (must differ from --in)')
+  .option('--dry-run', 'Show diff of proposed changes without writing')
+  .option('--skip-examples', 'Do not enrich response descriptions/examples')
+  .option('--skip-tags', 'Do not add missing tags')
+  .action(
+    (opts: { in: string; out: string; dryRun?: boolean; skipExamples?: boolean; skipTags?: boolean }) => {
+      runAiOpenApiEnrich({
+        in: opts.in,
+        out: opts.out,
+        dryRun: opts.dryRun ?? false,
+        skipExamples: opts.skipExamples ?? false,
+        skipTags: opts.skipTags ?? false,
+      }).catch((err: unknown) => {
+        console.error('Unexpected error:', err)
+        process.exit(1)
+      })
+    },
+  )
+
+aiCmd
+  .command('debug [input]')
+  .description(
+    'Analyze a BananaJS runtime error or stack trace; receive root-cause explanation and fix. Accepts stdin, --input <file>, or inline text.',
+  )
+  .option('--input <path>', 'Path to file containing the stack trace (alternative to stdin / positional)')
+  .option('--file <path>', 'Optional source file to attach for additional context')
+  .option('--format <fmt>', 'text | json (default: text)', 'text')
+  .option('--debug', 'Print raw LLM output')
+  .action(function (this: Command, inputArg: string | undefined) {
+    const opts = this.opts() as { input?: string; file?: string; format?: string; debug?: boolean }
+    runAiDebug({
+      input: opts.input ?? inputArg,
+      file: opts.file,
+      format: opts.format === 'json' ? 'json' : 'text',
+      debug: opts.debug ?? false,
+    }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('perf')
+  .description(
+    'Analyze controller/service files for performance antipatterns (N+1, missing cache, unbounded queries). Static-first — most checks require no LLM.',
+  )
+  .option('--file <path>', 'Path to a TypeScript file to analyze')
+  .option('--module <path>', 'Directory or bare module name (e.g. orders) — all .ts files')
+  .option('--format <fmt>', 'text | json (default: text)', 'text')
+  .option('--debug', 'Print raw LLM output')
+  .action((opts: { file?: string; module?: string; format?: string; debug?: boolean }) => {
+    if (!opts.file && !opts.module) {
+      console.error(chalk.red('Pass --file <path> or --module <name>.'))
+      process.exit(1)
+    }
+    runAiPerf({
+      file: opts.file,
+      module: opts.module,
+      format: opts.format === 'json' ? 'json' : 'text',
+      debug: opts.debug ?? false,
+    }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('upgrade')
+  .description(
+    'Scan codebase for deprecated BananaJS patterns and generate migration hints or patch files.',
+  )
+  .option('--to <version>', 'Target BananaJS version (e.g. 0.6.0); default: all patterns')
+  .option('--apply', 'Apply safe mechanical fixes in-place (requires explicit flag; ambiguous changes emit .patch only)')
+  .option('--out <dir>', 'Output directory for .patch files')
+  .option('--dry-run', 'Print findings without modifying any file')
+  .option('--debug', 'Print raw LLM output for ambiguous findings')
+  .action((opts: { to?: string; apply?: boolean; out?: string; dryRun?: boolean; debug?: boolean }) => {
+    runAiUpgrade({
+      to: opts.to,
+      apply: opts.apply ?? false,
+      out: opts.out,
+      dryRun: opts.dryRun ?? false,
+      debug: opts.debug ?? false,
+    }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('changelog')
+  .description(
+    'Generate a structured developer changelog from git commits (optionally enriched with OpenAPI spec diff).',
+  )
+  .option('--from <ref>', 'Start git ref (tag, commit, branch). Default: previous tag.')
+  .option('--to <ref>', 'End git ref (default: HEAD)')
+  .option('--before <spec>', 'OpenAPI JSON spec snapshot before the range')
+  .option('--after <spec>', 'OpenAPI JSON spec snapshot after the range')
+  .option('--format <fmt>', 'md | json (default: md)', 'md')
+  .option('--out <file>', 'Output file path. Default: stdout.')
+  .option('--debug', 'Print raw LLM output')
+  .action((opts: { from?: string; to?: string; before?: string; after?: string; format?: string; out?: string; debug?: boolean }) => {
+    const fmt = opts.format === 'json' ? 'json' : 'md'
+    runAiChangelog({
+      from: opts.from,
+      to: opts.to,
+      before: opts.before,
+      after: opts.after,
+      format: fmt,
+      out: opts.out,
+      debug: opts.debug ?? false,
+    }).catch((err: unknown) => {
+      console.error('Unexpected error:', err)
+      process.exit(1)
+    })
+  })
+
+aiCmd
+  .command('contract')
+  .description(
+    'Generate Pact-compatible consumer contract tests from an OpenAPI spec. Accepts --fixtures from `bananajs ai mock --format json` to skip redundant LLM calls.',
+  )
+  .requiredOption('--spec <openapi.json>', 'Input OpenAPI JSON file (from `bananajs openapi export`)')
+  .requiredOption('--consumer <name>', 'Consumer name for the Pact contract (e.g. "frontend")')
+  .requiredOption('--provider <name>', 'Provider name for the Pact contract (e.g. "api")')
+  .option('--fixtures <dir>', 'Directory containing JSON fixture files from `bananajs ai mock --format json`; skips LLM payload generation')
+  .option('--out <dir>', 'Output directory for generated test files (default: src/__tests__/contract)')
+  .option('--dry-run', 'Preview generated test files without writing')
+  .option('--debug', 'Print raw LLM output')
+  .action(
+    (opts: {
+      spec: string
+      consumer: string
+      provider: string
+      fixtures?: string
+      out?: string
+      dryRun?: boolean
+      debug?: boolean
+    }) => {
+      import('./lib/ai-contract.js')
+        .then(({ runAiContract }) =>
+          runAiContract({
+            spec: opts.spec,
+            consumer: opts.consumer,
+            provider: opts.provider,
+            fixtures: opts.fixtures,
+            out: opts.out,
+            dryRun: opts.dryRun ?? false,
+            debug: opts.debug ?? false,
+          }),
+        )
+        .catch((err: unknown) => {
+          console.error('Unexpected error:', err)
+          process.exit(1)
+        })
+    },
+  )
+
+// ─── MCP server ──────────────────────────────────────────────────────────────
+
+const mcpCmd = program.command('mcp').description('Model Context Protocol (MCP) tools server')
+
+mcpCmd
+  .command('start')
+  .description(
+    'Start the BananaJS MCP server on stdio. Exposes bananajs_routes, bananajs_explain, bananajs_review, bananajs_generate, bananajs_mock, bananajs_debug, bananajs_perf, bananajs_upgrade as MCP tools.',
+  )
+  .action(() => {
+    startMcpServer().catch((e: unknown) => {
+      process.stderr.write(`[bananajs-mcp] Fatal: ${String(e)}\n`)
+      process.exit(1)
+    })
+  })
+
 // Top-level -h/--help and -V/--version: handle before parse so they always work with subcommand-only CLIs
 // (some Commander / bundling setups treat these as unknown command names).
-const [, , ...argv] = process.argv
+const argv = process.argv.slice(2)
 if (argv.length === 1) {
   const only = argv[0]
   if (only === '-h' || only === '--help') {

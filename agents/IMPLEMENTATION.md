@@ -6,6 +6,32 @@ Current implementation state. Very brief — references other docs. The only cha
 
 ## Modules
 
+### packages/ai-provider-core v0.1.0 + packages/plugin-ai v0.1.0 + packages/bananajs-cli v0.6.0 [AIRoadmapV2 Horizon C — ai-provider-core, MCP server, BananaAiPlugin, ai contract]
+
+- **`packages/ai-provider-core`** — shared, publishable LLM contract: `LlmProvider` interface (`generate(prompt, options?): Promise<string>`), `LlmGenerateOptions`, `AI_PROVIDER_TOKEN = 'AiProvider'`; zero deps except `tslib`; `src/index.ts`
+- **`packages/bananajs-cli` `LlmProvider.ts` re-export** — `src/lib/llm/LlmProvider.ts` is now a thin `export type { ... } from '@banana-universe/ai-provider-core'` shim; CLI `package.json` gains `@banana-universe/ai-provider-core: "*"` dep
+- **`packages/plugin-ai`** — `BananaAiPlugin(options: { provider: LlmProvider }): BananaPlugin`; registers `options.provider` on `ctx.container` under `AI_PROVIDER_TOKEN`; `onShutdown` no-op; re-exports `AI_PROVIDER_TOKEN`, `LlmProvider`, `LlmGenerateOptions` from core; `README.md` with security/prompt-injection guidance; `src/index.ts`
+- **`bananajs mcp start`** (`src/lib/mcp-server.ts`) — stdio MCP JSON-RPC 2.0 server with Content-Length framing (`startMcpServer()`); 8 tools: `bananajs_routes`, `bananajs_explain`, `bananajs_review`, `bananajs_generate`, `bananajs_mock`, `bananajs_debug`, `bananajs_perf`, `bananajs_upgrade`; tools execute by spawning `node CLI_BIN <args>`; `bananajs_upgrade` always appends `--dry-run`
+- **`bananajs ai contract`** (`src/lib/ai-contract.ts`) — reads OpenAPI JSON spec; builds one `PactInteraction` per path/method (fixture → schema → LLM priority); emits `@pact-foundation/pact` consumer test file to `src/__tests__/contract/<consumer>-<provider>.contract.test.ts`; `@pact-foundation/pact` is optional peer dep; `--dry-run` for preview
+- **Tests**: `src/__tests__/ai-contract.test.ts` (dry-run happy path, export checks)
+- **Docs-site updated**: `docs-site/tooling/ai-commands.md` (Horizon C reference section), `docs-site/ai/index.md` (arc step 7, Horizon C table row, scenarios 14-16, command grid cards for `ai contract` + `mcp start`)
+
+### packages/bananajs-cli v0.5.0 [AIRoadmapV2 Horizon B — debug, perf, upgrade, changelog]
+
+- **`bananajs ai debug [input]`** (`--input`, `--file`, `--format text|json`, `--debug`) — analyzes a BananaJS runtime stack trace via stdin/file/string; builds module tree from `src/modules/`; returns `AiDebugJson` (`schemaVersion: "1.0.0"`) with `rootCause`, `location.file`, `fix`, `severity`; `src/lib/ai-debug.ts`, `src/lib/ai-debug-schema.ts`
+- **`bananajs ai perf`** (`--file`, `--module`, `--format text|json`, `--debug`) — static-first performance scan (6 regex patterns: N+1 in forEach/for-of, unbounded `findAll()`, missing `@Cache`, Mongoose without `.lean()`, `JSON.stringify/parse`) + optional LLM enrichment; output: `AiReviewJson`; static results always returned even without LLM; `src/lib/ai-perf.ts`
+- **`bananajs ai upgrade`** (`--to <version>`, `--apply`, `--out <dir>`, `--dry-run`, `--debug`) — scans `src/` for 11 deprecated patterns from `docs/MIGRATION.md`; `--apply` for 3 safe mechanical transforms (controller/route slash removal, `@ZodBody`→`@Body`); `--out` writes `.patch` files; LLM hints for manual findings; `src/lib/ai-upgrade.ts`, `src/lib/ai-upgrade-manifest.ts`
+- **`bananajs ai changelog`** (`--from`, `--to`, `--before`, `--after`, `--format md|json`, `--out`) — structured changelog from `git log --oneline --no-merges`; optional OpenAPI spec diff for breaking-change detection; `--format json` emits `ChangelogJson`; `src/lib/ai-changelog.ts`
+- **Tests**: `src/__tests__/ai-debug.test.ts`, `src/__tests__/ai-perf.test.ts`, `src/__tests__/ai-upgrade.test.ts`, `src/__tests__/ai-changelog.test.ts`
+- **Docs-site updated**: `docs-site/tooling/ai-commands.md` (Horizon B command docs + alias table rows), `docs-site/ai/index.md` (Horizon B arc step 6, scenarios 11-13, command grid Horizon B cards)
+
+### packages/bananajs-cli v0.4.0 [AIRoadmapV2 Horizon A — context, mock, openapi enrich]
+
+- **`bananajs ai context`** (`--format claude|cursor|copilot|agents|all`, `--out`, `--dry-run`) — generates `CLAUDE.md`, `.cursor/rules/bananajs.mdc`, `.cursorrules`, `.github/copilot-instructions.md`, `AGENTS.md` from `.bananarc.json` + static module scan; zero LLM calls; `src/lib/ai-context.ts`
+- **`bananajs ai mock`** (`--schema`, `--module`, `--out`, `--format ts|json`, `--dry-run`) — generates `__fixtures__/*.fixtures.ts` (or `.fixture.json`) from Zod schema files; faker-aware with hardcoded literal fallback; `src/lib/ai-mock.ts`
+- **`bananajs ai openapi enrich`** (`--in`, `--out`, `--dry-run`, `--skip-examples`, `--skip-tags`) — LLM-fills missing summaries, descriptions, tags, param/response descriptions in an OpenAPI JSON spec; safety: `--out` required, never overwrites `--in`, adds `x-enriched-by` extension; `src/lib/ai-openapi-enrich.ts`
+- **Docs-site updated**: `docs-site/tooling/ai-commands.md` (V2 command docs + alias table), `docs-site/ai/index.md` (arc step 5, scenarios 8-10, command grid V2 cards)
+
 ### packages/bananajs v0.6.0 [Breaking — tsyringe, modular `createModule`]
 
 - **DI**: **Awilix removed** — **`tsyringe`** only (`AppContext.container` is `DependencyContainer`); use **`injectable` / `inject`** (re-exported from core) and **`providers`** in **`defineBananaAppOptions`**

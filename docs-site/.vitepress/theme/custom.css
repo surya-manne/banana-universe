@@ -405,25 +405,40 @@
   border-bottom-color: rgba(253, 185, 19, 0.5);
 }
 
-/* ──── AI: 4-step workflow strip ────────────────────────────────── */
+/* ──── AI: workflow step grid ──────────────────────────────────── */
 
 .ai-steps {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
   margin: 1.5rem 0 2rem;
-  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .ai-steps { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .ai-steps { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 380px) {
+  .ai-steps { grid-template-columns: 1fr; }
 }
 
 .ai-step {
-  flex: 1;
-  min-width: 130px;
   background: rgba(15, 36, 64, 0.75);
   border: 1px solid rgba(253, 185, 19, 0.14);
   border-top: 3px solid var(--vp-c-brand-1);
   border-radius: 0 0 10px 10px;
   padding: 1rem 0.875rem 0.875rem;
   text-align: center;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ai-step:hover {
+  border-color: rgba(253, 185, 19, 0.35);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
 }
 
 .step-badge {
@@ -442,7 +457,7 @@
 
 .step-cmd {
   display: block;
-  font-size: 0.83rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #7dccd8;
   padding: 0.2rem 0.5rem;
@@ -451,6 +466,7 @@
   margin: 0 auto 0.5rem;
   width: fit-content;
   font-family: var(--vp-font-family-mono);
+  word-break: break-word;
 }
 
 .ai-step p {
@@ -460,16 +476,173 @@
   margin: 0;
 }
 
-.step-arrow {
-  align-self: center;
-  color: rgba(253, 185, 19, 0.35);
-  font-size: 1.1rem;
-  flex-shrink: 0;
-  padding-bottom: 1.25rem;
+/* kept for backwards compat — not rendered in markdown anymore */
+.step-arrow { display: none; }
+
+/* Full-width step (e.g. mcp start) */
+.ai-step.ai-step--full {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  border-top-color: #7dccd8;
+  border-top-width: 3px;
 }
 
-@media (max-width: 640px) {
-  .step-arrow { display: none; }
+/* Clickable full-width step */
+.ai-step.ai-step--link {
+  text-decoration: none;
+  cursor: pointer;
+  color: inherit;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.ai-step.ai-step--link:hover {
+  background: rgba(125, 204, 216, 0.08);
+  border-color: rgba(125, 204, 216, 0.45);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+}
+
+.step-link-hint {
+  margin-left: 0.4rem;
+  font-size: 0.78rem;
+  color: rgba(125, 204, 216, 0.65);
+  white-space: nowrap;
+}
+
+/* Collapsible scenario card */
+.ai-scenario.ai-scenario--collapsible {
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Compact collapsed padding */
+.ai-scenario.ai-scenario--collapsible:not([open]) {
+  padding: 0.875rem 1.25rem;
+  border-left: 3px solid rgba(253, 185, 19, 0.25);
+  border-radius: 0 10px 10px 0;
+}
+
+.ai-scenario.ai-scenario--collapsible[open] {
+  border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 0 10px 10px 0;
+}
+
+.ai-scenario.ai-scenario--collapsible > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--vp-c-text-1);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+  list-style: none;
+  outline: none;
+}
+
+.ai-scenario.ai-scenario--collapsible > summary strong {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.ai-scenario.ai-scenario--collapsible:hover > summary strong,
+.ai-scenario.ai-scenario--collapsible[open] > summary strong {
+  color: #fff;
+}
+
+/* Left chevron ▸ */
+.ai-scenario.ai-scenario--collapsible > summary::before {
+  content: '▸';
+  font-size: 0.7rem;
+  color: var(--vp-c-brand-1);
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.ai-scenario.ai-scenario--collapsible[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* Right + / × toggle icon */
+.ai-scenario.ai-scenario--collapsible > summary::after {
+  content: '+';
+  margin-left: auto;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--vp-c-brand-1);
+  font-weight: 300;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ai-scenario.ai-scenario--collapsible[open] > summary::after {
+  content: '×';
+  font-size: 1.15rem;
+  font-weight: 400;
+  opacity: 1;
+}
+
+.ai-scenario.ai-scenario--collapsible[open] > summary {
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(253, 185, 19, 0.15);
+}
+
+.ai-scenario.ai-scenario--collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Tool tag chip inside summary */
+.uc-tag {
+  font-size: 0.69rem;
+  font-family: var(--vp-font-family-mono);
+  color: var(--vp-c-brand-1);
+  background: rgba(253, 185, 19, 0.08);
+  border: 1px solid rgba(253, 185, 19, 0.2);
+  border-radius: 4px;
+  padding: 0.1em 0.45em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+/* MCP use cases — compact stacked list */
+.mcp-use-cases {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.mcp-use-cases .ai-scenario {
+  margin: 0;
+}
+
+.ai-step.ai-step--full .step-badge {
+  flex-shrink: 0;
+  margin: 0;
+  background: #7dccd8;
+}
+
+.ai-step.ai-step--full .step-cmd {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7dccd8;
+  background: rgba(125, 204, 216, 0.1);
+}
+
+.ai-step.ai-step--full p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.55;
 }
 
 /* ──── AI: guided example scenario cards ────────────────────────── */

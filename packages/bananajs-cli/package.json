@@ -34,6 +34,7 @@
     "test": "tsc -p tsconfig.lib.json && node --test dist/__tests__/**/*.js"
   },
   "dependencies": {
+    "@banana-universe/ai-provider-core": "*",
     "@banana-universe/bananajs": "*",
     "chalk": "4.1.2",
     "commander": "^7.2.0",
