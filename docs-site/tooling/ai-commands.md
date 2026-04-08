@@ -409,9 +409,31 @@ bjs ai changelog --format json --out changelog.json
 
 ---
 
+## PRPAV pipeline
+
+Every `bjs ai` command runs through the same five-stage pipeline. Understanding the stages makes `--debug` output and error messages easier to read.
+
+| Stage | What happens |
+| --- | --- |
+| **Prepare** | Load `.bananarc.json`, resolve the LLM provider, validate that required inputs (files, specs, git refs, flags) exist. Fails fast — nothing else runs if inputs are missing. |
+| **Research** | Read source files, scan for patterns, load OpenAPI specs, collect git log, load schemas. All local I/O; no LLM calls yet. Static checks in `ai perf` run here. |
+| **Plan** | Build LLM prompts and determine operation targets. No network I/O. |
+| **Act** | Execute LLM calls. Automatically skipped for `ai wire` when `--llm` is not passed — so `bjs ai wire` always produces output even without a configured model. |
+| **Validate** | Write files, apply patches, emit results to stdout. `--dry-run` short-circuits here — everything up to and including Act ran, but nothing lands on disk. |
+
+When a stage fails, the error message includes the stage name:
+
+```
+ai perf failed [research]: Cannot read file: src/modules/orders/order.service.ts
+ai contract failed [act]: Ollama HTTP 404: model 'llama3.2' not found
+ai upgrade failed [prepare]: No bananarc.json found — run `bjs ai setup` first
+```
+
+Pass **`--debug`** to any LLM command to log per-stage timings and raw LLM output to stderr.
+
 ## Implementation note
 
-Source lives in **`packages/bananajs-cli`** (`ai.ts`, `ai-module.ts`, `ai-review-run.ts`, `ai-context.ts`, `ai-mock.ts`, `ai-openapi-enrich.ts`, `ai-debug.ts`, `ai-debug-schema.ts`, `ai-perf.ts`, `ai-upgrade.ts`, `ai-upgrade-manifest.ts`, `ai-changelog.ts`, `ai-contract.ts`, `mcp-server.ts`, `lib/llm/`, …). Shared rules: **`lib/llm/bananajs-ai-rules.ts`**.
+Source lives in **`packages/bananajs-cli`** (`ai.ts`, `ai-module.ts`, `ai-review-run.ts`, `ai-context.ts`, `ai-mock.ts`, `ai-openapi-enrich.ts`, `ai-debug.ts`, `ai-debug-schema.ts`, `ai-perf.ts`, `ai-upgrade.ts`, `ai-upgrade-manifest.ts`, `ai-changelog.ts`, `ai-contract.ts`, `mcp-server.ts`, `lib/llm/`, …). Pipeline contract: **`lib/llm/pipeline.ts`**. Shared rules: **`lib/llm/bananajs-ai-rules.ts`**.
 
 ---
 

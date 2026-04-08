@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { loadBananarc } from './llm/bananarc.js'
 import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 export interface AiWireOptions {
   /** Optional second pass: ask LLM for narrative wiring steps (still does not modify files). */
@@ -45,51 +46,71 @@ export async function discoverFeatureModules(
   return out
 }
 
-export async function runAiWire(opts: AiWireOptions): Promise<void> {
-  const cwd = opts.cwd ?? process.cwd()
-  const config = await loadBananarc(cwd)
-  const bootstrapRel = config.project?.bootstrap ?? 'src/bootstrap.ts'
-  const bootstrapAbs = path.join(cwd, bootstrapRel)
-  const srcRoot = path.join(cwd, 'src')
+interface WireCtx extends BaseCtx {
+  cwd: string
+  opts: AiWireOptions
+  bootstrapRel: string
+  bootstrapAbs: string
+  bootstrapText: string
+  projectLog: string
+  discovered: Array<{ name: string; importPath: string }>
+  missing: Array<{ name: string; importPath: string }>
+  llmNarrative: string
+}
 
-  let bootstrapText: string
-  try {
-    bootstrapText = await fs.readFile(bootstrapAbs, 'utf-8')
-  } catch {
-    console.error(chalk.red(`Bootstrap not found: ${bootstrapAbs}`))
-    console.error(chalk.yellow('Set project.bootstrap in .bananarc.json if your entry differs.'))
-    process.exit(1)
-  }
+const wireOperation: LlmOperation<AiWireOptions, WireCtx, void> = {
+  name: 'ai-wire',
+  // LLM pass is optional: act() skipped when opts.llm !== true
+  isProviderOptional: true,
 
-  const discovered = await discoverFeatureModules(srcRoot)
-  if (discovered.length === 0) {
-    console.log(chalk.yellow('No feature modules found under src/modules/*/index.ts'))
-    return
-  }
-
-  const missing = discovered.filter(({ name }) => {
-    const re = new RegExp(`\\b${name}\\b`)
-    return !re.test(bootstrapText)
-  })
-
-  console.log(chalk.bold.blue('\nWire hints (dry-run)\n'))
-  console.log(chalk.gray(`bananarc project: ${JSON.stringify(config.project ?? {}, null, 2)}`))
-  console.log('')
-
-  if (missing.length === 0) {
-    console.log(chalk.green('All discovered modules appear referenced in bootstrap (name match).'))
-    return
-  }
-
-  for (const m of missing) {
-    console.log(
-      chalk.cyan(`Add import: import { ${m.name} } from '${m.importPath}'`),
-    )
-    console.log(chalk.cyan(`Consider adding ${m.name} to defineBananaAppOptions({ modules: [ ... ] })`))
-  }
-
-  if (opts.llm) {
+  // Prepare: load bananarc, resolve paths; providerAvailable = opts.llm === true
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const config = await loadBananarc(cwd)
+    const bootstrapRel = config.project?.bootstrap ?? 'src/bootstrap.ts'
+    const bootstrapAbs = path.join(cwd, bootstrapRel)
     const provider = resolveLlmProvider(config)
+    return {
+      cwd,
+      opts,
+      bootstrapRel,
+      bootstrapAbs,
+      bootstrapText: '',
+      projectLog: JSON.stringify(config.project ?? {}, null, 2),
+      discovered: [],
+      missing: [],
+      llmNarrative: '',
+      provider,
+      providerAvailable: opts.llm === true,
+      debug: false,
+    }
+  },
+
+  // Research: read bootstrap file, discover feature modules
+  async research(ctx) {
+    try {
+      ctx.bootstrapText = await fs.readFile(ctx.bootstrapAbs, 'utf-8')
+    } catch {
+      throw new Error(
+        `Bootstrap not found: ${ctx.bootstrapAbs}\nSet project.bootstrap in .bananarc.json if your entry differs.`,
+      )
+    }
+    const srcRoot = path.join(ctx.cwd, 'src')
+    ctx.discovered = await discoverFeatureModules(srcRoot)
+    return ctx
+  },
+
+  // Plan: identify missing modules
+  async plan(ctx) {
+    ctx.missing = ctx.discovered.filter(({ name }) => {
+      const re = new RegExp(`\\b${name}\\b`)
+      return !re.test(ctx.bootstrapText)
+    })
+    return ctx
+  },
+
+  // Act: LLM wiring narrative (skipped when providerAvailable === false)
+  async act(ctx) {
     const system = appendBananaJsAiRules(
       'You are a BananaJS bootstrap wiring assistant. Given the current bootstrap file and a list of unwired modules, produce ONLY copy-pasteable code edits:\n' +
       '1. The exact import line to add for each missing module (e.g. import { FooModule } from "./modules/foo/index.js")\n' +
@@ -99,17 +120,58 @@ export async function runAiWire(opts: AiWireOptions): Promise<void> {
       '5. If BananaApp.create or defineBananaAppOptions is absent, note the correct insertion point\n' +
       'Be precise and brief — show snippets, not full file rewrites. No markdown fences.',
     )
-    try {
-      const prose = await provider.generate(
-        `Bootstrap file (${bootstrapRel}):\n\n${bootstrapText}\n\nModules missing from bootstrap:\n${missing.map((m) => `- import { ${m.name} } from '${m.importPath}'`).join('\n')}`,
-        { system, temperature: 0.1 },
-      )
-      console.log(chalk.bold('\nLLM wiring notes:\n'))
-      console.log(prose)
-    } catch (e) {
-      console.error(chalk.yellow('Optional LLM wiring pass failed:'), e)
+    ctx.llmNarrative = await ctx.provider.generate(
+      `Bootstrap file (${ctx.bootstrapRel}):\n\n${ctx.bootstrapText}\n\nModules missing from bootstrap:\n${ctx.missing.map((m) => `- import { ${m.name} } from '${m.importPath}'`).join('\n')}`,
+      { system, temperature: 0.1 },
+    )
+    return ctx
+  },
+
+  // Validate: print wire hints and optional LLM narrative
+  async validate(ctx) {
+    if (ctx.discovered.length === 0) {
+      console.log(chalk.yellow('No feature modules found under src/modules/*/index.ts'))
+      return
     }
-  } else {
-    console.log(chalk.gray('\nPass --llm for an optional LLM narrative (still does not edit files).'))
+
+    console.log(chalk.bold.blue('\nWire hints (dry-run)\n'))
+    console.log(chalk.gray(`bananarc project: ${ctx.projectLog}`))
+    console.log('')
+
+    if (ctx.missing.length === 0) {
+      console.log(chalk.green('All discovered modules appear referenced in bootstrap (name match).'))
+      return
+    }
+
+    for (const m of ctx.missing) {
+      console.log(chalk.cyan(`Add import: import { ${m.name} } from '${m.importPath}'`))
+      console.log(
+        chalk.cyan(
+          `Consider adding ${m.name} to defineBananaAppOptions({ modules: [ ... ] })`,
+        ),
+      )
+    }
+
+    if (ctx.llmNarrative) {
+      console.log(chalk.bold('\nLLM wiring notes:\n'))
+      console.log(ctx.llmNarrative)
+    } else {
+      console.log(
+        chalk.gray('\nPass --llm for an optional LLM narrative (still does not edit files).'),
+      )
+    }
+  },
+}
+
+export async function runAiWire(opts: AiWireOptions): Promise<void> {
+  try {
+    await runLlmOperation(wireOperation, opts)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai wire failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('ai wire failed:'), e instanceof Error ? e.message : String(e))
+    }
+    process.exit(1)
   }
 }

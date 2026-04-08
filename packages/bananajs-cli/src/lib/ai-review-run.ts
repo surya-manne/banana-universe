@@ -10,6 +10,7 @@ import {
   type AiReviewJson,
 } from './ai-review-schema.js'
 import { findingsToSarif } from './ai-review-sarif.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 const SEV_ICON: Record<string, string> = { error: '✖', warn: '⚠', info: 'ℹ' }
 const SEV_ORDER: Record<string, number> = { error: 0, warn: 1, info: 2 }
@@ -160,114 +161,168 @@ export async function runAiReview(opts: AiReviewCliOptions): Promise<void> {
     process.exit(1)
   }
 
-  const parts: Array<{ path: string; content: string }> = []
-  for (const f of filesToRead) {
-    let content: string
-    try {
-      content = await fs.readFile(f.abs, 'utf-8')
-    } catch {
-      console.error(chalk.red(`File not found: ${f.abs}`))
-      process.exit(1)
-    }
-    parts.push({ path: f.path, content })
+  // ─── Context ──────────────────────────────────────────────────────────────
+
+  interface ReviewCtx extends BaseCtx {
+    filesToRead: Array<{ path: string; abs: string }>
+    parts: Array<{ path: string; content: string }>
+    systemPrompt: string
+    userPrompt: string
+    rawOutput: string
+    parsedObj: unknown
+    review: AiReviewJson | null
+    opts: AiReviewCliOptions
+    scope: string
   }
 
-  const cwd = process.cwd()
-  const config = await loadBananarc(cwd)
-  const provider = resolveLlmProvider(config)
+  // ─── Operation ────────────────────────────────────────────────────────────
 
-  const userPrompt = buildReviewPayload(parts)
-  const system = buildAiReviewJsonSystem()
+  const reviewOperation: LlmOperation<{ filesToRead: typeof filesToRead }, ReviewCtx, void> = {
+    name: 'ai-review',
 
-  let raw = ''
-  let parsedObj: unknown
-  let lastParseErr: unknown
-
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      raw = await provider.generate(userPrompt, { system, temperature: 0.2 })
-    } catch (err) {
-      console.error(chalk.red('AI review request failed:'), err)
-      return
-    }
-
-    if (opts.debug) {
-      console.error(chalk.gray(`--- LLM raw review output (attempt ${attempt}) ---`))
-      console.error(chalk.gray(raw || '(empty)'))
-      console.error(chalk.gray('--- end ---'))
-    }
-
-    if (!raw.trim()) {
-      console.error(
-        chalk.red(
-          attempt === 1
-            ? 'LLM returned an empty response (attempt 1). Retrying…'
-            : 'LLM returned an empty response on both attempts. Check your API key, model name, or context-window limits.',
-        ),
-      )
-      if (attempt === 1) continue
-      process.exit(1)
-    }
-
-    try {
-      parsedObj = tryParseJsonObject(raw)
-      break
-    } catch (e) {
-      lastParseErr = e
-      if (attempt === 1) {
-        console.error(chalk.yellow('Review JSON parse failed (attempt 1). Retrying…'))
-        continue
+    // Prepare: load config and provider
+    async prepare(o) {
+      const cwd = process.cwd()
+      const config = await loadBananarc(cwd)
+      const provider = resolveLlmProvider(config)
+      return {
+        filesToRead: o.filesToRead,
+        parts: [],
+        systemPrompt: '',
+        userPrompt: '',
+        rawOutput: '',
+        parsedObj: undefined,
+        review: null,
+        opts,
+        scope:
+          o.filesToRead.length === 1
+            ? o.filesToRead[0].path
+            : `${opts.module ?? ''} (${o.filesToRead.length} files)`,
+        provider,
+        providerAvailable: true,
+        debug: opts.debug ?? false,
       }
-    }
+    },
+
+    // Research: read source file content
+    async research(ctx) {
+      for (const f of ctx.filesToRead) {
+        let content: string
+        try {
+          content = await fs.readFile(f.abs, 'utf-8')
+        } catch {
+          throw new Error(`File not found: ${f.abs}`)
+        }
+        ctx.parts.push({ path: f.path, content })
+      }
+      return ctx
+    },
+
+    // Plan: build review payload and system prompt
+    async plan(ctx) {
+      ctx.systemPrompt = buildAiReviewJsonSystem()
+      ctx.userPrompt = buildReviewPayload(ctx.parts)
+      return ctx
+    },
+
+    // Act: LLM call with 2-attempt retry (preserves existing retry semantics)
+    async act(ctx) {
+      let lastParseErr: unknown
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        let raw: string
+        try {
+          raw = await ctx.provider.generate(ctx.userPrompt, {
+            system: ctx.systemPrompt,
+            temperature: 0.2,
+          })
+        } catch (err) {
+          // Non-retryable provider error — surface immediately
+          throw new Error(`AI review request failed: ${err instanceof Error ? err.message : String(err)}`)
+        }
+
+        if (ctx.debug) {
+          process.stderr.write(chalk.gray(`--- LLM raw review output (attempt ${attempt}) ---\n`))
+          process.stderr.write(chalk.gray((raw || '(empty)') + '\n'))
+          process.stderr.write(chalk.gray('--- end ---\n'))
+        }
+
+        if (!raw.trim()) {
+          if (attempt === 1) {
+            console.error(chalk.red('LLM returned an empty response (attempt 1). Retrying…'))
+            continue
+          }
+          throw new Error(
+            'LLM returned an empty response on both attempts. Check your API key, model name, or context-window limits.',
+          )
+        }
+
+        try {
+          ctx.parsedObj = tryParseJsonObject(raw)
+          ctx.rawOutput = raw
+          break
+        } catch (e) {
+          lastParseErr = e
+          if (attempt === 1) {
+            console.error(chalk.yellow('Review JSON parse failed (attempt 1). Retrying…'))
+            continue
+          }
+          throw new Error(
+            `Review output was not valid JSON after 2 attempts.\nParse error: ${String(lastParseErr)}` +
+              (!ctx.debug ? '\nTip: re-run with --debug to see raw LLM output.' : ''),
+          )
+        }
+      }
+      return ctx
+    },
+
+    // Validate: Zod-parse the review schema, render output
+    async validate(ctx) {
+      let review: AiReviewJson
+      try {
+        review = parseAiReviewJson(ctx.parsedObj)
+      } catch (e) {
+        throw new Error(
+          `Review JSON failed schema validation: ${e instanceof Error ? e.message : String(e)}`,
+        )
+      }
+
+      if (ctx.opts.sarif) {
+        const sarif = findingsToSarif({
+          findings: review.findings,
+          toolName: 'bananajs-ai-review',
+          runId: `run-${Date.now()}`,
+        })
+        console.log(JSON.stringify(sarif, null, 2))
+        return
+      }
+
+      if (ctx.opts.format === 'json') {
+        console.log(JSON.stringify(review, null, 2))
+        return
+      }
+
+      renderDiffOutput(review, ctx.scope)
+
+      if (ctx.opts.fix) {
+        console.log(
+          chalk.cyan(
+            '\n[--fix] Safe auto-fix is not applied automatically. Review findings above; ambiguous changes require a manual patch.',
+          ),
+        )
+      }
+    },
   }
 
-  if (parsedObj === undefined) {
-    console.error(chalk.red('Review output was not valid JSON after 2 attempts.'))
-    console.error(chalk.yellow('Raw output (last attempt):'))
-    console.error(raw || chalk.gray('(empty)'))
-    if (!opts.debug) {
-      console.error(chalk.gray('Tip: re-run with --debug to see raw LLM output for each attempt.'))
-    }
-    console.error(chalk.gray('Parse error:'), lastParseErr)
-    process.exit(1)
-  }
+  // ─── Run ──────────────────────────────────────────────────────────────────
 
-  let review: AiReviewJson
   try {
-    review = parseAiReviewJson(parsedObj)
+    await runLlmOperation(reviewOperation, { filesToRead }, opts.debug)
   } catch (e) {
-    console.error(chalk.red('Review JSON failed schema validation:'), e)
-    console.error(chalk.gray(JSON.stringify(parsedObj, null, 2)))
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai review failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('ai review failed:'), e instanceof Error ? e.message : String(e))
+    }
     process.exit(1)
-  }
-
-  if (opts.sarif) {
-    const sarif = findingsToSarif({
-      findings: review.findings,
-      toolName: 'bananajs-ai-review',
-      runId: `run-${Date.now()}`,
-    })
-    console.log(JSON.stringify(sarif, null, 2))
-    return
-  }
-
-  if (opts.format === 'json') {
-    console.log(JSON.stringify(review, null, 2))
-    return
-  }
-
-  const scope =
-    filesToRead.length === 1
-      ? filesToRead[0].path
-      : `${opts.module ?? ''} (${filesToRead.length} files)`
-
-  renderDiffOutput(review, scope)
-
-  if (opts.fix) {
-    console.log(
-      chalk.cyan(
-        '\n[--fix] Safe auto-fix is not applied automatically. Review findings above; ambiguous changes require a manual patch.',
-      ),
-    )
   }
 }

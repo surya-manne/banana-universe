@@ -64,8 +64,21 @@ export function insertIntoModulesArray(source: string, moduleName: string): stri
   const marker = 'modules:'
   const idx = source.indexOf(marker)
   if (idx === -1) return null
+
+  // Detect the indentation of the 'modules:' line so inserted content matches the file.
+  const lineStart = source.lastIndexOf('\n', idx) + 1
+  const baseIndent = source.slice(lineStart, idx).match(/^(\s+)/)?.[1] ?? ''
+  const itemIndent = baseIndent + '  '
+
   const bracketStart = source.indexOf('[', idx)
   if (bracketStart === -1) return null
+
+  // Guard: only patch when '[' follows 'modules:' with optional whitespace only.
+  // Without this, a variable-reference form like `modules: myArray,` would cause the next
+  // '[' in the file (e.g. from `plugins: [...]`) to be patched instead — producing truly
+  // malformed bootstrap content.
+  if (/[^\s]/.test(source.slice(idx + marker.length, bracketStart))) return null
+
   let depth = 0
   let i = bracketStart
   for (; i < source.length; i++) {
@@ -79,11 +92,12 @@ export function insertIntoModulesArray(source: string, moduleName: string): stri
   const inner = source.slice(bracketStart + 1, i)
   const re = new RegExp(`\\b${escapeRegex(moduleName)}\\b`)
   if (re.test(inner)) return source
-  const trimmed = inner.trim()
-  // Strip trailing comma before appending to avoid double-comma (Prettier often writes trailing commas)
-  const trimmedClean = trimmed.replace(/,\s*$/, '')
-  const newInner =
-    trimmedClean.length === 0 ? `\n    ${moduleName}\n  ` : `${trimmedClean},\n    ${moduleName}\n  `
+
+  // Split existing items and reformat with consistent indentation derived from the
+  // 'modules:' line — avoids hardcoded spaces that break when the file uses different indentation.
+  const existing = inner.split(',').map((s) => s.trim()).filter(Boolean)
+  const allItems = [...existing, moduleName]
+  const newInner = `\n${allItems.map((item) => `${itemIndent}${item}`).join(',\n')},\n${baseIndent}`
   return source.slice(0, bracketStart + 1) + newInner + source.slice(i)
 }
 

@@ -12,6 +12,18 @@ import { resolveLlmProvider } from './llm/provider.factory.js'
 import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
 import { ENTITY_EXTRACTION_SYSTEM } from './llm/prompts/extraction.js'
 import {
+  USE_CASE_ANALYSIS_SYSTEM,
+  buildContextAwareExtractionPrompt,
+  buildContextAwareServicePrompt,
+} from './llm/prompts/use-case-analysis.js'
+import {
+  tryParseUseCaseAnalysis,
+  buildAnswersSummary,
+  type UseCaseAnalysis,
+  type UseCaseContext,
+  UseCaseContextSchema,
+} from './llm/use-case.js'
+import {
   tryParseJsonObject,
   validateEntityExtraction,
   type EntityExtraction,
@@ -22,6 +34,7 @@ import { moduleExportName, moduleOutputBase, toKebabCase, toPascalCase } from '.
 import { toCamelCase } from './utils/naming.js'
 import { parseSchema, type ParsedSchema } from './schema-parse.js'
 import { PRESET_ORM_HELP, presetIdToOrm } from './preset-orm.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 export interface AiModuleGenerateOptions {
   /** Natural language module description, or `true` when `--module` is passed with no value (TTY prompts) */
@@ -37,6 +50,17 @@ export interface AiModuleGenerateOptions {
   detailed?: boolean
   debug?: boolean
   cwd?: string
+  /**
+   * When true, run use-case analysis and print the plan JSON to stdout, then exit.
+   * No files are generated. Used by the `bananajs_plan_module` MCP tool.
+   */
+  planOnly?: boolean
+  /**
+   * JSON-serialised `UseCaseContext` produced by `--plan-only` + developer answers.
+   * When provided, the use-case analysis step is skipped and this context is used
+   * directly to drive domain-appropriate code generation.
+   */
+  context?: string
 }
 
 function schemaToExtraction(parsed: ParsedSchema): EntityExtraction {
@@ -105,6 +129,7 @@ async function extractEntityWithLlm(
   debug: boolean,
   explicitName?: string,
   existingEntities?: ExistingEntityContext[],
+  useCaseContext?: UseCaseContext,
 ): Promise<EntityExtraction> {
   let lastErr: unknown
   let rawOut = ''
@@ -126,13 +151,28 @@ async function extractEntityWithLlm(
       `to reference the sibling entity. Each piece of data must live in exactly one place.`
   }
 
-  const prompt =
+  const basePrompt =
     nameHint +
     `Research the domain model for the following module or use-case and produce a complete, production-realistic field list:\n\n` +
     `"${userDescription}"\n\n` +
     `Even if the description is just a name or a brief phrase, apply your domain knowledge to enumerate ALL fields a real implementation would include. ` +
     existingContext +
     `\n\nRespond with JSON only — no markdown, no explanation.`
+
+  // When we have use-case context from the HITL planning step, build a richer, context-aware prompt
+  // that tells the LLM about the actual operations and developer answers instead of assuming CRUD.
+  const prompt = useCaseContext
+    ? nameHint +
+      buildContextAwareExtractionPrompt(
+        userDescription,
+        useCaseContext.analysis.summary,
+        useCaseContext.analysis.operations,
+        buildAnswersSummary(useCaseContext.analysis.questions, useCaseContext.answers),
+      ) +
+      existingContext +
+      `\n\nRespond with JSON only — no markdown, no explanation.`
+    : basePrompt
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       rawOut = await provider.generate(prompt, { system: ENTITY_EXTRACTION_SYSTEM, temperature: 0 })
@@ -147,6 +187,10 @@ async function extractEntityWithLlm(
       result.fields = result.fields.filter((f) => !AUTO_FIELDS.test(f.name))
       // Enforce caller-provided entity name so file names are deterministic
       if (explicitName) result.entityName = toPascalCase(explicitName)
+      // When context overrides entityName from analysis, apply it
+      if (!explicitName && useCaseContext?.analysis.entityName) {
+        result.entityName = toPascalCase(useCaseContext.analysis.entityName)
+      }
       return result
     } catch (e) {
       lastErr = e
@@ -217,6 +261,7 @@ async function applyDetailedPass(
   files: Array<{ relativePath: string; content: string }>,
   debug: boolean,
   orm: OrmChoice,
+  useCaseContext?: UseCaseContext,
 ): Promise<Array<{ relativePath: string; content: string }>> {
   const result: Array<{ relativePath: string; content: string }> = []
   for (const f of files) {
@@ -228,10 +273,18 @@ async function applyDetailedPass(
     }
     const ormGuide = ormMethodGuide(orm)
     try {
-      const refined = await provider.generate(
-        `Implement the stub methods in this file:\n\n${f.content}`,
-        {
-          system: appendBananaJsAiRules(
+      // When we have use-case context, use a domain-appropriate system prompt instead of the
+      // generic CRUD-focused one so the detailed pass generates correct non-CRUD implementations.
+      const systemPrompt = useCaseContext
+        ? appendBananaJsAiRules(
+            buildContextAwareServicePrompt(
+              useCaseContext.analysis.useCase,
+              useCaseContext.analysis.operations,
+              buildAnswersSummary(useCaseContext.analysis.questions, useCaseContext.answers),
+              ormGuide,
+            ),
+          )
+        : appendBananaJsAiRules(
             'You are a BananaJS DDD expert implementing the application service layer of a production module.\n' +
             'Replace every stub / TODO method with realistic, production-quality logic that:\n' +
             `- ${ormGuide}\n` +
@@ -242,9 +295,11 @@ async function applyDetailedPass(
             '- Does not add new imports that are not already in the file or resolvable from @banana-universe/bananajs\n' +
             '- Keeps the class structure, decorators, and exports exactly as-is\n' +
             'Return a single complete valid TypeScript source file. CRITICAL: no markdown fences, no commentary.',
-          ),
-          temperature: 0.2,
-        },
+          )
+
+      const refined = await provider.generate(
+        `Implement the stub methods in this file:\n\n${f.content}`,
+        { system: systemPrompt, temperature: 0.2 },
       )
       let text = refined.trim()
       const fence = text.match(/```(?:typescript|ts)?\s*([\s\S]*?)```/)
@@ -256,6 +311,39 @@ async function applyDetailedPass(
     }
   }
   return result
+}
+
+/**
+ * Run use-case analysis on a natural-language description.
+ * Returns the structured plan; used by `--plan-only` and the `bananajs_plan_module` MCP tool.
+ */
+async function analyzeModuleUseCase(
+  provider: ReturnType<typeof resolveLlmProvider>,
+  description: string,
+  debug: boolean,
+): Promise<UseCaseAnalysis> {
+  let rawOut = ''
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      rawOut = await provider.generate(description, {
+        system: USE_CASE_ANALYSIS_SYSTEM,
+        temperature: 0,
+      })
+      if (debug) {
+        console.log(chalk.gray('--- LLM raw use-case analysis output ---'))
+        console.log(chalk.gray(rawOut))
+        console.log(chalk.gray('--- end ---'))
+      }
+      return tryParseUseCaseAnalysis(rawOut)
+    } catch (e) {
+      if (debug && attempt === 0) {
+        console.log(chalk.yellow(`Use-case analysis parse failed (attempt ${attempt + 1}), retrying…`))
+      }
+      if (attempt === 1) throw e
+    }
+  }
+  // unreachable but satisfies TS control flow
+  throw new Error('Use-case analysis failed.')
 }
 
 /**
@@ -384,100 +472,279 @@ export async function promptAiModuleInputs(
   }
 }
 
-export async function aiGenerateModule(opts: AiModuleGenerateOptions): Promise<void> {
-  opts = await promptAiModuleInputs(opts)
-  const cwd = opts.cwd ?? process.cwd()
-  const config = await loadBananarc(cwd)
-  const defaultOrm = resolveOrm(config.generate?.defaultOrm, 'typeorm')
-  let fallback = defaultOrm
-  if (opts.preset) {
-    const mapped = presetIdToOrm(opts.preset)
-    if (!mapped) {
-      console.error(chalk.red(`Invalid --preset "${opts.preset}". Use: ${PRESET_ORM_HELP}`))
-      process.exit(1)
-    }
-    fallback = mapped
-  }
-  const orm = resolveOrm(opts.orm, fallback)
-  const outBase = path.resolve(cwd, opts.out ?? config.generate?.outDir ?? 'src')
+// ─── Pipeline types ───────────────────────────────────────────────────────────
 
-  // Read existing modules so the LLM can normalise cross-entity relationships
-  const existingEntities = await scanExistingModules(outBase)
+/**
+ * Discriminated result returned by the module pipeline's validate() stage.
+ * aiGenerateModule() inspects status and handles process lifecycle.
+ */
+export type AiModuleResult =
+  | { status: 'plan'; analysis: UseCaseAnalysis }
+  | { status: 'hitl_required'; analysis: UseCaseAnalysis }
+  | { status: 'generated'; extraction: EntityExtraction; fileCount: number }
 
-  let extraction: EntityExtraction
+interface ModuleCtx extends BaseCtx {
+  cwd: string
+  opts: AiModuleGenerateOptions
+  orm: OrmChoice
+  outBase: string
+  existingEntities: ExistingEntityContext[]
+  parsedSchema: ParsedSchema | undefined
+  useCaseContext: UseCaseContext | undefined
+  analysis: UseCaseAnalysis | undefined
+  extraction: EntityExtraction | undefined
+  files: Array<{ relativePath: string; content: string }>
+  needsExternalHitl: boolean
+}
 
-  if (opts.fromSchema) {
-    let content: string
-    try {
-      content = await fs.readFile(opts.fromSchema, 'utf-8')
-    } catch {
-      console.error(chalk.red(`File not found: ${opts.fromSchema}`))
-      process.exit(1)
+// ─── Operation ────────────────────────────────────────────────────────────────
+
+const moduleOperation: LlmOperation<AiModuleGenerateOptions, ModuleCtx, AiModuleResult> = {
+  name: 'ai-module',
+
+  // Prepare: config, ORM, outBase, existingEntities, pre-built context
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const config = await loadBananarc(cwd)
+    const defaultOrm = resolveOrm(config.generate?.defaultOrm, 'typeorm')
+    let fallback = defaultOrm
+    if (opts.preset) {
+      const mapped = presetIdToOrm(opts.preset)
+      if (!mapped) {
+        throw new Error(`Invalid --preset "${opts.preset}". Use: ${PRESET_ORM_HELP}`)
+      }
+      fallback = mapped
     }
-    let parsed: ParsedSchema
-    try {
-      parsed = parseSchema(content, opts.fromSchema)
-    } catch {
-      console.error(chalk.red(`Failed to parse schema: ${opts.fromSchema}`))
-      process.exit(1)
+    const orm = resolveOrm(opts.orm, fallback)
+    const outBase = path.resolve(cwd, opts.out ?? config.generate?.outDir ?? 'src')
+    const existingEntities = await scanExistingModules(outBase)
+
+    let useCaseContext: UseCaseContext | undefined
+    if (opts.context) {
+      try {
+        const raw = JSON.parse(opts.context)
+        useCaseContext = UseCaseContextSchema.parse(raw)
+      } catch (e) {
+        throw new Error(
+          `Invalid --context JSON: ${e instanceof Error ? e.message : String(e)}`,
+        )
+      }
     }
-    extraction = schemaToExtraction(parsed)
-  } else if (typeof opts.module === 'string' && opts.module.trim().length > 0) {
+
     const provider = resolveLlmProvider(config)
-    extraction = await extractEntityWithLlm(
+
+    return {
+      cwd,
+      opts,
+      orm,
+      outBase,
+      existingEntities,
+      parsedSchema: undefined,
+      useCaseContext,
+      analysis: undefined,
+      extraction: undefined,
+      files: [],
+      needsExternalHitl: false,
       provider,
-      opts.module.trim(),
-      opts.debug ?? false,
-      opts.explicitName,
-      existingEntities.length > 0 ? existingEntities : undefined,
-    )
-  } else {
-    console.error(
-      chalk.red(
+      providerAvailable: true,
+      debug: opts.debug ?? false,
+    }
+  },
+
+  // Research: schema-driven path reads and parses the schema file; text-driven validates description
+  async research(ctx) {
+    if (ctx.opts.fromSchema) {
+      let content: string
+      try {
+        content = await fs.readFile(ctx.opts.fromSchema, 'utf-8')
+      } catch {
+        throw new Error(`File not found: ${ctx.opts.fromSchema}`)
+      }
+      try {
+        ctx.parsedSchema = parseSchema(content, ctx.opts.fromSchema)
+      } catch {
+        throw new Error(`Failed to parse schema: ${ctx.opts.fromSchema}`)
+      }
+    } else if (ctx.opts.planOnly) {
+      if (typeof ctx.opts.module !== 'string' || !ctx.opts.module.trim()) {
+        throw new Error('--plan-only requires --module "<description>"')
+      }
+    } else if (!(typeof ctx.opts.module === 'string' && ctx.opts.module.trim().length > 0)) {
+      throw new Error(
         'DDD module generation requires --from-schema <file> or --module "<description>", or run in a TTY for prompts.',
-      ),
-    )
+      )
+    }
+    return ctx
+  },
+
+  // Plan: no-op for module generation (all logic is in act)
+  async plan(ctx) {
+    return ctx
+  },
+
+  // Act: 3 chained LLM calls (use-case analysis → HITL → entity extraction → optional detailed pass)
+  async act(ctx) {
+    // ── plan-only: single LLM call — analyse use case and return early ───────
+    if (ctx.opts.planOnly) {
+      ctx.analysis = await analyzeModuleUseCase(
+        ctx.provider,
+        (ctx.opts.module as string).trim(),
+        ctx.debug,
+      )
+      return ctx
+    }
+
+    // ── schema-driven: no LLM extraction needed ───────────────────────────────
+    if (ctx.parsedSchema) {
+      ctx.extraction = schemaToExtraction(ctx.parsedSchema)
+    } else {
+      // ── text-driven: use-case analysis + optional HITL + entity extraction ──
+      const description = (ctx.opts.module as string).trim()
+
+      if (!ctx.useCaseContext) {
+        console.log(chalk.cyan('Analysing use-case…'))
+        const analysis = await analyzeModuleUseCase(ctx.provider, description, ctx.debug)
+
+        if (analysis.hitlRequired) {
+          if (process.stdin.isTTY) {
+            console.log(chalk.bold('\nUse-case identified:'), chalk.cyan(analysis.summary))
+            console.log(
+              chalk.bold('\nBefore generating code, please answer these questions:'),
+              chalk.gray('(press Enter to accept the default)\n'),
+            )
+            const answers: Record<string, string> = {}
+            for (const q of analysis.questions) {
+              const { answer } = await inquirer.prompt<{ answer: string }>([
+                {
+                  type: 'input',
+                  name: 'answer',
+                  message: q.question,
+                  default: q.default ?? '',
+                },
+              ])
+              answers[q.id] = answer.trim() || (q.default ?? '')
+            }
+            ctx.useCaseContext = { analysis, answers }
+          } else {
+            // Non-TTY (MCP/CI): signal to validate() to return hitl_required
+            ctx.needsExternalHitl = true
+            ctx.analysis = analysis
+            return ctx
+          }
+        } else {
+          ctx.useCaseContext = { analysis, answers: {} }
+        }
+      }
+
+      ctx.extraction = await extractEntityWithLlm(
+        ctx.provider,
+        description,
+        ctx.debug,
+        ctx.opts.explicitName,
+        ctx.existingEntities.length > 0 ? ctx.existingEntities : undefined,
+        ctx.useCaseContext,
+      )
+    }
+
+    // ── Build module file tree ─────────────────────────────────────────────
+    ctx.files = buildDddModuleFromExtraction(ctx.extraction!, ctx.orm)
+
+    // ── Optional detailed pass: flesh out application service bodies ──────
+    if (ctx.opts.detailed) {
+      ctx.files = await applyDetailedPass(
+        ctx.provider,
+        ctx.files,
+        ctx.debug,
+        ctx.orm,
+        ctx.useCaseContext,
+      )
+    }
+
+    return ctx
+  },
+
+  // Validate: return discriminated result; write files and register bootstrap
+  async validate(ctx): Promise<AiModuleResult> {
+    // Plan-only: caller prints JSON and returns
+    if (ctx.opts.planOnly) {
+      return { status: 'plan', analysis: ctx.analysis! }
+    }
+
+    // HITL required in non-TTY context: caller writes JSON + process.exit(2)
+    if (ctx.needsExternalHitl) {
+      return { status: 'hitl_required', analysis: ctx.analysis! }
+    }
+
+    // Normal generation path
+    const extraction = ctx.extraction!
+    await writeFiles(ctx.outBase, ctx.files, ctx.opts.dryRun ?? false)
+
+    if (!ctx.opts.dryRun) {
+      const kebab = toKebabCase(extraction.entityName)
+      const Pascal = toPascalCase(extraction.entityName)
+      const discovered = await findBootstrapRelativePath(ctx.cwd)
+      const config = await loadBananarc(ctx.cwd)
+      const bootstrapRel = discovered ?? config.project?.bootstrap ?? 'src/bootstrap.ts'
+      await registerModuleInBootstrap({
+        cwd: ctx.cwd,
+        bootstrapRelative: bootstrapRel,
+        moduleFolderKebab: kebab,
+        moduleExportName: moduleExportName(kebab),
+        moduleIndexAbs: path.join(ctx.outBase, 'modules', kebab, 'index.ts'),
+        dryRun: false,
+      })
+
+      if (ctx.orm === 'typeorm') {
+        const entityAbs = path.join(
+          ctx.outBase,
+          moduleOutputBase(kebab),
+          'infrastructure',
+          `${Pascal}.orm-entity.ts`,
+        )
+        await patchTypeormEntitiesArray({
+          cwd: ctx.cwd,
+          entityFileAbs: path.resolve(entityAbs),
+          entityClassName: `${Pascal}OrmEntity`,
+          dryRun: false,
+        })
+      }
+    }
+
+    return { status: 'generated', extraction, fileCount: ctx.files.length }
+  },
+}
+
+// ─── Public entry point ───────────────────────────────────────────────────────
+
+export async function aiGenerateModule(opts: AiModuleGenerateOptions): Promise<void> {
+  // TTY input collection runs before the pipeline (not a pipeline concern)
+  opts = await promptAiModuleInputs(opts)
+
+  let result: AiModuleResult
+  try {
+    result = await runLlmOperation(moduleOperation, opts, opts.debug)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai generate failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('ai generate failed:'), e instanceof Error ? e.message : String(e))
+    }
     process.exit(1)
   }
 
-  let files = buildDddModuleFromExtraction(extraction, orm)
-
-  if (opts.detailed) {
-    const provider = resolveLlmProvider(config)
-    files = await applyDetailedPass(provider, files, opts.debug ?? false, orm)
-  }
-
-  await writeFiles(outBase, files, opts.dryRun ?? false)
-
-  if (opts.dryRun) {
+  if (result.status === 'plan') {
+    // --plan-only: caller receives JSON on stdout
+    process.stdout.write(JSON.stringify(result.analysis, null, 2) + '\n')
     return
   }
 
-  const kebab = toKebabCase(extraction.entityName)
-  const Pascal = toPascalCase(extraction.entityName)
-  const discovered = await findBootstrapRelativePath(cwd)
-  const bootstrapRel = discovered ?? config.project?.bootstrap ?? 'src/bootstrap.ts'
-  await registerModuleInBootstrap({
-    cwd,
-    bootstrapRelative: bootstrapRel,
-    moduleFolderKebab: kebab,
-    moduleExportName: moduleExportName(kebab),
-    moduleIndexAbs: path.join(outBase, 'modules', kebab, 'index.ts'),
-    dryRun: false,
-  })
-
-  if (orm === 'typeorm') {
-    const entityAbs = path.join(
-      outBase,
-      moduleOutputBase(kebab),
-      'infrastructure',
-      `${Pascal}.orm-entity.ts`,
+  if (result.status === 'hitl_required') {
+    // Non-TTY HITL: emit JSON for external tool + exit 2
+    process.stdout.write(
+      JSON.stringify({ hitlRequired: true, analysis: result.analysis }, null, 2) + '\n',
     )
-    await patchTypeormEntitiesArray({
-      cwd,
-      entityFileAbs: path.resolve(entityAbs),
-      entityClassName: `${Pascal}OrmEntity`,
-      dryRun: false,
-    })
+    process.exit(2)
   }
+
+  // status === 'generated' — files already written by validate()
 }

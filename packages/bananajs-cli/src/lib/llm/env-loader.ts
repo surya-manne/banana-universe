@@ -1,5 +1,4 @@
 import * as path from 'path'
-import chalk from 'chalk'
 
 /**
  * Loads a .env file from `cwd` into process.env without overriding already-set variables.
@@ -17,10 +16,8 @@ export async function loadEnvFile(cwd: string): Promise<void> {
       .then(() => true)
       .catch(() => false)
     if (exists) {
-      console.log(
-        chalk.yellow(
-          'dotenv is not installed — .env file was not loaded. Run: npm install dotenv',
-        ),
+      process.stderr.write(
+        'dotenv is not installed — .env file was not loaded. Run: npm install dotenv\n',
       )
     }
     return

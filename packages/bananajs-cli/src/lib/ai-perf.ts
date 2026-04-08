@@ -11,6 +11,7 @@ import {
   type AiReviewFinding,
   AI_REVIEW_JSON_SCHEMA_VERSION,
 } from './ai-review-schema.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 export interface AiPerfOptions {
   file?: string
@@ -179,114 +180,170 @@ function renderPerfOutput(review: AiReviewJson, scope: string, staticCount: numb
   }
 }
 
-// ─── Main entry ───────────────────────────────────────────────────────────────
+// ─── Context ──────────────────────────────────────────────────────────────────
 
-export async function runAiPerf(opts: AiPerfOptions): Promise<void> {
-  const cwd = opts.cwd ?? process.cwd()
+interface PerfCtx extends BaseCtx {
+  cwd: string
+  format: 'text' | 'json'
+  targetPath: string
+  scope: string
+  files: string[]
+  combined: string
+  systemPrompt: string
+  staticFindings: StaticPerfFinding[]
+  llmFindings: AiReviewFinding[]
+  llmSummary: string
+}
 
-  // Resolve target
-  let targetPath: string | null = null
-  if (opts.file) {
-    targetPath = path.resolve(cwd, opts.file)
-  } else if (opts.module) {
-    const direct = path.resolve(cwd, opts.module)
-    const st = await fs.stat(direct).catch(() => null)
-    if (st?.isDirectory()) {
-      targetPath = direct
-    } else {
-      // bare module name → src/modules/<name>
-      const underModules = path.join(cwd, 'src', 'modules', opts.module)
-      const st2 = await fs.stat(underModules).catch(() => null)
-      if (st2?.isDirectory()) {
-        targetPath = underModules
+// ─── Operation ────────────────────────────────────────────────────────────────
+
+const perfOperation: LlmOperation<AiPerfOptions, PerfCtx, void> = {
+  name: 'ai-perf',
+
+  // Prepare: resolve target path, validate it exists, load config and provider
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+
+    let targetPath: string | null = null
+    if (opts.file) {
+      targetPath = path.resolve(cwd, opts.file)
+    } else if (opts.module) {
+      const direct = path.resolve(cwd, opts.module)
+      const st = await fs.stat(direct).catch(() => null)
+      if (st?.isDirectory()) {
+        targetPath = direct
+      } else {
+        const underModules = path.join(cwd, 'src', 'modules', opts.module)
+        const st2 = await fs.stat(underModules).catch(() => null)
+        if (st2?.isDirectory()) targetPath = underModules
       }
     }
-  }
 
-  if (!targetPath) {
-    console.error(
-      chalk.red('Pass --file <path> or --module <name> to specify a target for perf analysis.'),
-    )
-    process.exit(1)
-  }
+    if (!targetPath) {
+      throw new Error('Pass --file <path> or --module <name> to specify a target for perf analysis.')
+    }
 
-  const files = await collectTsFiles(targetPath)
-  if (files.length === 0) {
-    console.error(chalk.yellow(`No TypeScript files found at: ${targetPath}`))
-    process.exit(1)
-  }
-
-  const scope = path.relative(cwd, targetPath) || path.basename(targetPath)
-  const combined = (
-    await Promise.all(
-      files.map(async (f) => {
-        const src = await fs.readFile(f, 'utf-8').catch(() => '')
-        return `// ${path.relative(cwd, f)}\n${src}`
-      }),
-    )
-  ).join('\n\n')
-
-  // ── Phase 1: static checks (no LLM) ─────────────────────────────────────
-  const staticFindings: StaticPerfFinding[] = []
-  for (const f of files) {
-    const src = await fs.readFile(f, 'utf-8').catch(() => '')
-    const relPath = path.relative(cwd, f)
-    staticFindings.push(...runStaticChecks(src, relPath))
-  }
-
-  // ── Phase 2: LLM enrichment ───────────────────────────────────────────────
-  let llmFindings: AiReviewFinding[] = []
-  let llmSummary = ''
-  try {
     const config = await loadBananarc(cwd)
     const provider = resolveLlmProvider(config)
-    const raw = await provider.generate(combined, {
-      system: buildAiPerfJsonSystem(),
-      temperature: 0.1,
-    })
+    const scope = path.relative(cwd, targetPath) || path.basename(targetPath)
 
-    if (opts.debug) {
-      console.log(chalk.dim('\n[debug] raw LLM output:'))
-      console.log(chalk.dim(raw))
-      console.log('')
+    return {
+      cwd,
+      format: opts.format ?? 'text',
+      targetPath,
+      scope,
+      files: [],
+      combined: '',
+      systemPrompt: '',
+      staticFindings: [],
+      llmFindings: [],
+      llmSummary: '',
+      provider,
+      providerAvailable: true,
+      debug: opts.debug ?? false,
+    }
+  },
+
+  // Research: collect TS files and run static pattern scans
+  async research(ctx) {
+    ctx.files = await collectTsFiles(ctx.targetPath)
+    if (ctx.files.length === 0) {
+      throw new Error(`No TypeScript files found at: ${ctx.targetPath}`)
     }
 
-    const parsed = parseAiReviewJson(tryParseJsonObject(raw))
-    llmFindings = parsed.findings
-    llmSummary = parsed.summary
-  } catch (err) {
-    // LLM step is optional — static results still useful
-    if (opts.debug) {
-      console.log(chalk.dim(`\n[debug] LLM step skipped: ${String(err)}`))
+    for (const f of ctx.files) {
+      const src = await fs.readFile(f, 'utf-8').catch(() => '')
+      const relPath = path.relative(ctx.cwd, f)
+      ctx.staticFindings.push(...runStaticChecks(src, relPath))
     }
+
+    ctx.combined = (
+      await Promise.all(
+        ctx.files.map(async (f) => {
+          const src = await fs.readFile(f, 'utf-8').catch(() => '')
+          return `// ${path.relative(ctx.cwd, f)}\n${src}`
+        }),
+      )
+    ).join('\n\n')
+
+    return ctx
+  },
+
+  // Plan: build perf system prompt
+  async plan(ctx) {
+    ctx.systemPrompt = buildAiPerfJsonSystem()
+    return ctx
+  },
+
+  // Act: LLM enrichment (optional — static results remain if this fails)
+  async act(ctx) {
+    try {
+      const raw = await ctx.provider.generate(ctx.combined, {
+        system: ctx.systemPrompt,
+        temperature: 0.1,
+      })
+
+      if (ctx.debug) {
+        console.log(chalk.dim('\n[debug] raw LLM output:'))
+        console.log(chalk.dim(raw))
+        console.log('')
+      }
+
+      const parsed = parseAiReviewJson(tryParseJsonObject(raw))
+      ctx.llmFindings = parsed.findings
+      ctx.llmSummary = parsed.summary
+    } catch (err) {
+      // LLM enrichment is optional — static results are still useful
+      if (ctx.debug) {
+        console.log(chalk.dim(`\n[debug] LLM step skipped: ${String(err)}`))
+      }
+    }
+    return ctx
+  },
+
+  // Validate: merge findings, render or emit JSON
+  async validate(ctx) {
+    const staticAsReview: AiReviewFinding[] = ctx.staticFindings.map((sf) => ({
+      severity: sf.severity,
+      message: sf.message,
+      file: sf.file,
+      line: sf.line,
+    }))
+
+    const allMessages = new Set(staticAsReview.map((f) => f.message.slice(0, 60)))
+    const uniqueLlm = ctx.llmFindings.filter((f) => !allMessages.has(f.message.slice(0, 60)))
+    const allFindings = [...staticAsReview, ...uniqueLlm]
+
+    const result: AiReviewJson = {
+      schemaVersion: AI_REVIEW_JSON_SCHEMA_VERSION,
+      summary:
+        ctx.llmSummary ||
+        (allFindings.length === 0
+          ? 'No performance issues found.'
+          : `Found ${allFindings.length} performance finding${allFindings.length !== 1 ? 's' : ''}.`),
+      findings: allFindings,
+    }
+
+    if (ctx.format === 'json') {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+      return
+    }
+
+    renderPerfOutput(result, ctx.scope, ctx.staticFindings.length)
+  },
+}
+
+// ─── Public entry ─────────────────────────────────────────────────────────────
+
+export async function runAiPerf(opts: AiPerfOptions): Promise<void> {
+  try {
+    await runLlmOperation(perfOperation, opts, opts.debug)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai perf failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('ai perf failed:'), e instanceof Error ? e.message : String(e))
+    }
+    process.exit(1)
   }
-
-  // Merge: static findings first, then LLM-unique (deduplicate by message)
-  const staticAsReview: AiReviewFinding[] = staticFindings.map((sf) => ({
-    severity: sf.severity,
-    message: sf.message,
-    file: sf.file,
-    line: sf.line,
-  }))
-
-  const allMessages = new Set(staticAsReview.map((f) => f.message.slice(0, 60)))
-  const uniqueLlm = llmFindings.filter((f) => !allMessages.has(f.message.slice(0, 60)))
-  const allFindings = [...staticAsReview, ...uniqueLlm]
-
-  const result: AiReviewJson = {
-    schemaVersion: AI_REVIEW_JSON_SCHEMA_VERSION,
-    summary:
-      llmSummary ||
-      (allFindings.length === 0
-        ? 'No performance issues found.'
-        : `Found ${allFindings.length} performance finding${allFindings.length !== 1 ? 's' : ''}.`),
-    findings: allFindings,
-  }
-
-  if (opts.format === 'json') {
-    process.stdout.write(JSON.stringify(result, null, 2) + '\n')
-    return
-  }
-
-  renderPerfOutput(result, scope, staticFindings.length)
 }

@@ -287,6 +287,14 @@ aiCmd
   .option('--dry-run', 'Print files without writing')
   .option('--detailed', 'Second LLM pass to expand domain/application service bodies (DDD module)')
   .option('--debug', 'Print raw LLM output for extraction/debugging')
+  .option(
+    '--plan-only',
+    'Analyse use case and emit HITL questions JSON without generating files (DDD module)',
+  )
+  .option(
+    '--context <json>',
+    'JSON-serialised UseCaseContext from a prior --plan-only run with developer answers; drives domain-appropriate generation',
+  )
   .action(
     (opts: {
       module?: string | boolean
@@ -298,10 +306,12 @@ aiCmd
       dryRun?: boolean
       detailed?: boolean
       debug?: boolean
+      planOnly?: boolean
+      context?: string
     }) => {
       const run = async (): Promise<void> => {
-        const wantDdd = opts.module !== undefined
-        const wantFlat = Boolean(opts.fromSchema || opts.fromPrompt)
+        const wantDdd = opts.module !== undefined || opts.planOnly || Boolean(opts.context)
+        const wantFlat = Boolean(opts.fromSchema || opts.fromPrompt) && !wantDdd
         if (!wantDdd && !wantFlat && process.stdin.isTTY) {
           const { mode } = await inquirer.prompt<{ mode: 'ddd' | 'flat' }>([
             {
@@ -386,6 +396,8 @@ aiCmd
             dryRun: opts.dryRun,
             detailed: opts.detailed,
             debug: opts.debug,
+            planOnly: opts.planOnly,
+            context: opts.context,
           })
           return
         }
@@ -772,6 +784,17 @@ if (argv.length === 1) {
 }
 
 ;(async () => {
+  // MCP stdio mode: stdout is reserved for JSON-RPC only.
+  // Redirect all console.log/info/warn to stderr before any other code runs.
+  const args = process.argv.slice(2)
+  if (args.includes('mcp') && args.includes('start')) {
+    const toStderr = (...a: unknown[]) =>
+      process.stderr.write(a.map((x) => String(x)).join(' ') + '\n')
+    console.log = toStderr
+    console.info = toStderr
+    console.warn = toStderr
+  }
+
   await loadEnvFile(process.cwd())
   program.parse(process.argv)
 })().catch((err: unknown) => {

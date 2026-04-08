@@ -6,6 +6,7 @@ import chalk from 'chalk'
 import { loadBananarc } from './llm/bananarc.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
 import { buildAiChangelogSystem } from './llm/prompts/changelog.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 const execFileAsync = promisify(execFile)
 
@@ -148,90 +149,155 @@ function markdownToJson(md: string, from: string | undefined, to: string): Chang
 
 // ─── Main entry ───────────────────────────────────────────────────────────────
 
-export async function runAiChangelog(opts: AiChangelogOptions): Promise<void> {
-  const cwd = opts.cwd ?? process.cwd()
-  const toRef = opts.to ?? 'HEAD'
+interface ChangelogCtx extends BaseCtx {
+  cwd: string
+  fromRef: string | undefined
+  toRef: string
+  gitLog: string
+  openApiDiff: string
+  hasOpenApiDiff: boolean
+  systemPrompt: string
+  userPrompt: string
+  rawOutput: string
+  markdownOutput: string
+  opts: AiChangelogOptions
+}
 
-  let fromRef = opts.from
-  if (!fromRef) {
-    fromRef = await resolveDefaultFrom(cwd)
-    if (fromRef) {
-      console.log(chalk.dim(`\nUsing previous tag as range start: ${fromRef}`))
+const changelogOperation: LlmOperation<AiChangelogOptions, ChangelogCtx, void> = {
+  name: 'ai-changelog',
+
+  // Prepare: resolve refs and provider
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const toRef = opts.to ?? 'HEAD'
+    let fromRef = opts.from
+    if (!fromRef) {
+      fromRef = await resolveDefaultFrom(cwd)
+      if (fromRef) {
+        console.log(chalk.dim(`\nUsing previous tag as range start: ${fromRef}`))
+      }
     }
-  }
-
-  let gitLog: string
-  try {
-    gitLog = await getGitLog(fromRef, toRef, cwd)
-  } catch (err) {
-    console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-    process.exit(1)
-  }
-
-  if (!gitLog.trim()) {
-    console.log(chalk.yellow('No commits found in the specified range.'))
-    return
-  }
-
-  // OpenAPI diff (optional)
-  let openApiDiff = ''
-  let hasOpenApiDiff = false
-  if (opts.before && opts.after) {
-    try {
-      const [beforeRaw, afterRaw] = await Promise.all([
-        fs.readFile(path.resolve(cwd, opts.before), 'utf-8'),
-        fs.readFile(path.resolve(cwd, opts.after), 'utf-8'),
-      ])
-      const beforeSpec = JSON.parse(beforeRaw) as OpenApiSpec
-      const afterSpec = JSON.parse(afterRaw) as OpenApiSpec
-      openApiDiff = '\n\n' + buildOpenApiDiffSummary(beforeSpec, afterSpec)
-      hasOpenApiDiff = true
-    } catch (err) {
-      console.warn(chalk.yellow(`Could not load OpenAPI specs: ${err instanceof Error ? err.message : String(err)}`))
+    const config = await loadBananarc(cwd)
+    const provider = resolveLlmProvider(config)
+    return {
+      cwd,
+      fromRef,
+      toRef,
+      gitLog: '',
+      openApiDiff: '',
+      hasOpenApiDiff: false,
+      systemPrompt: '',
+      userPrompt: '',
+      rawOutput: '',
+      markdownOutput: '',
+      opts,
+      provider,
+      providerAvailable: true,
+      debug: opts.debug ?? false,
     }
-  }
+  },
 
-  const config = await loadBananarc(cwd)
-  const provider = resolveLlmProvider(config)
+  // Research: gather git log and optional OpenAPI diff
+  async research(ctx) {
+    ctx.gitLog = await getGitLog(ctx.fromRef, ctx.toRef, ctx.cwd)
 
-  const prompt =
-    `Git commits (${fromRef ?? 'beginning'}..${toRef}):\n${gitLog}` + openApiDiff
+    if (!ctx.gitLog.trim()) {
+      // Signal empty — validate will short-circuit
+      return ctx
+    }
 
-  let rawOutput: string
-  try {
-    rawOutput = await provider.generate(prompt, {
-      system: buildAiChangelogSystem({ hasOpenApiDiff }),
+    if (ctx.opts.before && ctx.opts.after) {
+      try {
+        const [beforeRaw, afterRaw] = await Promise.all([
+          fs.readFile(path.resolve(ctx.cwd, ctx.opts.before), 'utf-8'),
+          fs.readFile(path.resolve(ctx.cwd, ctx.opts.after), 'utf-8'),
+        ])
+        const beforeSpec = JSON.parse(beforeRaw) as OpenApiSpec
+        const afterSpec = JSON.parse(afterRaw) as OpenApiSpec
+        ctx.openApiDiff = '\n\n' + buildOpenApiDiffSummary(beforeSpec, afterSpec)
+        ctx.hasOpenApiDiff = true
+      } catch (err) {
+        console.warn(
+          chalk.yellow(
+            `Could not load OpenAPI specs: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        )
+      }
+    }
+
+    return ctx
+  },
+
+  // Plan: build prompts
+  async plan(ctx) {
+    ctx.systemPrompt = buildAiChangelogSystem({ hasOpenApiDiff: ctx.hasOpenApiDiff })
+    ctx.userPrompt =
+      `Git commits (${ctx.fromRef ?? 'beginning'}..${ctx.toRef}):\n${ctx.gitLog}` +
+      ctx.openApiDiff
+    return ctx
+  },
+
+  // Act: single LLM call
+  async act(ctx) {
+    ctx.rawOutput = await ctx.provider.generate(ctx.userPrompt, {
+      system: ctx.systemPrompt,
       temperature: 0.3,
     })
-  } catch (err) {
-    console.error(chalk.red('LLM request failed:'), err instanceof Error ? err.message : String(err))
-    process.exit(1)
-  }
+    return ctx
+  },
 
-  if (opts.debug) {
-    console.log(chalk.dim('\n[debug] raw LLM output:'))
-    console.log(chalk.dim(rawOutput))
-    console.log('')
-  }
-
-  const markdownOutput = stripMarkdownFence(rawOutput)
-
-  if (opts.format === 'json') {
-    const json = markdownToJson(markdownOutput, fromRef, toRef)
-    const output = JSON.stringify(json, null, 2)
-    if (opts.out) {
-      await fs.writeFile(path.resolve(cwd, opts.out), output, 'utf-8')
-      console.log(chalk.green(`✔ Changelog JSON written to ${opts.out}`))
-    } else {
-      process.stdout.write(output + '\n')
+  // Validate: parse and emit
+  async validate(ctx) {
+    if (!ctx.gitLog.trim()) {
+      console.log(chalk.yellow('No commits found in the specified range.'))
+      return
     }
-    return
-  }
 
-  if (opts.out) {
-    await fs.writeFile(path.resolve(cwd, opts.out), markdownOutput + '\n', 'utf-8')
-    console.log(chalk.green(`✔ Changelog written to ${opts.out}`))
-  } else {
-    process.stdout.write(markdownOutput + '\n')
+    if (ctx.debug) {
+      console.log(chalk.dim('\n[debug] raw LLM output:'))
+      console.log(chalk.dim(ctx.rawOutput))
+      console.log('')
+    }
+
+    ctx.markdownOutput = stripMarkdownFence(ctx.rawOutput)
+
+    if (ctx.opts.format === 'json') {
+      const json = markdownToJson(ctx.markdownOutput, ctx.fromRef, ctx.toRef)
+      const output = JSON.stringify(json, null, 2)
+      if (ctx.opts.out) {
+        await fs.writeFile(path.resolve(ctx.cwd, ctx.opts.out), output, 'utf-8')
+        console.log(chalk.green(`✔ Changelog JSON written to ${ctx.opts.out}`))
+      } else {
+        process.stdout.write(output + '\n')
+      }
+      return
+    }
+
+    if (ctx.opts.out) {
+      await fs.writeFile(
+        path.resolve(ctx.cwd, ctx.opts.out),
+        ctx.markdownOutput + '\n',
+        'utf-8',
+      )
+      console.log(chalk.green(`✔ Changelog written to ${ctx.opts.out}`))
+    } else {
+      process.stdout.write(ctx.markdownOutput + '\n')
+    }
+  },
+}
+
+export async function runAiChangelog(opts: AiChangelogOptions): Promise<void> {
+  try {
+    await runLlmOperation(changelogOperation, opts, opts.debug)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai changelog failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(
+        chalk.red('ai changelog failed:'),
+        e instanceof Error ? e.message : String(e),
+      )
+    }
+    process.exit(1)
   }
 }

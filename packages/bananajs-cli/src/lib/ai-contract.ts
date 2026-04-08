@@ -5,6 +5,7 @@ import { loadBananarc } from './llm/bananarc.js'
 import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
 import { tryParseJsonObject } from './llm/entity-extraction.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 export interface AiContractOptions {
   /** OpenAPI JSON file to read (from `bananajs openapi export`). */
@@ -270,96 +271,146 @@ ${interactions}
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
-export async function runAiContract(options: AiContractOptions): Promise<void> {
-  const cwd = options.cwd ?? process.cwd()
+const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const
 
-  // Read OpenAPI spec
-  const specPath = path.resolve(cwd, options.spec)
-  let spec: OpenApiSpec
-  try {
-    const raw = await fs.readFile(specPath, 'utf-8')
-    spec = JSON.parse(raw) as OpenApiSpec
-  } catch (e) {
-    console.error(chalk.red(`Cannot read spec: ${specPath}`))
-    console.error(chalk.gray(e instanceof Error ? e.message : String(e)))
-    process.exit(1)
-  }
+interface ContractCtx extends BaseCtx {
+  cwd: string
+  opts: AiContractOptions
+  spec: OpenApiSpec
+  fixtures: Map<string, unknown>
+  // null when using fixtures exclusively
+  llmProvider: Awaited<ReturnType<typeof resolveLlmProvider>> | null
+  contracts: ContractFile[]
+  outFile: string
+  content: string
+}
 
-  if (!spec.paths || Object.keys(spec.paths).length === 0) {
-    console.error(chalk.red('No paths found in OpenAPI spec.'))
-    process.exit(1)
-  }
+const contractOperation: LlmOperation<AiContractOptions, ContractCtx, void> = {
+  name: 'ai-contract',
 
-  // Load fixtures (if provided — skips LLM for request payloads)
-  const fixtures = options.fixtures ? await loadFixtures(options.fixtures, cwd) : new Map<string, unknown>()
-  if (options.fixtures) {
-    console.log(chalk.cyan(`Loaded ${fixtures.size} fixtures from ${options.fixtures}`))
-  }
+  // Prepare: load fixtures, resolve LLM provider
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const config = await loadBananarc(cwd)
+    const provider = resolveLlmProvider(config)
 
-  // LLM provider (optional — used only when fixtures don't cover a payload)
-  let llmProvider: Awaited<ReturnType<typeof resolveLlmProvider>> | null = null
-  if (!options.fixtures || fixtures.size === 0) {
+    const fixtures = opts.fixtures ? await loadFixtures(opts.fixtures, cwd) : new Map<string, unknown>()
+    if (opts.fixtures) {
+      console.log(chalk.cyan(`Loaded ${fixtures.size} fixtures from ${opts.fixtures}`))
+    }
+
+    // Suppress LLM when dry-run (schema fallback only) or when fixtures fully cover payloads
+    const llmProvider: Awaited<ReturnType<typeof resolveLlmProvider>> | null =
+      opts.dryRun || (opts.fixtures && fixtures.size > 0) ? null : provider
+
+    const outDir = path.resolve(cwd, opts.out ?? path.join('src', '__tests__', 'contract'))
+    const outFile = path.join(outDir, `${opts.consumer}-${opts.provider}.contract.test.ts`)
+
+    return {
+      cwd,
+      opts,
+      spec: {} as OpenApiSpec,
+      fixtures,
+      llmProvider,
+      contracts: [],
+      outFile,
+      content: '',
+      provider,
+      providerAvailable: true,
+      debug: opts.debug ?? false,
+    }
+  },
+
+  // Research: load spec + validate it has paths
+  async research(ctx) {
+    const specPath = path.resolve(ctx.cwd, ctx.opts.spec)
+    let spec: OpenApiSpec
     try {
-      const config = await loadBananarc(cwd)
-      llmProvider = resolveLlmProvider(config)
-    } catch {
-      // No LLM — proceed with schema-derived defaults
-    }
-  }
-
-  // Build interaction pairs per operation
-  const contracts: ContractFile[] = []
-  const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete']
-
-  for (const [urlPath, pathItem] of Object.entries(spec.paths)) {
-    for (const method of HTTP_METHODS) {
-      const op = (pathItem as Record<string, OpenApiOperation>)[method]
-      if (!op) continue
-
-      const interaction = await buildInteraction(
-        options.consumer,
-        options.provider,
-        method,
-        urlPath,
-        op,
-        fixtures,
-        llmProvider,
-        options.debug ?? false,
+      const raw = await fs.readFile(specPath, 'utf-8')
+      spec = JSON.parse(raw) as OpenApiSpec
+    } catch (e) {
+      throw new Error(
+        `Cannot read spec: ${specPath}\n${e instanceof Error ? e.message : String(e)}`,
       )
-
-      contracts.push({
-        consumer: options.consumer,
-        provider: options.provider,
-        operationId: op.operationId ?? `${method}-${urlPath}`,
-        method,
-        path: urlPath,
-        interaction,
-      })
     }
+    if (!spec.paths || Object.keys(spec.paths).length === 0) {
+      throw new Error('No paths found in OpenAPI spec.')
+    }
+    ctx.spec = spec
+    return ctx
+  },
+
+  // Plan: nothing to pre-build (buildInteraction constructs prompts lazily)
+  async plan(ctx) {
+    return ctx
+  },
+
+  // Act: build Pact interaction per operation (may call LLM per operation)
+  async act(ctx) {
+    for (const [urlPath, pathItem] of Object.entries(ctx.spec.paths ?? {})) {
+      for (const method of HTTP_METHODS) {
+        const op = (pathItem as Record<string, OpenApiOperation>)[method]
+        if (!op) continue
+
+        const interaction = await buildInteraction(
+          ctx.opts.consumer,
+          ctx.opts.provider,
+          method,
+          urlPath,
+          op,
+          ctx.fixtures,
+          ctx.llmProvider,
+          ctx.debug,
+        )
+
+        ctx.contracts.push({
+          consumer: ctx.opts.consumer,
+          provider: ctx.opts.provider,
+          operationId: op.operationId ?? `${method}-${urlPath}`,
+          method,
+          path: urlPath,
+          interaction,
+        })
+      }
+    }
+    return ctx
+  },
+
+  // Validate: emit test file or dry-run
+  async validate(ctx) {
+    if (ctx.contracts.length === 0) {
+      console.log(chalk.yellow('No operations found in spec — nothing to generate.'))
+      return
+    }
+
+    ctx.content = emitPactTestFile(ctx.opts.consumer, ctx.opts.provider, ctx.contracts)
+
+    if (ctx.opts.dryRun) {
+      console.log(chalk.cyan(`[dry-run] Would write: ${ctx.outFile}`))
+      console.log(chalk.gray('─'.repeat(60)))
+      console.log(chalk.gray(ctx.content))
+      console.log(chalk.bold.green(`\n✔ ${ctx.contracts.length} interactions generated (dry-run)`))
+      return
+    }
+
+    await fs.mkdir(path.dirname(ctx.outFile), { recursive: true })
+    await fs.writeFile(ctx.outFile, ctx.content, 'utf-8')
+    console.log(chalk.green(`Created: ${ctx.outFile}`))
+    console.log(chalk.bold.green(`\n✔ ${ctx.contracts.length} Pact interactions written`))
+    console.log(chalk.gray('\nNote: @pact-foundation/pact must be installed as a dev dependency.'))
+    console.log(chalk.gray('  npm install --save-dev @pact-foundation/pact'))
+  },
+}
+
+export async function runAiContract(options: AiContractOptions): Promise<void> {
+  try {
+    await runLlmOperation(contractOperation, options, options.debug)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai contract failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('ai contract failed:'), e instanceof Error ? e.message : String(e))
+    }
+    process.exit(1)
   }
-
-  if (contracts.length === 0) {
-    console.log(chalk.yellow('No operations found in spec — nothing to generate.'))
-    return
-  }
-
-  // Emit test file
-  const outDir = path.resolve(cwd, options.out ?? path.join('src', '__tests__', 'contract'))
-  const outFile = path.join(outDir, `${options.consumer}-${options.provider}.contract.test.ts`)
-  const content = emitPactTestFile(options.consumer, options.provider, contracts)
-
-  if (options.dryRun) {
-    console.log(chalk.cyan(`[dry-run] Would write: ${outFile}`))
-    console.log(chalk.gray('─'.repeat(60)))
-    console.log(chalk.gray(content))
-    console.log(chalk.bold.green(`\n✔ ${contracts.length} interactions generated (dry-run)`))
-    return
-  }
-
-  await fs.mkdir(outDir, { recursive: true })
-  await fs.writeFile(outFile, content, 'utf-8')
-  console.log(chalk.green(`Created: ${outFile}`))
-  console.log(chalk.bold.green(`\n✔ ${contracts.length} Pact interactions written`))
-  console.log(chalk.gray('\nNote: @pact-foundation/pact must be installed as a dev dependency.'))
-  console.log(chalk.gray('  npm install --save-dev @pact-foundation/pact'))
 }

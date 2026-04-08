@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { loadBananarc } from './llm/bananarc.js'
 import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 /** Subset of OpenAPI 3.0 types we operate on. */
 interface OpenApiInfo {
@@ -235,80 +236,137 @@ function buildDiffSummary(targets: EnrichmentTarget[], enriched: Map<EnrichmentT
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export async function runAiOpenApiEnrich(opts: AiOpenApiEnrichOptions): Promise<void> {
-  const cwd = opts.cwd ?? process.cwd()
-  const specPath = path.resolve(cwd, opts.in)
-  const outPath = path.resolve(cwd, opts.out)
+interface OpenApiEnrichCtx extends BaseCtx {
+  cwd: string
+  specPath: string
+  outPath: string
+  opts: AiOpenApiEnrichOptions
+  spec: OpenApiSpec
+  targets: EnrichmentTarget[]
+  enriched: Map<EnrichmentTarget, EnrichmentPatch>
+}
 
-  if (specPath === outPath && !opts.dryRun) {
-    console.error(chalk.red('--out must differ from --in. Use a different output path to avoid overwriting the original spec.'))
-    process.exit(1)
-  }
+const openApiEnrichOperation: LlmOperation<AiOpenApiEnrichOptions, OpenApiEnrichCtx, void> = {
+  name: 'ai-openapi-enrich',
 
-  console.log(chalk.bold.blue('\nAI OpenAPI Enrich\n'))
-  console.log(chalk.dim(`  In:  ${opts.in}`))
-  console.log(chalk.dim(`  Out: ${opts.dryRun ? '(dry-run)' : opts.out}`))
-  console.log('')
+  // Prepare: assert --out !== --in FIRST, then resolve paths and provider
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const specPath = path.resolve(cwd, opts.in)
+    const outPath = path.resolve(cwd, opts.out)
 
-  const spec = await loadSpec(specPath)
-  const targets = collectTargets(spec, opts)
-
-  if (targets.length === 0) {
-    console.log(chalk.green('✔ Spec is already fully documented — nothing to enrich.'))
-    return
-  }
-
-  console.log(chalk.dim(`  Operations with missing documentation: ${targets.length}`))
-  console.log('')
-
-  const config = await loadBananarc(cwd)
-  const provider = resolveLlmProvider(config)
-
-  const enriched = new Map<EnrichmentTarget, EnrichmentPatch>()
-
-  for (const target of targets) {
-    const label = `${target.verb.toUpperCase()} ${target.path}`
-    process.stdout.write(chalk.dim(`  Enriching ${label}...`))
-    const patch = await enrichOperation(target, provider)
-    enriched.set(target, patch)
-
-    // Apply to spec in place (we operate on the mutable spec object)
-    const pathItem = spec.paths?.[target.path]
-    const op = pathItem?.[target.verb]
-    if (op) {
-      applyPatch(op, patch, opts)
+    if (specPath === outPath && !opts.dryRun) {
+      throw new Error(
+        '--out must differ from --in. Use a different output path to avoid overwriting the original spec.',
+      )
     }
-    process.stdout.write(chalk.green(' done\n'))
-  }
 
-  // Tag the spec with enrichment metadata
-  spec['x-enriched-by'] = `bananajs-cli@${process.env['npm_package_version'] ?? 'local'}`
-
-  const diff = buildDiffSummary(targets, enriched)
-
-  if (opts.dryRun) {
+    console.log(chalk.bold.blue('\nAI OpenAPI Enrich\n'))
+    console.log(chalk.dim(`  In:  ${opts.in}`))
+    console.log(chalk.dim(`  Out: ${opts.dryRun ? '(dry-run)' : opts.out}`))
     console.log('')
-    console.log(chalk.bold('Dry-run diff — proposed changes:'))
+
+    const config = await loadBananarc(cwd)
+    const provider = resolveLlmProvider(config)
+
+    return {
+      cwd,
+      specPath,
+      outPath,
+      opts,
+      spec: {} as OpenApiSpec,
+      targets: [],
+      enriched: new Map(),
+      provider,
+      providerAvailable: true,
+      debug: false,
+    }
+  },
+
+  // Research: load spec and collect operations with missing documentation
+  async research(ctx) {
+    ctx.spec = await loadSpec(ctx.specPath)
+    ctx.targets = collectTargets(ctx.spec, ctx.opts)
+    return ctx
+  },
+
+  // Plan: log what will be enriched
+  async plan(ctx) {
+    if (ctx.targets.length === 0) return ctx
+    console.log(chalk.dim(`  Operations with missing documentation: ${ctx.targets.length}`))
+    console.log('')
+    return ctx
+  },
+
+  // Act: sequential LLM enrichment per target; apply patch to spec in place
+  async act(ctx) {
+    for (const target of ctx.targets) {
+      const label = `${target.verb.toUpperCase()} ${target.path}`
+      process.stdout.write(chalk.dim(`  Enriching ${label}...`))
+      const patch = await enrichOperation(target, ctx.provider)
+      ctx.enriched.set(target, patch)
+
+      const pathItem = ctx.spec.paths?.[target.path]
+      const op = pathItem?.[target.verb]
+      if (op) {
+        applyPatch(op, patch, ctx.opts)
+      }
+      process.stdout.write(chalk.green(' done\n'))
+    }
+
+    ctx.spec['x-enriched-by'] = `bananajs-cli@${process.env['npm_package_version'] ?? 'local'}`
+    return ctx
+  },
+
+  // Validate: emit dry-run diff or write enriched spec
+  async validate(ctx) {
+    if (ctx.targets.length === 0) {
+      console.log(chalk.green('✔ Spec is already fully documented — nothing to enrich.'))
+      return
+    }
+
+    const diff = buildDiffSummary(ctx.targets, ctx.enriched)
+
+    if (ctx.opts.dryRun) {
+      console.log('')
+      console.log(chalk.bold('Dry-run diff — proposed changes:'))
+      for (const entry of diff) {
+        console.log(chalk.cyan(`  ${entry.operation}`))
+        console.log(chalk.gray(`    + ${entry.added.join(', ')}`))
+      }
+      console.log('')
+      console.log(chalk.dim(`Total: ${diff.length} operations would be enriched.`))
+      return
+    }
+
+    const enrichedJson = JSON.stringify(ctx.spec, null, 2)
+    await fs.mkdir(path.dirname(ctx.outPath), { recursive: true })
+    await fs.writeFile(ctx.outPath, enrichedJson, 'utf-8')
+
+    console.log('')
+    console.log(chalk.bold('Done.'))
+    console.log(chalk.green(`  ✔ Enriched spec written to ${ctx.opts.out}`))
+    console.log('')
+    console.log(chalk.bold('Summary:'))
     for (const entry of diff) {
       console.log(chalk.cyan(`  ${entry.operation}`))
       console.log(chalk.gray(`    + ${entry.added.join(', ')}`))
     }
-    console.log('')
-    console.log(chalk.dim(`Total: ${diff.length} operations would be enriched.`))
-    return
-  }
+  },
+}
 
-  const enrichedJson = JSON.stringify(spec, null, 2)
-  await fs.mkdir(path.dirname(outPath), { recursive: true })
-  await fs.writeFile(outPath, enrichedJson, 'utf-8')
-
-  console.log('')
-  console.log(chalk.bold('Done.'))
-  console.log(chalk.green(`  ✔ Enriched spec written to ${opts.out}`))
-  console.log('')
-  console.log(chalk.bold('Summary:'))
-  for (const entry of diff) {
-    console.log(chalk.cyan(`  ${entry.operation}`))
-    console.log(chalk.gray(`    + ${entry.added.join(', ')}`))
+export async function runAiOpenApiEnrich(opts: AiOpenApiEnrichOptions): Promise<void> {
+  try {
+    await runLlmOperation(openApiEnrichOperation, opts)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai openapi enrich failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(
+        chalk.red('ai openapi enrich failed:'),
+        e instanceof Error ? e.message : String(e),
+      )
+    }
+    process.exit(1)
   }
 }

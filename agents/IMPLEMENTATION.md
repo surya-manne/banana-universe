@@ -6,12 +6,28 @@ Current implementation state. Very brief — references other docs. The only cha
 
 ## Modules
 
-### packages/ai-provider-core v0.1.0 + packages/plugin-ai v0.1.0 + packages/bananajs-cli v0.6.0 [AIRoadmapV2 Horizon C — ai-provider-core, MCP server, BananaAiPlugin, ai contract]
+### packages/bananajs-cli — PRPAV LLM Pipeline Standard [All AI operations standardized]
+
+- **`packages/bananajs-cli/src/lib/llm/pipeline.ts`** (NEW) — shared PRPAV pipeline contract for all CLI LLM operations
+  - `PipelineStage` — `'prepare' | 'research' | 'plan' | 'act' | 'validate'`
+  - `LlmOperationError extends Error` — carries `stage: PipelineStage` and `override readonly cause: Error` (wrap stage failures)
+  - `BaseCtx` — `{ provider: any | null; providerAvailable: boolean; debug: boolean }` — base context all operations extend
+  - `LlmOperation<TOptions, TCtx extends BaseCtx, TOutput>` — 5-method interface; optional `name: string` and `isProviderOptional?: boolean`
+  - `runLlmOperation(operation, opts, debug?)` — async runner: wraps each stage in error catcher → `LlmOperationError`; skips `act()` when `isProviderOptional === true && !ctx.providerAvailable`; debug logs stage timings to stderr
+- **All 10 LLM operations refactored** to use `LlmOperation` interface: `ai-explain`, `ai-debug`, `ai-perf`, `ai-review-run`, `ai-changelog`, `ai-upgrade`, `ai-openapi-enrich`, `ai-contract`, `ai-wire`, `ai-module`
+- **`ai-wire.ts`** — `isProviderOptional: true`; `providerAvailable = opts.llm === true`; `act()` auto-skipped when `--llm` not passed
+- **`ai-module.ts`** — `AiModuleResult` discriminated union: `{ status: 'plan' | 'hitl_required' | 'generated' }`; `act()` chains 3 LLM calls; `aiGenerateModule()` calls `promptAiModuleInputs` before `runLlmOperation`, handles `process.exit(2)` for `hitl_required`
+- **`ai-contract.ts`** — `llmProvider = null` when `dryRun: true` (schema-based fallback, no LLM network calls); also null when fixtures fully cover payloads
+- **Tests**: `src/__tests__/llm-pipeline.test.ts` (17 tests — stage ordering, `LlmOperationError` wrapping for all 5 stages, `isProviderOptional` skip/run, debug logging, error properties)
+
+### packages/ai-provider-core v0.1.0 + packages/plugin-ai v0.1.0 + packages/bananajs-cli v0.6.0 [AIRoadmapV2 Horizon C — ai-provider-core, MCP server, BananaAiPlugin, ai contract] + HITL use-case analysis
 
 - **`packages/ai-provider-core`** — shared, publishable LLM contract: `LlmProvider` interface (`generate(prompt, options?): Promise<string>`), `LlmGenerateOptions`, `AI_PROVIDER_TOKEN = 'AiProvider'`; zero deps except `tslib`; `src/index.ts`
 - **`packages/bananajs-cli` `LlmProvider.ts` re-export** — `src/lib/llm/LlmProvider.ts` is now a thin `export type { ... } from '@banana-universe/ai-provider-core'` shim; CLI `package.json` gains `@banana-universe/ai-provider-core: "*"` dep
 - **`packages/plugin-ai`** — `BananaAiPlugin(options: { provider: LlmProvider }): BananaPlugin`; registers `options.provider` on `ctx.container` under `AI_PROVIDER_TOKEN`; `onShutdown` no-op; re-exports `AI_PROVIDER_TOKEN`, `LlmProvider`, `LlmGenerateOptions` from core; `README.md` with security/prompt-injection guidance; `src/index.ts`
-- **`bananajs mcp start`** (`src/lib/mcp-server.ts`) — stdio MCP JSON-RPC 2.0 server with Content-Length framing (`startMcpServer()`); 8 tools: `bananajs_routes`, `bananajs_explain`, `bananajs_review`, `bananajs_generate`, `bananajs_mock`, `bananajs_debug`, `bananajs_perf`, `bananajs_upgrade`; tools execute by spawning `node CLI_BIN <args>`; `bananajs_upgrade` always appends `--dry-run`
+- **`bananajs mcp start`** (`src/lib/mcp-server.ts`) — stdio MCP JSON-RPC 2.0 server with Content-Length framing (`startMcpServer()`); 9 tools: `bananajs_routes`, `bananajs_explain`, `bananajs_review`, `bananajs_plan_module` (NEW), `bananajs_generate`, `bananajs_mock`, `bananajs_debug`, `bananajs_perf`, `bananajs_upgrade`; `bananajs_plan_module` calls `ai generate --module --plan-only` and returns structured `UseCaseAnalysis` JSON; `bananajs_generate` now accepts optional `context` field (JSON-serialised `UseCaseContext`) enabling domain-appropriate generation after HITL; `bananajs_upgrade` always appends `--dry-run`
+- **HITL use-case classification** (`src/lib/llm/use-case.ts`, `src/lib/llm/prompts/use-case-analysis.ts`) — `UseCaseType` union (`crud|webhook|event-processor|integration|query-service|saga|auth|hybrid|other`), `UseCaseAnalysis` + `UseCaseContext` Zod schemas; `USE_CASE_ANALYSIS_SYSTEM` LLM prompt classifies description and emits up to 5 targeted questions; `buildContextAwareExtractionPrompt` and `buildContextAwareServicePrompt` helpers drive domain-appropriate extraction and `--detailed` pass
+- **`ai generate --module` pipeline updated** (`src/lib/ai-module.ts`) — new `--plan-only` flag (exit 0 with JSON, no file writes); new `--context <json>` flag; in TTY: analyses use-case → if `hitlRequired` presents questions via `inquirer` → proceeds with context; in non-TTY / MCP: if `hitlRequired` exits 2 with plan JSON on stdout; `extractEntityWithLlm` and `applyDetailedPass` both accept optional `UseCaseContext` to generate webhook/saga/integration code rather than defaulting to CRUD
 - **`bananajs ai contract`** (`src/lib/ai-contract.ts`) — reads OpenAPI JSON spec; builds one `PactInteraction` per path/method (fixture → schema → LLM priority); emits `@pact-foundation/pact` consumer test file to `src/__tests__/contract/<consumer>-<provider>.contract.test.ts`; `@pact-foundation/pact` is optional peer dep; `--dry-run` for preview
 - **Tests**: `src/__tests__/ai-contract.test.ts` (dry-run happy path, export checks)
 - **Docs-site updated**: `docs-site/tooling/ai-commands.md` (Horizon C reference section), `docs-site/ai/index.md` (arc step 7, Horizon C table row, scenarios 14-16, command grid cards for `ai contract` + `mcp start`)

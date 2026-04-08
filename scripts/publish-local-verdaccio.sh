@@ -20,6 +20,8 @@ publish_one() {
 
 publish_one bananajs bananajs
 publish_one ddd ddd
+publish_one ai-provider-core ai-provider-core
+publish_one plugin-ai plugin-ai
 publish_one plugin-typeorm plugin-typeorm
 publish_one plugin-mongoose plugin-mongoose
 publish_one plugin-otel plugin-otel

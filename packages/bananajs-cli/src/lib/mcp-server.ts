@@ -5,17 +5,18 @@
  * (Claude Code, Cursor, GitHub Copilot Workspace, etc.) can invoke
  * them without shell scripts.
  *
- * Protocol: JSON-RPC 2.0 over stdio with Content-Length framing (same as LSP).
+ * Protocol: JSON-RPC 2.0 over stdio with newline-delimited JSON (NDJSON).
  *
  * Tools exposed:
- *   bananajs_routes   — static route scan
- *   bananajs_explain  — LLM file summary
- *   bananajs_review   — structured AI review (AiReviewJson)
- *   bananajs_generate — DDD module generation
- *   bananajs_mock     — fixture factory generation
- *   bananajs_debug    — stack trace root-cause analysis (AiDebugJson)
- *   bananajs_perf     — performance antipattern scan (AiReviewJson)
- *   bananajs_upgrade  — migration hints (dry-run only — --apply NOT exposed)
+ *   bananajs_routes        — static route scan
+ *   bananajs_explain       — LLM file summary
+ *   bananajs_review        — structured AI review (AiReviewJson)
+ *   bananajs_plan_module   — use-case analysis + HITL questions (must call before bananajs_generate for non-trivial modules)
+ *   bananajs_generate      — DDD module generation (accepts optional context from bananajs_plan_module)
+ *   bananajs_mock          — fixture factory generation
+ *   bananajs_debug         — stack trace root-cause analysis (AiDebugJson)
+ *   bananajs_perf          — performance antipattern scan (AiReviewJson)
+ *   bananajs_upgrade       — migration hints (dry-run only — --apply NOT exposed)
  */
 
 import { execFile } from 'child_process'
@@ -47,9 +48,7 @@ interface JsonRpcError {
 }
 
 function send(msg: JsonRpcResult | JsonRpcError): void {
-  const body = JSON.stringify(msg)
-  const frame = `Content-Length: ${Buffer.byteLength(body, 'utf-8')}\r\n\r\n${body}`
-  process.stdout.write(frame)
+  process.stdout.write(JSON.stringify(msg) + '\n')
 }
 
 function ok(id: JsonRpcId, result: unknown): void {
@@ -60,35 +59,24 @@ function err(id: JsonRpcId, code: number, message: string, data?: unknown): void
   send({ jsonrpc: '2.0', id: id ?? null, error: { code, message, ...(data ? { data } : {}) } })
 }
 
-// ─── Input framing reader ────────────────────────────────────────────────────
+// ─── Input reader (MCP stdio = newline-delimited JSON) ───────────────────────
 
 async function* readFramedMessages(stream: NodeJS.ReadableStream): AsyncGenerator<string> {
   let buf = ''
-  let contentLength = -1
 
   for await (const chunk of stream) {
     buf += (chunk as Buffer).toString('utf-8')
-
-    while (true) {
-      if (contentLength === -1) {
-        const idx = buf.indexOf('\r\n\r\n')
-        if (idx === -1) break
-        const header = buf.slice(0, idx)
-        const match = header.match(/Content-Length:\s*(\d+)/i)
-        if (!match) {
-          buf = buf.slice(idx + 4)
-          break
-        }
-        contentLength = parseInt(match[1], 10)
-        buf = buf.slice(idx + 4)
-      }
-
-      if (buf.length < contentLength) break
-      yield buf.slice(0, contentLength)
-      buf = buf.slice(contentLength)
-      contentLength = -1
+    const lines = buf.split('\n')
+    buf = lines.pop() ?? ''
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed) yield trimmed
     }
   }
+
+  // flush any remaining non-newline-terminated content
+  const trimmed = buf.trim()
+  if (trimmed) yield trimmed
 }
 
 // ─── CLI runner ──────────────────────────────────────────────────────────────
@@ -153,6 +141,24 @@ const TOOLS: McpTool[] = [
     },
   },
   {
+    name: 'bananajs_plan_module',
+    description:
+      'Analyse a natural-language module description and return a use-case classification plus HITL clarifying questions that must be answered before code generation. ' +
+      'Call this first when generating a non-trivial module (payments, webhooks, integrations, sagas, auth). ' +
+      'When hitlRequired is true in the response, present the questions to the user, collect answers, then call bananajs_generate with the context field set to the JSON-serialised plan+answers.',
+    inputSchema: {
+      type: 'object',
+      required: ['description'],
+      properties: {
+        description: {
+          type: 'string',
+          description: 'Natural language description of the module (e.g. "Payments module with Stripe webhook handling")',
+        },
+        cwd: { type: 'string', description: 'Project root directory (default: process.cwd())' },
+      },
+    },
+  },
+  {
     name: 'bananajs_generate',
     description: 'Generate a full DDD BananaJS module (controller, domain entities, application services, repository port + adapter) from a natural language description.',
     inputSchema: {
@@ -163,6 +169,13 @@ const TOOLS: McpTool[] = [
         orm: { type: 'string', enum: ['typeorm', 'mongoose', 'none'], description: 'ORM to use (default: from .bananarc.json)', default: 'typeorm' },
         out: { type: 'string', description: 'Output base directory (default: ./src)' },
         dryRun: { type: 'boolean', description: 'If true, print files without writing', default: false },
+        context: {
+          type: 'string',
+          description:
+            'JSON-serialised UseCaseContext object from a prior bananajs_plan_module call with developer answers filled in. ' +
+            'Required when the plan returned hitlRequired: true. ' +
+            'Shape: { "analysis": <plan output>, "answers": { "<questionId>": "<answer>", ... } }',
+        },
         cwd: { type: 'string', description: 'Project root directory' },
       },
     },
@@ -257,12 +270,38 @@ async function callTool(name: string, args: ToolArgs): Promise<unknown> {
       return { type: 'text', text: output }
     }
 
+    case 'bananajs_plan_module': {
+      if (!args.description) throw new Error('description is required')
+      const output = await runCli(
+        ['ai', 'generate', '--module', args.description as string, '--plan-only'],
+        cwd,
+      )
+      // The plan-only mode writes JSON to stdout; parse and return it as structured data.
+      const jsonStart = output.indexOf('{')
+      if (jsonStart >= 0) {
+        try {
+          const plan = JSON.parse(output.slice(jsonStart)) as unknown
+          return plan
+        } catch {
+          // fall through to text
+        }
+      }
+      return { type: 'text', text: output }
+    }
+
     case 'bananajs_generate': {
       if (!args.description) throw new Error('description is required')
       const cliArgs = ['ai', 'generate', '--module', args.description as string]
       if (args.orm) cliArgs.push('--orm', args.orm as string)
       if (args.out) cliArgs.push('--out', args.out as string)
-      if (args.dryRun === true || args.dryRun === undefined) cliArgs.push('--dry-run')
+      if (args.context) cliArgs.push('--context', args.context as string)
+      // In MCP mode default to dry-run only when no context is provided (safety guard)
+      // When context is explicitly provided the caller has done HITL and wants real files.
+      if (!args.context && (args.dryRun === true || args.dryRun === undefined)) {
+        cliArgs.push('--dry-run')
+      } else if (args.dryRun === true) {
+        cliArgs.push('--dry-run')
+      }
       const output = await runCli(cliArgs, cwd)
       return { type: 'text', text: output }
     }

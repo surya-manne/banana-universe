@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "npx tsc": true,
+        "/^cd /Users/smanne/Desktop/banana-universe/packages/bananajs-cli && npx tsc -p tsconfig\\.lib\\.json && node --test dist/__tests__/ai-upgrade\\.test\\.js dist/__tests__/ai-debug\\.test\\.js dist/__tests__/ai-perf\\.test\\.js 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

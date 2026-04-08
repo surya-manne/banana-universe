@@ -4,7 +4,43 @@ outline: [2, 3]
 
 # MCP Server
 
-`bjs mcp start` exposes the full BananaJS CLI as a **Model Context Protocol (MCP) server** — a persistent JSON-RPC process that any MCP-compatible IDE discovers automatically. Your agent sidebar gets 8 typed tools. No copy-pasting terminal commands. No context switching.
+`bjs mcp start` exposes the full BananaJS CLI as a **Model Context Protocol (MCP) server** — a persistent JSON-RPC process that any MCP-compatible IDE discovers automatically. Your agent sidebar gets 9 typed tools. No copy-pasting terminal commands. No context switching.
+
+## Request flow
+
+Each tool call routes through the CLI's PRPAV pipeline on the server side. Complex module requests use a **two-step flow** — plan first, then generate with answers — so the AI never has to guess intent.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Agent as IDE Agent
+    participant MCP as MCP Server
+    participant CLI as CLI (PRPAV)
+
+    Dev->>Agent: request
+
+    alt Non-CRUD module (hitlRequired: true)
+        Agent->>MCP: bananajs_plan_module(description)
+        MCP->>CLI: Prepare → Research → exit with plan
+        CLI-->>MCP: UseCaseAnalysis + HITL questions
+        MCP-->>Agent: { hitlRequired: true, questions: [...] }
+        Agent-->>Dev: presents questions in chat
+        Dev-->>Agent: answers
+        Agent->>MCP: bananajs_generate(description, context)
+    else CRUD module (hitlRequired: false)
+        Agent->>MCP: bananajs_generate(description)
+    end
+
+    MCP->>CLI: Prepare → Research → Plan → Act → Validate
+    Note right of CLI: full PRPAV pipeline
+    CLI-->>MCP: { files: [...], registered: true }
+    MCP-->>Agent: generation result
+    Agent-->>Dev: files written + bootstrap patched
+```
+
+::: tip Two-step flow for non-CRUD modules
+Always call `bananajs_plan_module` first for complex requests (webhooks, sagas, integrations). It exits early after the **Research** stage and returns targeted questions. Pass the answers back via the `context` field in `bananajs_generate` — this produces domain-appropriate code instead of generic CRUD stubs.
+:::
 
 ## Exposed tools
 
@@ -13,7 +49,8 @@ outline: [2, 3]
 | `bananajs_routes` | List every registered route and its HTTP method |
 | `bananajs_explain` | Return a concise LLM summary of any source file |
 | `bananajs_review` | Run a structured convention review; returns `AiReviewJson` |
-| `bananajs_generate` | Scaffold a flat bundle or full DDD module tree |
+| `bananajs_plan_module` | Classify use case + return HITL questions before generation (call first for non-CRUD modules) |
+| `bananajs_generate` | Scaffold a flat bundle or full DDD module tree; accepts `context` from `bananajs_plan_module` |
 | `bananajs_mock` | Generate `build<Type>()` fixture factories from Zod schemas |
 | `bananajs_debug` | Parse a stack trace into root cause + fix (`AiDebugJson`) |
 | `bananajs_perf` | Static-first N+1 and performance scan |
@@ -137,7 +174,7 @@ claude mcp list
 :::
 
 ::: tip Restart once, use everywhere
-After saving the config, **restart the IDE** (or reload the MCP server from its settings panel). All 8 tools register automatically — no further setup needed.
+After saving the config, **restart the IDE** (or reload the MCP server from its settings panel). All 9 tools register automatically — no further setup needed.
 :::
 
 ::: warning Working directory matters
@@ -159,10 +196,12 @@ The server resolves your project root from the directory it starts in. If your I
 
 **What happens:**
 
-1. The agent calls `bananajs_generate` with your prompt and the `typeorm` ORM from `.bananarc.json`.
-2. Files land in `src/modules/payments/` — controller, service, DTOs, entities, bootstrap registration — all in one pass.
-3. The agent calls `bananajs_review payments --format json` immediately.
-4. Findings come back inline: one `warning` about a missing `@Catch` on the webhook handler, one `info` about an unbounded query. You fix both in the same turn.
+1. The agent calls `bananajs_plan_module` with your description. It returns `useCase: "webhook"`, `hitlRequired: true`, and three questions (which Stripe events to handle, whether to deduplicate by idempotency key, how to persist raw payloads).
+2. The agent presents the questions in the chat. You answer: _payment_intent.succeeded, charge.failed_, _yes_, _typeorm_.
+3. The agent calls `bananajs_generate` with a `context` field carrying the plan and your answers.
+4. Files land in `src/modules/payment/` with webhook-appropriate code: `receiveWebhook`, `verifySignature`, `handlePaymentSucceeded`, `handleChargeFailed` — not generic CRUD stubs.
+5. The agent calls `bananajs_review payment --format json` immediately.
+6. Findings come back inline: one `warning` about a missing idempotency guard on retry, one `info` about raw payload size limits. You fix both in the same turn.
 
 **Why this matters:** Three terminal commands and two file opens collapse into one conversation turn. Review findings stay in the same context as the generated code.
 

@@ -25,6 +25,10 @@ You are not “vibe coding” a monolith. You are **configuring a tool**, **gene
 <a href="#mcp-server" class="ai-step ai-step--full ai-step--link"><div class="step-badge">9</div><code class="step-cmd">mcp start</code><p>Expose the full CLI as an MCP server — <code>bananajs_routes</code>, <code>bananajs_review</code>, <code>bananajs_generate</code>, and more available as native tools in Cursor, Claude Desktop, and any MCP-compatible IDE <span class="step-link-hint">→ see real-world usage</span></p></a>
 </div>
 
+::: info How every command runs internally
+Every `bjs ai` command follows the same **Prepare → Research → Plan → Act → Validate** pipeline. **Prepare** loads config and validates inputs. **Research** reads files and runs static checks locally — no LLM yet. **Plan** builds prompts. **Act** calls the LLM (skipped for `ai wire` without `--llm`, which is why wire always produces output). **Validate** writes results or previews with `--dry-run`. Pass `--debug` to see per-stage timings. Full reference: [PRPAV pipeline](/tooling/ai-commands#prpav-pipeline).
+:::
+
 ## Where the deep docs live (Tooling)
 
 | You want…                                           | Open in Tooling                                           |

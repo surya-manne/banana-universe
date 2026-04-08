@@ -5,6 +5,7 @@ import { UPGRADE_MANIFEST, SAFE_APPLY_IDS, type UpgradePattern } from './ai-upgr
 import { loadBananarc } from './llm/bananarc.js'
 import { resolveLlmProvider } from './llm/provider.factory.js'
 import { appendBananaJsAiRules } from './llm/bananajs-ai-rules.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 export interface AiUpgradeOptions {
   /** Target BananaJS version (e.g. "0.6.0"). When omitted, checks all known patterns. */
@@ -201,96 +202,166 @@ function renderReport(report: UpgradeReport, cwd: string): void {
 
 // ─── Main entry ───────────────────────────────────────────────────────────────
 
-export async function runAiUpgrade(opts: AiUpgradeOptions): Promise<void> {
-  const cwd = opts.cwd ?? process.cwd()
-  const patterns = filterPatternsForVersion(opts.to)
+interface UpgradeCtx extends BaseCtx {
+  cwd: string
+  opts: AiUpgradeOptions
+  patterns: UpgradePattern[]
+  // populated in research: abs path → original source
+  fileSources: Map<string, string>
+  files: string[]
+  allFindings: UpgradeFinding[]
+  appliedCount: number
+  patchFiles: string[]
+  llmHints: string
+}
 
-  if (opts.to) {
-    console.log(chalk.dim(`\nScanning for patterns deprecated in BananaJS ≥ ${opts.to}...\n`))
-  } else {
-    console.log(chalk.dim('\nScanning for all known deprecated patterns...\n'))
-  }
+const upgradeOperation: LlmOperation<AiUpgradeOptions, UpgradeCtx, void> = {
+  name: 'ai-upgrade',
 
-  const files = await collectTsFiles(cwd)
-  if (files.length === 0) {
-    console.log(chalk.yellow('No TypeScript source files found under src/. Run from a BananaJS project root.'))
-    return
-  }
+  // Prepare: resolve cwd, filter patterns, load provider
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const patterns = filterPatternsForVersion(opts.to)
+    if (opts.to) {
+      console.log(chalk.dim(`\nScanning for patterns deprecated in BananaJS ≥ ${opts.to}...\n`))
+    } else {
+      console.log(chalk.dim('\nScanning for all known deprecated patterns...\n'))
+    }
+    const config = await loadBananarc(cwd)
+    const provider = resolveLlmProvider(config)
+    return {
+      cwd,
+      opts,
+      patterns,
+      fileSources: new Map(),
+      files: [],
+      allFindings: [],
+      appliedCount: 0,
+      patchFiles: [],
+      llmHints: '',
+      provider,
+      providerAvailable: true,
+      debug: opts.debug ?? false,
+    }
+  },
 
-  const allFindings: UpgradeFinding[] = []
-  let appliedCount = 0
-  const patchFiles: string[] = []
+  // Research: collect TS files and run static scan over each
+  async research(ctx) {
+    ctx.files = await collectTsFiles(ctx.cwd)
+    if (ctx.files.length === 0) {
+      return ctx
+    }
+    for (const absFile of ctx.files) {
+      const src = await fs.readFile(absFile, 'utf-8').catch(() => '')
+      if (!src) continue
+      ctx.fileSources.set(absFile, src)
+      const relFile = path.relative(ctx.cwd, absFile)
+      const findings = scanFile(src, relFile, ctx.patterns)
+      ctx.allFindings.push(...findings)
+    }
+    return ctx
+  },
 
-  for (const absFile of files) {
-    const relFile = path.relative(cwd, absFile)
-    const src = await fs.readFile(absFile, 'utf-8').catch(() => '')
-    if (!src) continue
+  // Plan: apply safe mechanical transforms (--apply or --out)
+  async plan(ctx) {
+    if (ctx.files.length === 0 || ctx.opts.dryRun) return ctx
 
-    const findings = scanFile(src, relFile, patterns)
-    allFindings.push(...findings)
+    for (const absFile of ctx.files) {
+      const src = ctx.fileSources.get(absFile)
+      if (!src) continue
+      const relFile = path.relative(ctx.cwd, absFile)
+      const fileFindings = ctx.allFindings.filter((f) => f.file === relFile)
+      if (fileFindings.length === 0) continue
 
-    if (findings.length === 0 || opts.dryRun) continue
-
-    if (opts.apply) {
-      // Apply only safe mechanical transforms
-      const safePatterns = patterns.filter((p) => p.safeFix)
-      const { modified, count } = await applyPatterns(src, safePatterns)
-      if (count > 0) {
-        await fs.writeFile(absFile, modified, 'utf-8')
-        appliedCount += count
-      }
-    } else if (opts.out) {
-      // Emit patch files for safe transforms
-      const safePatterns = patterns.filter((p) => p.safeFix)
-      const { modified } = await applyPatterns(src, safePatterns)
-      if (modified !== src) {
-        const diff = minimalUnifiedDiff(src, modified, relFile)
-        const patchName = relFile.replace(/\//g, '__').replace(/\.ts$/, '.patch')
-        const outDir = path.resolve(cwd, opts.out)
-        await fs.mkdir(outDir, { recursive: true })
-        const patchPath = path.join(outDir, patchName)
-        await fs.writeFile(patchPath, diff, 'utf-8')
-        patchFiles.push(patchPath)
+      if (ctx.opts.apply) {
+        const safePatterns = ctx.patterns.filter((p) => p.safeFix)
+        const { modified, count } = await applyPatterns(src, safePatterns)
+        if (count > 0) {
+          await fs.writeFile(absFile, modified, 'utf-8')
+          ctx.appliedCount += count
+        }
+      } else if (ctx.opts.out) {
+        const safePatterns = ctx.patterns.filter((p) => p.safeFix)
+        const { modified } = await applyPatterns(src, safePatterns)
+        if (modified !== src) {
+          const diff = minimalUnifiedDiff(src, modified, relFile)
+          const patchName = relFile.replace(/\//g, '__').replace(/\.ts$/, '.patch')
+          const outDir = path.resolve(ctx.cwd, ctx.opts.out)
+          await fs.mkdir(outDir, { recursive: true })
+          const patchPath = path.join(outDir, patchName)
+          await fs.writeFile(patchPath, diff, 'utf-8')
+          ctx.patchFiles.push(patchPath)
+        }
       }
     }
-  }
 
-  // LLM pass for manual findings (ambiguous transforms)
-  const manualFindings = allFindings.filter((f) => !f.safeApply)
-  if (manualFindings.length > 0 && !opts.dryRun) {
+    return ctx
+  },
+
+  // Act: LLM hints for manual findings (non-blocking; failure leaves llmHints empty)
+  async act(ctx) {
+    if (ctx.opts.dryRun) return ctx
+    const manualFindings = ctx.allFindings.filter((f) => !f.safeApply)
+    if (manualFindings.length === 0) return ctx
+
     try {
-      const config = await loadBananarc(cwd)
-      const provider = resolveLlmProvider(config)
-      // Build a concise prompt listing manual findings and asking for guidance
       const manualList = manualFindings
-        .slice(0, 10) // cap to avoid token overflow
+        .slice(0, 10)
         .map((f) => `- ${f.file}:${f.line} [${f.patternId}]: ${f.snippet}`)
         .join('\n')
       const system = appendBananaJsAiRules(
         `You are a BananaJS migration assistant. For each deprecated pattern below, provide a concise 1-2 sentence migration hint. Respond in plain text, one hint per bullet.`,
       )
-      const raw = await provider.generate(
+      ctx.llmHints = await ctx.provider.generate(
         `Provide migration hints for these deprecated patterns:\n${manualList}`,
         { system, temperature: 0.2 },
       )
-      if (opts.debug) {
-        console.log(chalk.dim('\n[debug] LLM upgrade hints:'))
-        console.log(chalk.dim(raw))
-      } else if (raw.trim()) {
-        console.log(chalk.bold('\nAI Migration Hints:'))
-        console.log(chalk.dim(raw.trim()))
-      }
     } catch {
-      // LLM step is optional; static findings are already complete
+      // LLM step is optional — static findings are already complete
     }
-  }
 
-  const report: UpgradeReport = {
-    totalFiles: files.length,
-    findings: allFindings,
-    appliedCount,
-    patchFiles,
-  }
+    return ctx
+  },
 
-  renderReport(report, cwd)
+  // Validate: print LLM hints if available, render static report
+  async validate(ctx) {
+    if (ctx.files.length === 0) {
+      console.log(
+        chalk.yellow(
+          'No TypeScript source files found under src/. Run from a BananaJS project root.',
+        ),
+      )
+      return
+    }
+
+    if (ctx.debug && ctx.llmHints) {
+      console.log(chalk.dim('\n[debug] LLM upgrade hints:'))
+      console.log(chalk.dim(ctx.llmHints))
+    } else if (ctx.llmHints.trim()) {
+      console.log(chalk.bold('\nAI Migration Hints:'))
+      console.log(chalk.dim(ctx.llmHints.trim()))
+    }
+
+    const report: UpgradeReport = {
+      totalFiles: ctx.files.length,
+      findings: ctx.allFindings,
+      appliedCount: ctx.appliedCount,
+      patchFiles: ctx.patchFiles,
+    }
+
+    renderReport(report, ctx.cwd)
+  },
+}
+
+export async function runAiUpgrade(opts: AiUpgradeOptions): Promise<void> {
+  try {
+    await runLlmOperation(upgradeOperation, opts, opts.debug)
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai upgrade failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('ai upgrade failed:'), e instanceof Error ? e.message : String(e))
+    }
+    process.exit(1)
+  }
 }

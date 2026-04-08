@@ -7,6 +7,7 @@ import { tryParseJsonObject } from './llm/entity-extraction.js'
 import { buildAiDebugJsonSystem } from './llm/prompts/debug.js'
 import { parseAiDebugJson, type AiDebugJson } from './ai-debug-schema.js'
 import { listRoutes as _listRoutes } from './routes.js'
+import { type BaseCtx, type LlmOperation, LlmOperationError, runLlmOperation } from './llm/pipeline.js'
 
 export interface AiDebugOptions {
   /** Stdin or file path containing the stack trace / error message. */
@@ -87,21 +88,105 @@ function renderTextOutput(result: AiDebugJson): void {
   console.log(chalk.gray('─'.repeat(60)))
 }
 
-export async function runAiDebug(opts: AiDebugOptions): Promise<void> {
-  const cwd = opts.cwd ?? process.cwd()
-  const config = await loadBananarc(cwd)
+// ─── Context ──────────────────────────────────────────────────────────────────
 
-  const stackTrace = await readStackTrace(opts.input, cwd)
-  if (!stackTrace.trim()) {
-    console.error(
-      chalk.red(
+interface DebugCtx extends BaseCtx {
+  cwd: string
+  format: 'text' | 'json'
+  stackTrace: string
+  sourceContext: string
+  moduleTreeString: string
+  systemPrompt: string
+  userPrompt: string
+  rawOutput: string
+  result: AiDebugJson | null
+}
+
+// ─── Operation ────────────────────────────────────────────────────────────────
+
+const debugOperation: LlmOperation<AiDebugOptions, DebugCtx, void> = {
+  name: 'ai-debug',
+
+  // Prepare: validate there is input, load config, resolve provider
+  async prepare(opts) {
+    const cwd = opts.cwd ?? process.cwd()
+    const stackTrace = await readStackTrace(opts.input, cwd)
+    if (!stackTrace.trim()) {
+      throw new Error(
         'No stack trace provided. Pipe stderr/stdout to stdin, pass --input <file>, or provide an inline error string.',
-      ),
-    )
-    process.exit(1)
-  }
+      )
+    }
+    const config = await loadBananarc(cwd)
+    const provider = resolveLlmProvider(config)
+    return {
+      cwd,
+      format: opts.format ?? 'text',
+      stackTrace: stackTrace.trim(),
+      sourceContext: '',
+      moduleTreeString: '',
+      systemPrompt: '',
+      userPrompt: '',
+      rawOutput: '',
+      result: null,
+      provider,
+      providerAvailable: true,
+      debug: opts.debug ?? false,
+    }
+  },
 
-  // Attach optional reference file
+  // Research: build module tree and attach optional source file context
+  async research(ctx) {
+    ctx.moduleTreeString = await buildModuleTreeString(ctx.cwd)
+    return ctx
+  },
+
+  // Plan: build debug system prompt and user prompt
+  async plan(ctx) {
+    ctx.systemPrompt = buildAiDebugJsonSystem(ctx.moduleTreeString)
+    ctx.userPrompt = `Stack trace / error:\n\`\`\`\n${ctx.stackTrace}\n\`\`\`` + ctx.sourceContext
+    return ctx
+  },
+
+  // Act: single LLM call
+  async act(ctx) {
+    ctx.rawOutput = await ctx.provider.generate(ctx.userPrompt, {
+      system: ctx.systemPrompt,
+      temperature: 0.1,
+    })
+    if (ctx.debug) {
+      console.log(chalk.dim('\n[debug] raw LLM output:'))
+      console.log(chalk.dim(ctx.rawOutput))
+      console.log('')
+    }
+    return ctx
+  },
+
+  // Validate: parse structured JSON, render output
+  async validate(ctx) {
+    let result: AiDebugJson
+    try {
+      result = parseAiDebugJson(tryParseJsonObject(ctx.rawOutput))
+    } catch {
+      throw new Error(
+        'Failed to parse structured debug output. Use --debug to see raw LLM response.' +
+          (ctx.debug ? '' : `\n${ctx.rawOutput.slice(0, 500)}`),
+      )
+    }
+
+    if (ctx.format === 'json') {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+      return
+    }
+    renderTextOutput(result)
+  },
+}
+
+// ─── Public entry ─────────────────────────────────────────────────────────────
+
+export async function runAiDebug(opts: AiDebugOptions): Promise<void> {
+  // Source-file attachment is built outside the pipeline since it involves
+  // optional file I/O that populates the stack trace context before research.
+  const cwd = opts.cwd ?? process.cwd()
   let sourceContext = ''
   if (opts.file) {
     const absFile = path.resolve(cwd, opts.file)
@@ -111,42 +196,26 @@ export async function runAiDebug(opts: AiDebugOptions): Promise<void> {
     }
   }
 
-  const moduleTree = await buildModuleTreeString(cwd)
-  const provider = resolveLlmProvider(config)
-
-  const prompt =
-    `Stack trace / error:\n\`\`\`\n${stackTrace.trim()}\n\`\`\`` + sourceContext
-
-  let raw: string
   try {
-    raw = await provider.generate(prompt, {
-      system: buildAiDebugJsonSystem(moduleTree),
-      temperature: 0.1,
-    })
-  } catch (err) {
-    console.error(chalk.red('LLM request failed:'), err instanceof Error ? err.message : String(err))
+    await runLlmOperation(
+      {
+        ...debugOperation,
+        // Inject source context into the ctx built by prepare
+        async prepare(o) {
+          const ctx = await debugOperation.prepare(o)
+          ctx.sourceContext = sourceContext
+          return ctx
+        },
+      },
+      opts,
+      opts.debug,
+    )
+  } catch (e) {
+    if (e instanceof LlmOperationError) {
+      console.error(chalk.red(`ai debug failed [${e.stage}]: ${e.cause.message}`))
+    } else {
+      console.error(chalk.red('LLM request failed:'), e instanceof Error ? e.message : String(e))
+    }
     process.exit(1)
   }
-
-  if (opts.debug) {
-    console.log(chalk.dim('\n[debug] raw LLM output:'))
-    console.log(chalk.dim(raw))
-    console.log('')
-  }
-
-  let result: AiDebugJson
-  try {
-    result = parseAiDebugJson(tryParseJsonObject(raw))
-  } catch {
-    console.error(chalk.red('Failed to parse structured debug output. Use --debug to see raw LLM response.'))
-    if (!opts.debug) console.error(chalk.dim(raw.slice(0, 500)))
-    process.exit(1)
-  }
-
-  if (opts.format === 'json') {
-    process.stdout.write(JSON.stringify(result, null, 2) + '\n')
-    return
-  }
-
-  renderTextOutput(result)
 }
