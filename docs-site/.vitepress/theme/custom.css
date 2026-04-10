@@ -162,7 +162,7 @@
   color: var(--vp-c-text-1);
 }
 
-/* Learning path — three-track card grid */
+/* Learning path — four-track card grid */
 .vp-doc .home-learning-path {
   max-width: min(1080px, 100%);
   margin: 0 auto 3rem;
@@ -179,8 +179,14 @@
 
 .vp-doc .home-learning-path .tracks {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+}
+
+@media (min-width: 960px) {
+  .vp-doc .home-learning-path .tracks {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .vp-doc .home-learning-path .track {
@@ -248,6 +254,22 @@
 }
 .vp-doc .home-learning-path .track-deep a:hover {
   color: #a777e3;
+}
+
+/* Track 4 — orange: AI & MCP */
+.vp-doc .home-learning-path .track-ai {
+  background: linear-gradient(155deg, rgba(72, 36, 8, 0.55) 0%, rgba(10, 22, 40, 0.7) 100%);
+  border-color: rgba(255, 138, 61, 0.2);
+  border-top-color: #ff8a3d;
+}
+.vp-doc .home-learning-path .track-ai strong {
+  color: #ff8a3d;
+}
+.vp-doc .home-learning-path .track-ai a {
+  color: #ffb07a;
+}
+.vp-doc .home-learning-path .track-ai a:hover {
+  color: #ff8a3d;
 }
 
 .vp-doc .home-learning-path .track > p {

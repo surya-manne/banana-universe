@@ -40,6 +40,9 @@ import { createTenantMiddleware, getTenantId } from '../Tenant/TenantContext.js'
 export type Constructor<T = unknown> = new (...args: any[]) => T
 
 /** Bootstrap: either legacy `controllers` or modular `modules` (not both). */
+/** Typed Helmet configuration options — re-exported so consumers do not need to import directly from `helmet`. */
+export type HelmetOptions = Parameters<typeof helmet>[0]
+
 export type BananaAppCreateInput =
   | (BananaAppOptions & { controllers: Constructor[]; modules?: undefined })
   | (BananaAppOptions & { modules: BananaModuleDescriptor[]; controllers?: undefined })
@@ -50,6 +53,11 @@ export interface BananaAppOptions {
     helmet?: boolean | Parameters<typeof helmet>[0]
     cors?: CorsOptions | false
   }
+  /**
+   * Maximum request body size accepted by the JSON and URL-encoded body parsers.
+   * Uses the same format as the `bytes` package (e.g. `'1mb'`, `'500kb'`). Defaults to `'1mb'`.
+   */
+  bodyLimit?: string
   requestId?: boolean
   logger?: Logger | false
   /** Root tsyringe container; optional — created when using `modules` without an explicit container. */
@@ -132,6 +140,7 @@ export class BananaApp {
       requestId = true,
       logger: loggerOption,
       container,
+      bodyLimit = '1mb',
     } = input
 
     if (input.modules !== undefined) {
@@ -179,8 +188,8 @@ export class BananaApp {
     }
 
     this.app = express()
-    this.app.use(express.json())
-    this.app.use(express.urlencoded({ extended: true }))
+    this.app.use(express.json({ limit: bodyLimit }))
+    this.app.use(express.urlencoded({ extended: false, limit: bodyLimit }))
 
     if (security.helmet !== false) {
       const helmetOptions = typeof security.helmet === 'object' ? security.helmet : undefined
@@ -188,7 +197,13 @@ export class BananaApp {
     }
 
     if (security.cors !== false) {
-      this.app.use(cors(security.cors as CorsOptions | undefined))
+      const corsOptions = security.cors as CorsOptions | undefined
+      if (!corsOptions?.origin) {
+        this.logger?.warn(
+          '[BananaJS] CORS is enabled with no explicit origin restriction — requests from any origin are allowed. Set security.cors.origin to an allowlist in production.',
+        )
+      }
+      this.app.use(cors(corsOptions))
     }
 
     if (requestId !== false) {

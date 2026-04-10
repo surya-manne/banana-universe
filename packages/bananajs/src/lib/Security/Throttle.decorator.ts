@@ -6,6 +6,12 @@ export interface ThrottleOptions {
   max: number
   keyBy?: 'userId' | 'ip'
   message?: string
+  /**
+   * Optional external store for distributed deployments (e.g. Redis).
+   * Must implement the `ThrottleStore` interface from `@banana-universe/bananajs`.
+   * Defaults to in-memory counting when omitted.
+   */
+  store?: import('./ThrottleStore.interface.js').ThrottleStore
 }
 
 export function Throttle(options: ThrottleOptions): MethodDecorator & ClassDecorator {

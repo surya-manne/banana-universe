@@ -65,3 +65,29 @@ export function ApiResponseDoc(options: ApiResponseOptions): MethodDecorator {
     )
   }
 }
+
+/**
+ * Declares that a route requires a specific OpenAPI security scheme.
+ *
+ * @example
+ * ```typescript
+ * @Get('profile')
+ * @Auth()
+ * @ApiSecurity('BearerAuth')
+ * profile() { ... }
+ * ```
+ */
+export function ApiSecurity(...schemes: string[]): MethodDecorator & ClassDecorator {
+  return (target: object, propertyKey?: string | symbol): void => {
+    if (propertyKey !== undefined) {
+      Reflect.defineMetadata(
+        MetadataKeys.API_SECURITY,
+        schemes,
+        (target as { constructor: object }).constructor,
+        propertyKey,
+      )
+    } else {
+      Reflect.defineMetadata(MetadataKeys.API_SECURITY, schemes, target)
+    }
+  }
+}

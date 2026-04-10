@@ -1,0 +1,113 @@
+# version: 2
+
+# updates:
+#   # Root workspace
+#   - package-ecosystem: npm
+#     directory: /
+#     schedule:
+#       interval: weekly
+#       day: monday
+#     groups:
+#       security-updates:
+#         applies-to: security-updates
+#         patterns:
+#           - "*"
+
+#   # Core framework package
+#   - package-ecosystem: npm
+#     directory: /packages/bananajs
+#     schedule:
+#       interval: weekly
+#       day: monday
+#     groups:
+#       security-updates:
+#         applies-to: security-updates
+#         patterns:
+#           - "*"
+
+#   # CLI package
+#   - package-ecosystem: npm
+#     directory: /packages/bananajs-cli
+#     schedule:
+#       interval: weekly
+#       day: monday
+#     groups:
+#       security-updates:
+#         applies-to: security-updates
+#         patterns:
+#           - "*"
+
+#   # plugins
+#   - package-ecosystem: npm
+#     directory: /packages/plugin-mongoose
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /packages/plugin-otel
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /packages/plugin-typeorm
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /packages/plugin-websocket
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /packages/plugin-zod
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /packages/plugin-ai
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   # Example apps
+#   - package-ecosystem: npm
+#     directory: /apps/example-rest-postgresql
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /apps/example-rest-mongodb
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /apps/example-fastify
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /apps/example-websocket-chat
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   - package-ecosystem: npm
+#     directory: /apps/example-multitenant
+#     schedule:
+#       interval: weekly
+#       day: monday
+
+#   # GitHub Actions
+#   - package-ecosystem: github-actions
+#     directory: /
+#     schedule:
+#       interval: weekly
+#       day: monday

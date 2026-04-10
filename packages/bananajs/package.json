@@ -28,7 +28,7 @@
     }
   },
   "scripts": {
-    "test": "tsc -p tsconfig.lib.json && node --test dist/lib/OpenAPI/__tests__/swagger.setup.test.js"
+    "test": "tsc -p tsconfig.lib.json && node --test dist/lib/OpenAPI/__tests__/swagger.setup.test.js dist/lib/Core/__tests__/security-headers.test.js dist/lib/Core/__tests__/body-limit.test.js dist/lib/Config/__tests__/BananaConfig.sensitive.test.js"
   },
   "files": [
     "dist",
@@ -40,6 +40,7 @@
     "express-rate-limit": ">=7.0.0",
     "multer": ">=1.4.0",
     "prom-client": ">=15.0.0",
+    "rate-limiter-flexible": ">=2.0.0",
     "sanitize-html": ">=2.0.0",
     "swagger-ui-express": ">=5.0.0"
   },
@@ -57,6 +58,9 @@
       "optional": true
     },
     "sanitize-html": {
+      "optional": true
+    },
+    "rate-limiter-flexible": {
       "optional": true
     },
     "swagger-ui-express": {

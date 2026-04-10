@@ -24,6 +24,7 @@ export enum MetadataKeys {
   SANITIZE = 'banana:sanitize',
   CAN = 'banana:can',
   THROTTLE = 'banana:throttle',
+  API_SECURITY = 'banana:api_security',
   // Phase 4 — Multi-Tenancy
   TENANT = 'banana:tenant',
 }

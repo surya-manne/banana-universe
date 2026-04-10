@@ -141,7 +141,48 @@ These flow through **`ErrorMiddleware`** like other **`ApiError`** subclasses.
 When **`auth`** is set on **`BananaApp`**, the generated spec includes **`BearerAuth`** (HTTP bearer, JWT-style) and marks protected operations with **`security: [{ BearerAuth: [] }]`** (unless the handler is **`@Public`**). See **`packages/bananajs/src/lib/OpenAPI/swagger.setup.ts`**.
 
 Install **`@scalar/express-api-reference`** or **`swagger-ui-express`** to get a UI; otherwise the JSON spec is still served at **`/api-docs.json`** (path defaults—see **`swagger`** options).
+## OpenAPI security schemes
 
+When `auth` is set on `BananaApp`, the generated spec includes a `BearerAuth` scheme
+(HTTP bearer, JWT-style). You can declare additional schemes and mark individual routes
+using `@ApiSecurity`:
+
+```typescript
+import { Controller, Get, Auth, ApiSecurity } from '@banana-universe/bananajs'
+
+@Controller('payments')
+@Auth()
+export class PaymentController {
+  // Inherits BearerAuth from the auth guard
+  @Get('invoices')
+  listInvoices() { ... }
+
+  // Requires an additional API-key scheme for machine-to-machine calls
+  @Get('webhook-status')
+  @ApiSecurity('ApiKeyAuth', 'BearerAuth')
+  webhookStatus() { ... }
+}
+```
+
+Declare the scheme definitions in the raw OpenAPI `components.securitySchemes` block
+(pass it through `swagger.components` once that option is exposed, or extend the spec
+in a plugin):
+
+```yaml
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+```
+
+The `@ApiSecurity` decorator accepts one or more scheme names. Without arguments it
+marks the route with the globally configured scheme (`BearerAuth` when auth guard is set).
 ## Beyond auth: ABAC with `@Can`
 
 If you need **resource/action** checks (e.g. “can delete **this** document”), use **`@Can(action, resource)`** and provide **`abac: { guard: AbacGuard }`** in **`BananaAppOptions`**. That runs **after** authentication. See [**Advanced concepts**](/guide/advanced-concepts) and TypeDoc for **`AbacGuard`**.

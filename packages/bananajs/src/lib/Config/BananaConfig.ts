@@ -66,6 +66,25 @@ function buildConfig<S extends ConfigSchema>(schema: S): ConfigResult<S> {
     throw new Error(`Configuration validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`)
   }
 
+  const sensitiveKeys = new Set<string>()
+  for (const [key, field] of Object.entries(schema)) {
+    if (field.sensitive) sensitiveKeys.add(key)
+  }
+  if (sensitiveKeys.size > 0) {
+    Object.defineProperty(result, 'toJSON', {
+      value(): Record<string, unknown> {
+        const out: Record<string, unknown> = {}
+        for (const key of Object.keys(result)) {
+          out[key] = sensitiveKeys.has(key) ? '[REDACTED]' : result[key]
+        }
+        return out
+      },
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    })
+  }
+
   return Object.freeze(result) as ConfigResult<S>
 }
 

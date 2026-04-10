@@ -26,21 +26,43 @@ features:
   - icon: 🤖
     title: AI-first CLI & codegen
     details: 'Turn specs and prompts into working endpoints and modules—generate code, improve docs, and review quality from the CLI so routine API work does not eat your week.'
+    link: /ai/
+    linkText: AI docs
   - icon: ✨
     title: DX — calm and productive
     details: 'Developer experience matters—one consistent way to declare routes, validate input, shape responses, and surface errors: less boilerplate, fewer surprises, faster iteration on real product logic.'
+    link: /guide/basic-concepts
+    linkText: Core concepts
   - icon: 🧱
     title: DDD as a destination
     details: 'Keep business rules and use cases understandable and testable—structure grows with your product instead of turning into a flat pile of handlers.'
+    link: /guide/layered-architecture
+    linkText: Architecture guide
   - icon: 🔌
     title: Deeply extendable
     details: 'Add databases, realtime, observability, and other integrations when you need them—the core stays lean while you opt into heavier pieces.'
-  - icon: 🔐
+    link: /plugins/overview
+    linkText: Plugin docs
+  - icon: "🛡️"
+    title: Natively secure
+    details: 'Secure headers, CORS, body-size limits, and rate limiting are native to the framework—on from the first request, no extra wiring. Input sanitization and prototype-pollution guards come standard; tune or extend only when your requirements demand it.'
+    link: /reference/security
+    linkText: Security docs
+  - icon: "🔐"
     title: Enterprise-ready surface
     details: 'Authentication, authorization, tenancy, safety nets around input and traffic, health signals, and metrics—so production concerns are part of the story, not an afterthought.'
+    link: /integrations/auth
+    linkText: Auth & enterprise
+  - icon: 🤖
+    title: MCP server
+    details: '`bjs mcp start` exposes the full BananaJS CLI as a Model Context Protocol server—9 typed tools available natively in Cursor, Claude Desktop, and any MCP-compatible IDE. No copy-pasting terminal commands, no context switching.'
+    link: /mcp/
+    linkText: MCP docs
   - icon: 📄
     title: Automatic Swagger docs
     details: 'Your decorators are the spec. The OpenAPI doc your consumers read is built live from the same code your server runs—so the contract never drifts, and you never write YAML.'
+    link: /reference/openapi
+    linkText: OpenAPI docs
 ---
 
 <div class="home-hero-section">
@@ -105,6 +127,19 @@ Architecture, performance, plugin authoring.
 - [Testing](/reference/testing) — `BananaTestApp`, `testOverrides`
 - [Multi-tenancy](/reference/multi-tenancy) — tenant isolation patterns
 - [Writing a plugin](/plugins/writing-a-plugin) — async lifecycle, DI integration
+
+</div>
+<div class="track track-ai">
+
+**🤖 AI & MCP**
+
+Let your IDE agent do the heavy lifting.
+
+- [AI overview](/ai/) — `bjs ai` commands and the PRPAV pipeline
+- [AI codegen](/tooling/ai-commands) — generate modules and endpoints from text
+- [AI review](/tooling/ai-commands#ai-review) — structured findings for CI
+- [MCP server](/mcp/) — `bjs mcp start`, 9 tools in Cursor and Claude Desktop
+- [AI context](/tooling/ai-commands#ai-context) — publish conventions to every teammate's agent
 
 </div>
 </div>
