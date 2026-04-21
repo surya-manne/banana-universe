@@ -207,16 +207,9 @@ export default withMermaid(
         ],
       },
 
-      socialLinks: [{ icon: 'github', link: 'https://github.com/surya-manne/banana-universe' }],
-
       footer: {
         message: 'Released under the MIT License.',
         copyright: 'Copyright © 2026',
-      },
-
-      editLink: {
-        pattern: 'https://github.com/surya-manne/banana-universe/edit/main/docs-site/:path',
-        text: 'Edit this page on GitHub',
       },
 
       search: {

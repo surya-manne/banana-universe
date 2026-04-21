@@ -18,9 +18,6 @@ hero:
     - theme: alt
       text: Recipes
       link: /recipes/
-    - theme: alt
-      text: GitHub
-      link: https://github.com/surya-manne/banana-universe
 
 features:
   - icon: 🤖

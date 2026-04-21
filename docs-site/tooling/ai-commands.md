@@ -118,19 +118,19 @@ bjs ai e src/bootstrap.ts
 
 Generates project-tailored AI context files embedding the shared BananaJS rules, discovered module layout, and installed plugin list. No LLM call required — reads `.bananarc.json` and scans `src/modules/` statically.
 
-| Output file | IDE / agent |
-| --- | --- |
-| `CLAUDE.md` | Claude Code, Claude.ai projects |
-| `.cursor/rules/bananajs.mdc` | Cursor (current MDC format) |
-| `.cursorrules` | Cursor (legacy backwards compat) |
-| `.github/copilot-instructions.md` | GitHub Copilot |
-| `AGENTS.md` | OpenAI Codex CLI and other agents |
+| Output file                       | IDE / agent                       |
+| --------------------------------- | --------------------------------- |
+| `CLAUDE.md`                       | Claude Code, Claude.ai projects   |
+| `.cursor/rules/bananajs.mdc`      | Cursor (current MDC format)       |
+| `.cursorrules`                    | Cursor (legacy backwards compat)  |
+| `.github/copilot-instructions.md` | GitHub Copilot                    |
+| `AGENTS.md`                       | OpenAI Codex CLI and other agents |
 
-| Option | Description |
-| --- | --- |
+| Option               | Description                                                     |
+| -------------------- | --------------------------------------------------------------- |
 | **`--format <fmt>`** | `claude \| cursor \| copilot \| agents \| all` (default: `all`) |
-| **`--out <dir>`** | Output directory (default: project root) |
-| **`--dry-run`** | Preview files without writing |
+| **`--out <dir>`**    | Output directory (default: project root)                        |
+| **`--dry-run`**      | Preview files without writing                                   |
 
 ```bash
 # Generate all context files in the project root
@@ -154,13 +154,13 @@ Commit the generated context files so every team member's IDE agent follows the 
 
 Generates TypeScript fixture factories and JSON sample files from Zod schemas in a controller, DTO, or module directory.
 
-| Option | Description |
-| --- | --- |
-| **`--schema <file>`** | Path to a TypeScript file containing a Zod schema |
-| **`--module <path>`** | Directory — generates fixtures for all Zod schema files found |
-| **`--out <dir>`** | Base directory for `__fixtures__/` output (default: alongside input) |
+| Option                  | Description                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| **`--schema <file>`**   | Path to a TypeScript file containing a Zod schema                            |
+| **`--module <path>`**   | Directory — generates fixtures for all Zod schema files found                |
+| **`--out <dir>`**       | Base directory for `__fixtures__/` output (default: alongside input)         |
 | **`--format ts\|json`** | TypeScript factory functions (`ts`) or JSON samples (`json`) (default: `ts`) |
-| **`--dry-run`** | Preview without writing |
+| **`--dry-run`**         | Preview without writing                                                      |
 
 Output format for `--format ts` (with `@faker-js/faker` installed):
 
@@ -179,9 +179,11 @@ export const buildCreateUserDto = (overrides?: Partial<CreateUserDto>): CreateUs
 
 ::: info Optional peer: @faker-js/faker
 When `@faker-js/faker` is not installed, the command falls back to hardcoded type-based literals (`'value'`, `1`, `true`, etc.) and prints an install hint. Install it for richer fixture data:
+
 ```bash
 npm install --save-dev @faker-js/faker
 ```
+
 :::
 
 ```bash
@@ -202,13 +204,13 @@ bjs ai mock --module src/modules/orders --dry-run
 
 Takes an existing `openapi.json` (from `bjs openapi export`) and fills in missing operation summaries, parameter descriptions, response descriptions, and tags using the configured LLM.
 
-| Option | Description |
-| --- | --- |
-| **`--in <spec>`** | Input OpenAPI JSON file (**required**) |
-| **`--out <spec>`** | Output OpenAPI JSON file — must differ from `--in` (**required**) |
-| **`--dry-run`** | Show a diff of proposed additions without writing |
-| **`--skip-examples`** | Do not enrich response descriptions |
-| **`--skip-tags`** | Do not add missing tags |
+| Option                | Description                                                       |
+| --------------------- | ----------------------------------------------------------------- |
+| **`--in <spec>`**     | Input OpenAPI JSON file (**required**)                            |
+| **`--out <spec>`**    | Output OpenAPI JSON file — must differ from `--in` (**required**) |
+| **`--dry-run`**       | Show a diff of proposed additions without writing                 |
+| **`--skip-examples`** | Do not enrich response descriptions                               |
+| **`--skip-tags`**     | Do not add missing tags                                           |
 
 ::: warning Safety contract
 `--out` is always required. The command never overwrites `--in` in place. The enriched spec includes `x-enriched-by: bananajs-cli@<version>` so the source is traceable. Use `--dry-run` to review changes before committing them to your spec.
@@ -228,22 +230,22 @@ bjs ai openapi enrich --in openapi.json --out openapi.enriched.json --skip-tags
 
 ## Command alias table (full)
 
-| Command | Alias |
-| --- | --- |
-| `setup` | `s` |
-| `generate` | `g` |
-| `doc` | `d` |
-| `review` | `r` |
-| `wire` | `w` |
-| `test` | `t` |
-| `explain` | `e` |
-| `context` | `ctx` |
-| `mock` | — |
-| `openapi enrich` | — |
-| `debug` | — |
-| `perf` | — |
-| `upgrade` | — |
-| `changelog` | — |
+| Command          | Alias |
+| ---------------- | ----- |
+| `setup`          | `s`   |
+| `generate`       | `g`   |
+| `doc`            | `d`   |
+| `review`         | `r`   |
+| `wire`           | `w`   |
+| `test`           | `t`   |
+| `explain`        | `e`   |
+| `context`        | `ctx` |
+| `mock`           | —     |
+| `openapi enrich` | —     |
+| `debug`          | —     |
+| `perf`           | —     |
+| `upgrade`        | —     |
+| `changelog`      | —     |
 
 ---
 
@@ -266,13 +268,13 @@ Output schema — `AiDebugJson` (`schemaVersion: "1.0.0"`, separate versioning f
 }
 ```
 
-| Option | Description |
-| --- | --- |
-| **`[input]`** (positional) | Inline error text or path to a file with the stack trace |
-| **`--input <path>`** | Path to stack trace file (alternative to stdin / positional) |
-| **`--file <path>`** | Optional source file to attach as additional context |
-| **`--format text\|json`** | Default: `text` |
-| **`--debug`** | Print raw LLM output |
+| Option                     | Description                                                  |
+| -------------------------- | ------------------------------------------------------------ |
+| **`[input]`** (positional) | Inline error text or path to a file with the stack trace     |
+| **`--input <path>`**       | Path to stack trace file (alternative to stdin / positional) |
+| **`--file <path>`**        | Optional source file to attach as additional context         |
+| **`--format text\|json`**  | Default: `text`                                              |
+| **`--debug`**              | Print raw LLM output                                         |
 
 ```bash
 # Pipe stderr output
@@ -300,22 +302,22 @@ Scan controller or service files for performance antipatterns. **Static-first** 
 
 Findings are emitted in the same `AiReviewJson` format as `bjs ai review`, so existing JSON parsers and CI tooling work immediately.
 
-| Option | Description |
-| --- | --- |
-| **`--file <path>`** | Single TypeScript file |
-| **`--module <path>`** | Directory or bare module name (e.g. `orders` → `src/modules/orders`) |
-| **`--format text\|json`** | Default: `text` |
-| **`--debug`** | Print raw LLM output |
+| Option                    | Description                                                          |
+| ------------------------- | -------------------------------------------------------------------- |
+| **`--file <path>`**       | Single TypeScript file                                               |
+| **`--module <path>`**     | Directory or bare module name (e.g. `orders` → `src/modules/orders`) |
+| **`--format text\|json`** | Default: `text`                                                      |
+| **`--debug`**             | Print raw LLM output                                                 |
 
 Static checks included (no LLM required):
 
-| Pattern | Severity |
-| --- | --- |
-| ORM call inside `.forEach`/`.map`/for-of loop (N+1) | `error` |
-| `findAll()` with no `take`/`limit` (unbounded query) | `warn` |
-| `@Get` route with no `@Cache` decorator | `warn` |
-| Mongoose `find()` without `.lean()` | `warn` |
-| `JSON.stringify`/`JSON.parse` per request | `info` |
+| Pattern                                              | Severity |
+| ---------------------------------------------------- | -------- |
+| ORM call inside `.forEach`/`.map`/for-of loop (N+1)  | `error`  |
+| `findAll()` with no `take`/`limit` (unbounded query) | `warn`   |
+| `@Get` route with no `@Cache` decorator              | `warn`   |
+| Mongoose `find()` without `.lean()`                  | `warn`   |
+| `JSON.stringify`/`JSON.parse` per request            | `info`   |
 
 ```bash
 # Analyze a single controller
@@ -336,15 +338,16 @@ Scan the codebase for deprecated BananaJS patterns and generate migration hints 
 
 Pattern manifest is seeded from [`docs/MIGRATION.md`](/migration/) — covers all breaking changes across BananaJS versions.
 
-| Option | Description |
-| --- | --- |
-| **`--to <version>`** | Target BananaJS version (e.g. `0.6.0`); checks only patterns deprecated by that version. Default: all patterns. |
-| **`--apply`** | Apply **safe mechanical** fixes in-place (leading-slash removal, `@ZodBody` → `@Body`, etc.). Requires explicit flag — never applied silently. |
-| **`--out <dir>`** | Output directory for `.patch` files (for ambiguous patterns that need manual review). |
-| **`--dry-run`** | Print all findings without modifying any file. |
-| **`--debug`** | Print raw LLM hints. |
+| Option               | Description                                                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`--to <version>`** | Target BananaJS version (e.g. `0.6.0`); checks only patterns deprecated by that version. Default: all patterns.                                |
+| **`--apply`**        | Apply **safe mechanical** fixes in-place (leading-slash removal, `@ZodBody` → `@Body`, etc.). Requires explicit flag — never applied silently. |
+| **`--out <dir>`**    | Output directory for `.patch` files (for ambiguous patterns that need manual review).                                                          |
+| **`--dry-run`**      | Print all findings without modifying any file.                                                                                                 |
+| **`--debug`**        | Print raw LLM hints.                                                                                                                           |
 
 Pattern tags:
+
 - **`[safe-apply]`** — safe mechanical transform; applied by `--apply`
 - **`[manual]`** — requires developer judgment; emits `.patch` or LLM hint
 
@@ -372,15 +375,15 @@ bjs ai upgrade --out ./upgrade-patches
 
 Generate a structured developer changelog from git commits, optionally enriched with an OpenAPI spec diff between two snapshots.
 
-| Option | Description |
-| --- | --- |
-| **`--from <ref>`** | Start git ref (tag, commit, branch). Default: previous tag. |
-| **`--to <ref>`** | End git ref (default: `HEAD`). |
-| **`--before <spec>`** | OpenAPI JSON snapshot before the range (for diff). |
-| **`--after <spec>`** | OpenAPI JSON snapshot after the range (for diff). |
-| **`--format md\|json`** | Output format (default: `md`). |
-| **`--out <file>`** | Write to file instead of stdout. |
-| **`--debug`** | Print raw LLM output. |
+| Option                  | Description                                                 |
+| ----------------------- | ----------------------------------------------------------- |
+| **`--from <ref>`**      | Start git ref (tag, commit, branch). Default: previous tag. |
+| **`--to <ref>`**        | End git ref (default: `HEAD`).                              |
+| **`--before <spec>`**   | OpenAPI JSON snapshot before the range (for diff).          |
+| **`--after <spec>`**    | OpenAPI JSON snapshot after the range (for diff).           |
+| **`--format md\|json`** | Output format (default: `md`).                              |
+| **`--out <file>`**      | Write to file instead of stdout.                            |
+| **`--debug`**           | Print raw LLM output.                                       |
 
 Output sections (only non-empty sections are included):
 
@@ -413,13 +416,13 @@ bjs ai changelog --format json --out changelog.json
 
 Every `bjs ai` command runs through the same five-stage pipeline. Understanding the stages makes `--debug` output and error messages easier to read.
 
-| Stage | What happens |
-| --- | --- |
-| **Prepare** | Load `.bananarc.json`, resolve the LLM provider, validate that required inputs (files, specs, git refs, flags) exist. Fails fast — nothing else runs if inputs are missing. |
-| **Research** | Read source files, scan for patterns, load OpenAPI specs, collect git log, load schemas. All local I/O; no LLM calls yet. Static checks in `ai perf` run here. |
-| **Plan** | Build LLM prompts and determine operation targets. No network I/O. |
-| **Act** | Execute LLM calls. Automatically skipped for `ai wire` when `--llm` is not passed — so `bjs ai wire` always produces output even without a configured model. |
-| **Validate** | Write files, apply patches, emit results to stdout. `--dry-run` short-circuits here — everything up to and including Act ran, but nothing lands on disk. |
+| Stage        | What happens                                                                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Prepare**  | Load `.bananarc.json`, resolve the LLM provider, validate that required inputs (files, specs, git refs, flags) exist. Fails fast — nothing else runs if inputs are missing. |
+| **Research** | Read source files, scan for patterns, load OpenAPI specs, collect git log, load schemas. All local I/O; no LLM calls yet. Static checks in `ai perf` run here.              |
+| **Plan**     | Build LLM prompts and determine operation targets. No network I/O.                                                                                                          |
+| **Act**      | Execute LLM calls. Automatically skipped for `ai wire` when `--llm` is not passed — so `bjs ai wire` always produces output even without a configured model.                |
+| **Validate** | Write files, apply patches, emit results to stdout. `--dry-run` short-circuits here — everything up to and including Act ran, but nothing lands on disk.                    |
 
 When a stage fails, the error message includes the stage name:
 
@@ -443,15 +446,15 @@ Source lives in **`packages/bananajs-cli`** (`ai.ts`, `ai-module.ts`, `ai-review
 
 Generate **Pact-compatible consumer contract tests** from an exported OpenAPI spec. Produces TypeScript test files that define consumer expectations per endpoint and can be run against the live provider in CI.
 
-| Option | Description |
-| --- | --- |
-| **`--spec <openapi.json>`** | Input OpenAPI JSON file from `bjs openapi export` (**required**) |
-| **`--consumer <name>`** | Consumer name for the Pact contract, e.g. `frontend` (**required**) |
-| **`--provider <name>`** | Provider name for the Pact contract, e.g. `api` (**required**) |
-| **`--fixtures <dir>`** | Directory with JSON files from `bjs ai mock --format json`; skips LLM payload generation |
-| **`--out <dir>`** | Output directory (default: `src/__tests__/contract`) |
-| **`--dry-run`** | Preview generated test files without writing |
-| **`--debug`** | Print raw LLM output |
+| Option                      | Description                                                                              |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| **`--spec <openapi.json>`** | Input OpenAPI JSON file from `bjs openapi export` (**required**)                         |
+| **`--consumer <name>`**     | Consumer name for the Pact contract, e.g. `frontend` (**required**)                      |
+| **`--provider <name>`**     | Provider name for the Pact contract, e.g. `api` (**required**)                           |
+| **`--fixtures <dir>`**      | Directory with JSON files from `bjs ai mock --format json`; skips LLM payload generation |
+| **`--out <dir>`**           | Output directory (default: `src/__tests__/contract`)                                     |
+| **`--dry-run`**             | Preview generated test files without writing                                             |
+| **`--debug`**               | Print raw LLM output                                                                     |
 
 **Workflow: combine `ai mock` + `ai contract` to minimize LLM calls:**
 
@@ -470,9 +473,11 @@ bjs ai contract --spec openapi.json --consumer frontend --provider api --dry-run
 
 ::: info @pact-foundation/pact peer
 The generated test files import from `@pact-foundation/pact`. Install it as a dev dependency:
+
 ```bash
 npm install --save-dev @pact-foundation/pact
 ```
+
 :::
 
 ---
@@ -504,16 +509,16 @@ npx @banana-universe/bananajs-cli mcp start
 
 **Tools exposed:**
 
-| Tool | Maps to | Notes |
-| --- | --- | --- |
-| `bananajs_routes` | `bjs routes` | Returns route table for the scanned project |
-| `bananajs_explain` | `bjs ai explain <file>` | LLM file summary |
-| `bananajs_review` | `bjs ai review --format json` | Returns `AiReviewJson` |
-| `bananajs_generate` | `bjs ai generate --module` | DDD module generation; defaults to `--dry-run` via MCP |
-| `bananajs_mock` | `bjs ai mock --schema` | Fixture factory generation; defaults to `--dry-run` via MCP |
-| `bananajs_debug` | `bjs ai debug --format json` | Returns `AiDebugJson` |
-| `bananajs_perf` | `bjs ai perf --format json` | Returns `AiReviewJson` |
-| `bananajs_upgrade` | `bjs ai upgrade --dry-run` | Dry-run **only** — `--apply` is intentionally not exposed |
+| Tool                | Maps to                       | Notes                                                       |
+| ------------------- | ----------------------------- | ----------------------------------------------------------- |
+| `bananajs_routes`   | `bjs routes`                  | Returns route table for the scanned project                 |
+| `bananajs_explain`  | `bjs ai explain <file>`       | LLM file summary                                            |
+| `bananajs_review`   | `bjs ai review --format json` | Returns `AiReviewJson`                                      |
+| `bananajs_generate` | `bjs ai generate --module`    | DDD module generation; defaults to `--dry-run` via MCP      |
+| `bananajs_mock`     | `bjs ai mock --schema`        | Fixture factory generation; defaults to `--dry-run` via MCP |
+| `bananajs_debug`    | `bjs ai debug --format json`  | Returns `AiDebugJson`                                       |
+| `bananajs_perf`     | `bjs ai perf --format json`   | Returns `AiReviewJson`                                      |
+| `bananajs_upgrade`  | `bjs ai upgrade --dry-run`    | Dry-run **only** — `--apply` is intentionally not exposed   |
 
 ::: warning Security: --apply not exposed via MCP
 The `bananajs_upgrade` tool always runs in dry-run mode. File-mutating operations must be run via the CLI directly after reviewing the output.
@@ -538,7 +543,7 @@ await BananaApp.create({
 Inject in controllers via `@inject(AI_PROVIDER_TOKEN)`.
 
 ::: danger Prompt injection
-`BananaAiPlugin` does **not** sanitize user input. Always validate input with Zod `@Body` schemas, cap string lengths, and never pass raw `req.headers` / `req.params` into LLM prompts. See the [plugin README](https://github.com/surya-manne/banana-universe/tree/main/packages/plugin-ai) for full security guidance.
+`BananaAiPlugin` does **not** sanitize user input. Always validate input with Zod `@Body` schemas, cap string lengths, and never pass raw `req.headers` / `req.params` into LLM prompts. See the plugin README for full security guidance.
 :::
 
 ---
