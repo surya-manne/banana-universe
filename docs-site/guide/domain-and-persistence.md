@@ -1,61 +1,65 @@
 # Domain & persistence
 
-This page is about **where business logic lives** versus **where storage and ORMs live**, and how BananaJS keeps them apart so you can test and evolve each side independently.
+**The one-line idea:** business rules live in one place (the domain), database code lives somewhere else (infrastructure), and they talk through a simple interface (the port). Neither side needs to know how the other is built.
 
-**Flow (who talks to whom):** HTTP stays thin; **application** services orchestrate; **domain** holds rules; **ports** describe persistence needs; **adapters** and the **ORM** sit outside the domain.
+This is what makes it easy to test your logic without a real database, and to swap databases without rewriting business rules.
 
-```mermaid
-flowchart TB
-  subgraph edge [Delivery]
-    H[Controllers / HTTP]
-  end
-  subgraph app [Application]
-    S[Services · use cases · DTOs]
-  end
-  subgraph dom [Domain]
-    R[Entities · rules]
-    PT[Repository ports · tokens]
-  end
-  subgraph infra [Infrastructure]
-    A[Adapters]
-    O[ORM · DB · migrations]
-  end
-  H --> S
-  S --> R
-  S --> PT
-  PT --> A
-  A --> O
-  style R fill:#0f2440,stroke:#fdb913,color:#f8fafc
-  style PT fill:#132a45,stroke:#fdb913,color:#f8fafc
-  style S fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style H fill:#1a3a52,stroke:#5b7a8c,color:#f8fafc
-  style A fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style O fill:#1a3a52,stroke:#fdb913,color:#f8fafc
+## Why separate them?
+
+Imagine you write your article-saving logic directly with Mongoose:
+
+```typescript
+// ❌ Business logic tangled with database code
+async function createArticle(title: string, body: string) {
+  const doc = await ArticleModel.create({ title, body })
+  return doc
+}
 ```
 
-## Domain layer
+This is fine at first. But now:
+- To test it, you need a running MongoDB
+- To switch to PostgreSQL, you rewrite this function
+- Business rules (e.g. "title must not be empty") sit next to `await ArticleModel.create`
 
-The domain holds business rules and your model. It must not import Express, HTTP, or ORM APIs.
+The solution is to separate *what an Article is* from *how it gets stored*.
+
+## The three-part pattern
+
+| Part | What it is | Example |
+|---|---|---|
+| **Domain entity** | Plain TypeScript class — your business model | `Article` with title, body, rules |
+| **Port** | TypeScript interface — describes what you need from storage | `findById`, `save`, `delete` |
+| **Adapter** | Class that implements the port using a real ORM | `ArticleMongooseRepo` |
+
+The service calls the port. The adapter fulfills it. The two never import each other directly.
+
+## Step by step
+
+### 1. Domain entity — pure business model
+
+No Express. No ORM. Just the data and its rules.
 
 ```typescript
 // domain/Article.entity.ts
 import { Entity } from '@banana-universe/ddd'
 
 export interface ArticleProps {
-  id: string; title: string; body: string
-  createdAt: Date; updatedAt: Date
+  id: string
+  title: string
+  body: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export class Article extends Entity<ArticleProps> {
-  constructor(props: ArticleProps) { super(props) }
   get title() { return this.props.title }
   get body()  { return this.props.body  }
 }
 ```
 
-**Application services** orchestrate use cases — they call domain and ports, validate inputs via DTOs (Zod), and return results suitable for HTTP. They do not know about databases.
+### 2. Port — the storage contract
 
-**Repository ports** (interface + injection token) describe _what_ you need from persistence without naming a table, collection, or ORM:
+An interface + a DI token. The service will depend on this, not on any real DB class.
 
 ```typescript
 // domain/Article.repository.ts
@@ -63,62 +67,90 @@ import type { Repository } from '@banana-universe/ddd'
 import type { InjectionToken } from 'tsyringe'
 import type { Article } from './Article.entity.js'
 
+// Repository<T> gives you: findById, findAll, save, delete
 export type ArticleRepository = Repository<Article>
-// Repository<T> provides: findById, findAll, save, delete
 
 export const ArticleRepositoryToken = Symbol(
   'ArticleRepository',
 ) as InjectionToken<ArticleRepository>
 ```
 
-Use `@banana-universe/ddd` for `Entity`, `ValueObject`, `AggregateRoot`, `Repository`, `FindCriteria`, `UnitOfWork`, and layer decorators — see [Layered architecture](/guide/layered-architecture).
-
-## Persistence and infrastructure
-
-Infrastructure implements your ports and maps between domain objects and ORM shapes. Two patterns — one per ORM:
-
-### TypeORM adapter
+### 3. Service — uses the port, knows nothing about the DB
 
 ```typescript
-// infrastructure/Article.typeorm-repository.ts
+// application/Article.service.ts
 import { injectable, inject } from 'tsyringe'
+import type { ArticleRepository } from '../domain/Article.repository.js'
+import { ArticleRepositoryToken } from '../domain/Article.repository.js'
+import { Article } from '../domain/Article.entity.js'
+
+@injectable()
+export class ArticleService {
+  constructor(
+    @inject(ArticleRepositoryToken)
+    private readonly repo: ArticleRepository,
+  ) {}
+
+  async create(title: string, body: string): Promise<Article> {
+    return this.repo.save(new Article({ id: '', title, body,
+      createdAt: new Date(), updatedAt: new Date() }))
+  }
+
+  async getAll(): Promise<Article[]> {
+    return this.repo.findAll()
+  }
+}
+```
+
+### 4. Adapter — the real database code
+
+Two options — TypeORM or Mongoose.
+
+**TypeORM**
+
+```typescript
+// infrastructure/Article.typeorm-repo.ts
+import { injectable, inject } from 'tsyringe'
+import { DataSource } from 'typeorm'
 import { TypeOrmRepositoryAdapter } from '@banana-universe/plugin-typeorm'
 import { Article } from '../domain/Article.entity.js'
 import { ArticleOrmEntity } from './Article.orm-entity.js'
 
 @injectable()
-export class ArticleTypeOrmRepository
+export class ArticleTypeOrmRepo
   extends TypeOrmRepositoryAdapter<Article, ArticleOrmEntity>
 {
-  constructor(@inject('dataSource') dataSource: DataSource) {
-    super(dataSource, ArticleOrmEntity)
+  constructor(@inject('dataSource') ds: DataSource) {
+    super(ds, ArticleOrmEntity)
   }
 
-  toDomain(orm: ArticleOrmEntity): Article {
-    return new Article({ id: orm.id, title: orm.title, body: orm.body,
-      createdAt: orm.createdAt, updatedAt: orm.updatedAt })
+  // DB row → domain object
+  toDomain(row: ArticleOrmEntity): Article {
+    return new Article({ id: row.id, title: row.title, body: row.body,
+      createdAt: row.createdAt, updatedAt: row.updatedAt })
   }
 
-  toPersistence(domain: Article): ArticleOrmEntity {
+  // Domain object → DB row
+  toPersistence(article: Article): ArticleOrmEntity {
     const row = new ArticleOrmEntity()
-    row.id = domain.id; row.title = domain.title; row.body = domain.body
-    row.createdAt = domain.createdAt; row.updatedAt = domain.updatedAt
+    row.title = article.title
+    row.body  = article.body
     return row
   }
 }
 ```
 
-### Mongoose adapter
+**Mongoose**
 
 ```typescript
-// infrastructure/Article.mongoose-repository.ts
+// infrastructure/Article.mongoose-repo.ts
 import { injectable, inject } from 'tsyringe'
 import { MongooseRepositoryAdapter } from '@banana-universe/plugin-mongoose'
 import { Article } from '../domain/Article.entity.js'
 import { getArticleModel, type ArticleDoc } from './Article.mongoose-model.js'
 
 @injectable()
-export class ArticleMongooseRepository
+export class ArticleMongooseRepo
   extends MongooseRepositoryAdapter<Article, ArticleDoc>
 {
   constructor(@inject('mongooseConnection') connection: Connection) {
@@ -130,105 +162,57 @@ export class ArticleMongooseRepository
       createdAt: doc.createdAt, updatedAt: doc.updatedAt })
   }
 
-  toPersistence(domain: Article): Partial<ArticleDoc> {
-    return { _id: domain.id, title: domain.title, body: domain.body,
-      createdAt: domain.createdAt, updatedAt: domain.updatedAt }
+  toPersistence(article: Article): Partial<ArticleDoc> {
+    return { title: article.title, body: article.body }
   }
 }
 ```
 
-The plugin (`TypeOrmPlugin` / `MongoosePlugin`) registers `'dataSource'` / `'mongooseConnection'` on the root container so adapters can `@inject` them. Details: [TypeORM](/integrations/typeorm), [Mongoose](/integrations/mongoose).
-
-## Ports and adapters — step by step
-
-A typical feature follows three steps:
-
-### 1. Define a port in domain
-
-Interface + injection token in `domain/Article.repository.ts` — shown above.
-
-### 2. Implement an adapter in infrastructure
-
-Adapter class (TypeORM or Mongoose) — shown above. The adapter `implements` the port through `toDomain` / `toPersistence`.
-
-### 3. Bind token → adapter in the module
+### 5. Bind token → adapter in the module
 
 ```typescript
 // index.ts
 import { createModule } from '@banana-universe/bananajs'
 import { ArticleController } from './Article.controller.js'
-import { ArticleAppService } from './application/Article.service.js'
-import { ArticleMongooseRepository } from './infrastructure/Article.mongoose-repository.js'
+import { ArticleService } from './application/Article.service.js'
+import { ArticleMongooseRepo } from './infrastructure/Article.mongoose-repo.js'
 import { ArticleRepositoryToken } from './domain/Article.repository.js'
 
 export const articlesModule = createModule({
   id: 'articles',
   controller: ArticleController,
   providers: [
-    { token: ArticleRepositoryToken, useClass: ArticleMongooseRepository },
-    ArticleAppService,
+    { token: ArticleRepositoryToken, useClass: ArticleMongooseRepo },  // ← swap here
+    ArticleService,
   ],
 })
 ```
 
-The application service depends on `ArticleRepositoryToken` via `@inject` — it never imports the concrete adapter. Swapping adapters (e.g. Mongoose → TypeORM) requires changing one line in `index.ts`.
+**Switching from Mongoose to TypeORM?** Change `useClass: ArticleMongooseRepo` to `useClass: ArticleTypeOrmRepo`. Nothing else changes.
 
-```mermaid
-flowchart LR
-  subgraph dom [Domain]
-    Port[Port + InjectionToken]
-  end
-  subgraph infra [Infrastructure]
-    Ad[Adapter class]
-    ORM[ORM models / tables]
-  end
-  UC[Application service]
-  UC -->|depends on| Port
-  Ad -->|implements| Port
-  Ad --> ORM
-  style Port fill:#0f2440,stroke:#fdb913,color:#f8fafc
-  style UC fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style Ad fill:#132a45,stroke:#fdb913,color:#f8fafc
-  style ORM fill:#1a3a52,stroke:#5b7a8c,color:#f8fafc
-```
+## Plugin order matters
 
-At runtime the module binds **token → adapter**, so **use cases** only see the **port**.
-
-## Plugins and module order
-
-Plugins register shared infrastructure (DB connections, etc.) on the **root** container **before** feature modules resolve providers. If a module cannot resolve a token at startup, the plugin is either missing or ordered after the module that needs it.
+Plugins register the DB connection on the root container **before** feature modules run. If a module can't find its `dataSource` or `mongooseConnection` at startup, the plugin is either missing or listed after the module.
 
 ```typescript
-import { BananaApp } from '@banana-universe/bananajs'
-import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
-import { articlesModule } from './modules/articles/index.js'
-
+// bootstrap.ts
 const app = await BananaApp.create({
   plugins: [TypeOrmPlugin({ entities: [ArticleOrmEntity], ...dbConfig })],  // runs first
   modules: [articlesModule],                                                 // resolves after
 })
 ```
 
-```mermaid
-flowchart LR
-  P[Plugins register DB · shared tokens] --> R[Root container]
-  R --> M[Feature modules · port to adapter]
-  style P fill:#0f2440,stroke:#fdb913,color:#f8fafc
-  style R fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style M fill:#1a3a52,stroke:#fdb913,color:#f8fafc
-```
+## Testing without a database
 
-## Testing with fake repositories
-
-Because the application service depends on the **port token**, not the concrete adapter, tests can inject a fake:
+Because the service depends on the **token** (not the concrete adapter), tests can plug in a fake implementation:
 
 ```typescript
-// __tests__/article.integration.test.ts
+// __tests__/article.test.ts
 import { BananaTestApp } from '@banana-universe/bananajs/testing'
 import { articlesModule } from '../index.js'
 import { ArticleRepositoryToken } from '../domain/Article.repository.js'
 
-class FakeArticleRepository implements ArticleRepository {
+class FakeArticleRepo implements ArticleRepository {
   private items = new Map<string, Article>()
   async findById(id: string) { return this.items.get(id) ?? null }
   async findAll() { return [...this.items.values()] }
@@ -236,7 +220,7 @@ class FakeArticleRepository implements ArticleRepository {
   async delete(id: string) { this.items.delete(id) }
 }
 
-const fake = new FakeArticleRepository()
+const fake = new FakeArticleRepo()
 
 const app = await BananaTestApp.create({
   modules: [articlesModule],
@@ -253,16 +237,12 @@ test('POST /articles creates an article', async () => {
 })
 ```
 
-No database required — tests run in milliseconds. See [Testing reference](/reference/testing) for the full guide.
-
-## Transactions
-
-Keep transaction boundaries in the **application** or **infrastructure** layer — not in controllers. With TypeORM or Mongoose, use `UnitOfWork` from `@banana-universe/ddd` and the ORM-level `@Transactional()` decorator provided by the plugin. Transaction scope should wrap the entire cross-aggregate write, not individual repository calls.
+No running database. Tests finish in milliseconds. See [Testing reference](/reference/testing) for the full guide.
 
 ## Learn more
 
-- [Dependency injection](/guide/dependency-injection) — containers, **`providers`**, plugin **`AppContext`**, **`testOverrides`**
-- [Layered architecture & DDD](/guide/layered-architecture) — folder layout, CLI scaffolds, **`FindCriteria`**
-- [Basic concepts](/guide/basic-concepts) — **`BananaApp.create`**, modules, **`defineBananaAppOptions`**
-- [AI module generation](/tooling/ai-module-generation) — **`bjs ai generate --module`**
-- [Recipes](/recipes/) — full examples with **`createModule`** and layered folders
+- [Layered architecture & DDD](/guide/layered-architecture) — full step-by-step example with all four layers
+- [Dependency injection](/guide/dependency-injection) — containers, providers, `testOverrides`
+- [TypeORM integration](/integrations/typeorm) — ORM entity setup and plugin config
+- [Mongoose integration](/integrations/mongoose) — schema, model, and plugin config
+- [Recipes](/recipes/) — runnable apps with real module and adapter examples

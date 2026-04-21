@@ -1,143 +1,53 @@
 # Layered architecture & DDD
 
-BananaJS supports **feature modules** built with **`createModule`**: one HTTP controller per slice, **domain** and **application** layers, and **infrastructure** adapters. Think of each **`src/modules/<feature>/`** folder as a **vertical slice**—HTTP at the edge, rules in the middle, storage at the bottom.
+**The short version:** organize each feature into layers so that business rules, HTTP wiring, and database code never get mixed together.
 
-```mermaid
-flowchart TB
-  subgraph slice [One feature module]
-    C[Controller · HTTP · DTOs]
-    A[Application · use cases]
-    D[Domain · entities · ports]
-    I[Infrastructure · ORM adapters]
-  end
-  C --> A
-  A --> D
-  A --> I
-  D -.contract.-> I
-  style D fill:#0f2440,stroke:#fdb913,color:#f8fafc
-  style C fill:#1a3a52,stroke:#5b7a8c,color:#f8fafc
-  style A fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style I fill:#132a45,stroke:#fdb913,color:#f8fafc
-```
+You don't need this on day one. A flat controller + service works fine for simple apps. This page describes the structure the CLI scaffolds when your app starts to grow.
 
-**Dependency direction:** **application** orchestrates and calls **domain** + **ports**; **infrastructure** implements ports. Controllers stay thin—they validate input, call application services, return responses.
+## Why bother? A quick analogy
 
-The **`bjs generate module`** command scaffolds the same **`src/modules/<feature>/`** layout as **`bjs new`** presets: **`index.ts`** with **`createModule`**, repository tokens, and ORM adapters. When **`src/bootstrap.ts`** (or another file with **`defineBananaAppOptions`** + **`modules:`**) is found, the CLI **imports and registers** the new module and, for **TypeORM**, appends the entity to **`entities: [...]`** where possible. Use **`--skip-bootstrap`** to only write files under **`src/modules/`**.
+Think of a restaurant:
 
-For **how domain logic relates to databases and ORMs** (ports, adapters, plugins), see [Domain & persistence](/guide/domain-and-persistence). For **tsyringe** containers, **`providers`**, and plugin **`AppContext`**, see [Dependency injection](/guide/dependency-injection).
+| Restaurant | Your code |
+|---|---|
+| **Waiter** | **Controller** — takes the HTTP request, returns a response |
+| **Chef** | **Service** — runs the business logic |
+| **Recipe book** | **Domain** — the rules about what your data *is* and what it *can do* |
+| **Fridge / pantry** | **Infrastructure** — the actual database adapter |
 
-::: info `@banana-universe/ddd`
-The **`ddd`** package provides **Entity**, **ValueObject**, **AggregateRoot**, **Repository** / **FindCriteria**, **UnitOfWork**, and **@DomainService** / **@ApplicationService** (layer metadata + `Injectable`). Use **`bjs g`** (or **`bjs generate`**) and omit args in a TTY to pick **controller** / **dto** / **middleware** / **module**, or **`bjs generate module <name>`** for a non-interactive layered scaffold; **`bjs ai generate --module`** produces the same tree from a schema or description.
-:::
+The chef doesn't care whether the food is in a fridge or a freezer. The recipe book has no idea what SQL is. That separation is the whole idea — each layer has one job and doesn't peek into the others.
 
-```mermaid
-flowchart LR
-  subgraph opt [Optional DDD toolkit]
-    E[Entity · ValueObject]
-    R[Repository · FindCriteria]
-    U[UnitOfWork]
-  end
-  subgraph core [BananaJS module]
-    M[createModule + providers]
-  end
-  opt -.-> M
-  style opt fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style M fill:#0f2440,stroke:#fdb913,color:#f8fafc
-```
-
-## Standard folder layout
-
-Feature modules live under `src/modules/<feature>/`. Inside each slice, files use **dotted role names** (`PascalCase` entity or feature prefix + `.` + role):
+## The four layers at a glance
 
 ```
-src/
-  modules/
-    article/
-      domain/
-        Article.entity.ts           # extends Entity<ArticleProps> from @banana-universe/ddd
-        Article.repository.ts       # Repository<Article> interface + InjectionToken
-      application/
-        Article.service.ts          # @injectable() orchestration class
-      infrastructure/
-        Article.mongoose-model.ts   # Mongoose schema + model
-        Article.mongoose-repo.ts    # @injectable() adapter — implements port
-      Article.controller.ts         # @Controller + HTTP methods
-      Article.dto.ts                # Zod schemas for request/response
-      index.ts                      # createModule({ id, controller, providers })
-```
-
-For TypeORM the `infrastructure/` subfolder contains `Article.orm-entity.ts` (TypeORM `@Entity`) and `Article.typeorm-repository.ts` instead.
-
-## CLI scaffold (`bjs generate module`)
-
-**Command:** **`bjs generate module <name> [--orm typeorm|mongoose|none] [--out <dir>] [--skip-bootstrap]`** — or run **`bjs g`** with no arguments in a TTY to be prompted for type and name.
-
-- **Default `--out`:** **`src`** relative to the **current working directory** (run the CLI from your app folder).
-- **Default `--orm`:** **`typeorm`** when stdin is **not** a TTY; in an interactive terminal you choose **TypeORM**, **Mongoose**, or **none** (in-memory repository).
-
-Output is written under **`<out>/modules/<kebab-name>/`** (e.g. **`src/modules/my-widget/`** for **`bjs generate module my-widget`**).
-
-**Shape** (matches **`bananajs new`** presets and **`buildDddModuleFiles`** in **`bananajs-cli`**):
-
-```
-<out>/modules/<kebab-name>/
-  domain/
-    <Name>.entity.ts
-    <Name>.repository.ts          # Repository<T> port + DI token
+src/modules/article/
+  Article.controller.ts    ← Waiter: HTTP only, no business logic
+  Article.dto.ts           ← Request/response shapes (Zod)
   application/
-    <Name>.service.ts             # <Name>AppService — @injectable() + repository
+    Article.service.ts     ← Chef: orchestrates the use case
+  domain/
+    Article.entity.ts      ← Recipe: what an Article IS
+    Article.repository.ts  ← What we need from storage (no DB specifics)
   infrastructure/
-    <Name>.orm-entity.ts          # if --orm typeorm
-    <Name>.typeorm-repository.ts
-    # OR <Name>.mongoose-model.ts + <Name>.mongoose-repository.ts  # mongoose
-    # OR <Name>.in-memory-repository.ts     # if --orm none
-  <Name>.dto.ts
-  <Name>.controller.ts
-  index.ts                        # createModule + providers
+    Article.typeorm-repo.ts   ← Fridge: actual database code
+    Article.orm-entity.ts     ← Table/document shape for the ORM
+  index.ts                 ← Wires everything together
 ```
 
-Bootstrap wiring is applied automatically unless **`--skip-bootstrap`** is set.
-
-```mermaid
-flowchart TB
-  subgraph files [Generated tree]
-    IDX[index.ts · createModule]
-    DOM[domain/]
-    APP[application/]
-    INF[infrastructure/]
-    TOP[*.dto.ts · *.controller.ts]
-  end
-  IDX --> DOM
-  IDX --> APP
-  IDX --> INF
-  IDX --> TOP
-  style IDX fill:#0f2440,stroke:#fdb913,color:#f8fafc
-  style DOM fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style APP fill:#132a45,stroke:#5b7a8c,color:#f8fafc
-  style INF fill:#1a3a52,stroke:#fdb913,color:#f8fafc
-```
-
-## Repository examples in this repo
-
-Example apps follow the same **layered** idea with small **naming/layout** differences from the raw CLI template:
-
-| App                                | Module                 | Notes                                                                                                                                                                                                                                             |
-| ---------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`apps/example-rest-postgresql`** | **`modules/catalog`**  | Domain port **`CatalogItem.mapper.ts`**; DTO as **`Catalog.dto.ts`** at module root; TypeORM files under **`infrastructure/`** (no **`typeorm/`** subfolder); application class **`CatalogAppService`** in **`application/Catalog.service.ts`**.  |
-| **`apps/example-rest-mongodb`**    | **`modules/articles`** | Domain port **`Article.repository.ts`** (same role as **`*.mapper.ts`** in the CLI); **`Article.dto.ts`** at module root; **`Article.mongoose-model.ts`** + **`Article.mongoose-repository.ts`**; exports **`createModule`** from **`index.ts`**. |
-
-Use these as **copy-paste** references for **`createModule`**, **tsyringe** **`@inject`**, and plugin bootstrap.
-
-## Layer responsibilities
-
-| Layer | Files | Rules |
+| Layer | One job | Must NOT |
 |---|---|---|
-| **Domain** | `*.entity.ts`, `*.repository.ts` | No Express, no ORM, no HTTP imports — pure business logic |
-| **Application** | `*.service.ts` | Orchestrates domain + ports; receives validated DTOs; no Express `req`/`res` |
-| **Infrastructure** | `*.typeorm-repository.ts`, `*.mongoose-repository.ts` | Implements port; maps ORM ↔ domain objects; knows about DB |
-| **Delivery** | `*.controller.ts`, `*.dto.ts` | Thin; validates input with Zod; delegates to application service; returns response |
+| **Controller** | Parse request → call service → return response | Contain business rules |
+| **Service** | Orchestrate the use case | Import Express or query the DB directly |
+| **Domain** | Hold your model and rules | Import Express, any ORM, or any framework |
+| **Infrastructure** | Implement storage adapters (map DB rows ↔ domain objects) | Contain business logic |
 
-### Domain entity
+## A complete example — blog articles
+
+Let's walk through a real `Article` feature layer by layer.
+
+### Step 1 — Domain: what is an Article?
+
+The entity holds your data shape and business rules. No database, no HTTP — just the plain idea of what an article is.
 
 ```typescript
 // domain/Article.entity.ts
@@ -152,14 +62,14 @@ export interface ArticleProps {
 }
 
 export class Article extends Entity<ArticleProps> {
-  constructor(props: ArticleProps) { super(props) }
-
   get title() { return this.props.title }
   get body()  { return this.props.body  }
 }
 ```
 
-### Port (repository interface + token)
+### Step 2 — Domain: what do we need from storage?
+
+Instead of calling the database directly, the domain declares a **port** — a TypeScript interface that says *"I need to store and retrieve Articles, but I don't care how."*
 
 ```typescript
 // domain/Article.repository.ts
@@ -167,6 +77,7 @@ import type { Repository } from '@banana-universe/ddd'
 import type { InjectionToken } from 'tsyringe'
 import type { Article } from './Article.entity.js'
 
+// Four methods out of the box: findById, findAll, save, delete
 export type ArticleRepository = Repository<Article>
 
 export const ArticleRepositoryToken = Symbol(
@@ -174,7 +85,9 @@ export const ArticleRepositoryToken = Symbol(
 ) as InjectionToken<ArticleRepository>
 ```
 
-### Application service
+### Step 3 — Service: the business logic
+
+The service calls the domain and the port. It has no idea whether the database is Postgres or MongoDB.
 
 ```typescript
 // application/Article.service.ts
@@ -185,42 +98,142 @@ import { ArticleRepositoryToken } from '../domain/Article.repository.js'
 import { Article } from '../domain/Article.entity.js'
 
 @injectable()
-export class ArticleAppService {
+export class ArticleService {
   constructor(
     @inject(ArticleRepositoryToken)
-    private readonly repo: ArticleRepository,
+    private readonly repo: ArticleRepository,  // the interface, not a real DB class
   ) {}
 
   async create(title: string, body: string): Promise<Article> {
-    const now = new Date()
-    return this.repo.save(new Article({ id: randomUUID(), title, body, createdAt: now, updatedAt: now }))
+    return this.repo.save(new Article({ id: randomUUID(), title, body,
+      createdAt: new Date(), updatedAt: new Date() }))
+  }
+
+  async getAll(): Promise<Article[]> {
+    return this.repo.findAll()
   }
 }
 ```
 
-### Module wiring (`index.ts`)
+### Step 4 — Infrastructure: the actual database
+
+This is the only layer where TypeORM or Mongoose appears. It implements the port by translating between domain objects and DB rows/documents.
+
+```typescript
+// infrastructure/Article.typeorm-repo.ts
+import { injectable, inject } from 'tsyringe'
+import { DataSource } from 'typeorm'
+import { TypeOrmRepositoryAdapter } from '@banana-universe/plugin-typeorm'
+import { Article } from '../domain/Article.entity.js'
+import { ArticleOrmEntity } from './Article.orm-entity.js'
+
+@injectable()
+export class ArticleTypeOrmRepo
+  extends TypeOrmRepositoryAdapter<Article, ArticleOrmEntity>
+{
+  constructor(@inject('dataSource') ds: DataSource) {
+    super(ds, ArticleOrmEntity)
+  }
+
+  // DB row → domain object
+  toDomain(row: ArticleOrmEntity): Article {
+    return new Article({ id: row.id, title: row.title, body: row.body,
+      createdAt: row.createdAt, updatedAt: row.updatedAt })
+  }
+
+  // Domain object → DB row
+  toPersistence(article: Article): ArticleOrmEntity {
+    const row = new ArticleOrmEntity()
+    row.title = article.title
+    row.body  = article.body
+    return row
+  }
+}
+```
+
+### Step 5 — Controller: HTTP wiring
+
+Thin. Validates input with Zod, calls the service, returns the response.
+
+```typescript
+// Article.controller.ts
+import type { Request, Response } from 'express'
+import { Controller, Post, Get, Body, BaseController } from '@banana-universe/bananajs'
+import { injectable, inject } from 'tsyringe'
+import { ArticleService } from './application/Article.service.js'
+import { CreateArticleDto } from './Article.dto.js'
+
+@Controller('articles')
+@injectable()
+export class ArticleController extends BaseController {
+  constructor(@inject(ArticleService) private readonly service: ArticleService) {
+    super()
+  }
+
+  @Post('')
+  @Body(CreateArticleDto)
+  async create(req: Request, res: Response) {
+    const { title, body } = req.body as { title: string; body: string }
+    return this.ok(res, 'created', await this.service.create(title, body))
+  }
+
+  @Get('')
+  async list(_req: Request, res: Response) {
+    return this.ok(res, 'ok', await this.service.getAll())
+  }
+}
+```
+
+### Step 6 — Wire it all together
 
 ```typescript
 // index.ts
 import { createModule } from '@banana-universe/bananajs'
 import { ArticleController } from './Article.controller.js'
-import { ArticleAppService } from './application/Article.service.js'
-import { ArticleMongooseRepository } from './infrastructure/Article.mongoose-repository.js'
+import { ArticleService } from './application/Article.service.js'
+import { ArticleTypeOrmRepo } from './infrastructure/Article.typeorm-repo.js'
 import { ArticleRepositoryToken } from './domain/Article.repository.js'
 
 export const articlesModule = createModule({
   id: 'articles',
   controller: ArticleController,
   providers: [
-    { token: ArticleRepositoryToken, useClass: ArticleMongooseRepository },
-    ArticleAppService,
+    { token: ArticleRepositoryToken, useClass: ArticleTypeOrmRepo },  // ← swap DB here
+    ArticleService,
   ],
 })
 ```
 
-## Repository model
+**Want to switch from TypeORM to Mongoose?** Change the `useClass` line above. The service and domain are untouched.
 
-`Repository<T>` from `@banana-universe/ddd` defines four methods:
+## Do I need all four layers?
+
+No. Start flat:
+
+```
+src/modules/article/
+  Article.controller.ts   ← validation + HTTP
+  Article.service.ts      ← logic lives here too, totally fine for simple features
+  Article.dto.ts
+  index.ts
+```
+
+Add the full split when:
+- You want to **test business logic** without a running database
+- You want to **swap databases** without rewriting use cases
+- Your feature has **real business rules** that deserve their own home
+
+## Generate the full structure
+
+```bash
+bjs generate module article --orm typeorm
+# or
+bjs generate module article --orm mongoose
+```
+
+This scaffolds the complete folder layout above. See [CLI docs](/tooling/cli) for all options.
+
+## Quick reference — `Repository<T>` methods
 
 ```typescript
 interface Repository<T, ID = string> {
@@ -231,51 +244,22 @@ interface Repository<T, ID = string> {
 }
 ```
 
-`FindCriteria<T>` keeps queries **explicit and testable** — no raw SQL leaking into application code:
+Filter with `FindCriteria` — no raw SQL leaking into services:
 
 ```typescript
-import type { FindCriteria } from '@banana-universe/ddd'
-import type { Article } from './Article.entity.js'
-
-// In application service:
 const recent = await this.repo.findAll({
   where:   { title: { like: 'BananaJS' } },
   orderBy: { field: 'createdAt', direction: 'desc' },
   limit:   20,
-  offset:  0,
 })
-```
-
-Supported operators: `eq`, `in`, `like`, `gt`, `lt`.
-
-## Transactions
-
-Keep transaction boundaries in the **application** or **infrastructure** layer — not in controllers. With TypeORM or Mongoose, use `UnitOfWork` from `@banana-universe/ddd` and the ORM-level `@Transactional()` decorator the plugin provides:
-
-```typescript
-// application/Order.service.ts
-@injectable()
-export class OrderAppService {
-  constructor(
-    @inject(OrderRepositoryToken) private readonly orders: OrderRepository,
-    @inject(PaymentRepositoryToken) private readonly payments: PaymentRepository,
-  ) {}
-
-  async placeOrder(dto: PlaceOrderDto): Promise<Order> {
-    // Both writes must succeed or both must fail — handled at infrastructure layer
-    const order   = await this.orders.save(Order.create(dto))
-    await this.payments.save(Payment.pending(order.id, dto.amount))
-    return order
-  }
-}
+// Supported operators: eq, in, like, gt, lt
 ```
 
 ## Learn more
 
-- [Dependency injection](/guide/dependency-injection) — root vs module containers, **`providers`**, **`createModule`**, testing
-- [Domain & persistence](/guide/domain-and-persistence) — domain vs storage, ports and adapters, plugins
-- [Philosophy](/guide/philosophy) — DDD and product direction
-- [AI module generation](/tooling/ai-module-generation) — LLM-driven **`bjs ai generate --module`**
-- [TypeORM integration](/integrations/typeorm) — plugins and repository adapters
-- [Mongoose integration](/integrations/mongoose) — plugins and adapters
-- [Recipes](/recipes/) — runnable apps with **`createModule`** and layered folders
+- [Domain & persistence](/guide/domain-and-persistence) — deep dive into ports, adapters, and plugin wiring
+- [Dependency injection](/guide/dependency-injection) — `createModule`, `providers`, scoped containers
+- [Philosophy](/guide/philosophy) — why structure helps teams scale
+- [TypeORM integration](/integrations/typeorm) — ORM entity and adapter setup
+- [Mongoose integration](/integrations/mongoose) — schema, model, and adapter setup
+- [Recipes](/recipes/) — runnable apps with `createModule` and layered folders
