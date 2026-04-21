@@ -40,16 +40,6 @@ features:
     details: 'Add databases, realtime, observability, and other integrations when you need them—the core stays lean while you opt into heavier pieces.'
     link: /plugins/overview
     linkText: Plugin docs
-  - icon: "🛡️"
-    title: Natively secure
-    details: 'Secure headers, CORS, body-size limits, and rate limiting are native to the framework—on from the first request, no extra wiring. Input sanitization and prototype-pollution guards come standard; tune or extend only when your requirements demand it.'
-    link: /reference/security
-    linkText: Security docs
-  - icon: "🔐"
-    title: Enterprise-ready surface
-    details: 'Authentication, authorization, tenancy, safety nets around input and traffic, health signals, and metrics—so production concerns are part of the story, not an afterthought.'
-    link: /integrations/auth
-    linkText: Auth & enterprise
   - icon: 🤖
     title: MCP server
     details: '`bjs mcp start` exposes the full BananaJS CLI as a Model Context Protocol server—9 typed tools available natively in Cursor, Claude Desktop, and any MCP-compatible IDE. No copy-pasting terminal commands, no context switching.'

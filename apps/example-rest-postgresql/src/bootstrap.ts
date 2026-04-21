@@ -4,7 +4,7 @@ import { TypeOrmPlugin } from '@banana-universe/plugin-typeorm'
 import { OpenTelemetryPlugin } from '@banana-universe/plugin-otel'
 import { BearerAuthGuard } from './lib/BearerAuthGuard.js'
 import { catalogModule } from './modules/catalog/index.js'
-import { CatalogItemOrmEntity } from './modules/catalog/infrastructure/CatalogItem.orm-entity.js'
+import { CatalogItemOrmEntity } from './modules/catalog/CatalogItem.repository.js'
 
 export { CatalogItemOrmEntity }
 

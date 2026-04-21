@@ -1,7 +1,8 @@
 {
   "generate": {
-    "defaultOrm": "typeorm",
-    "outDir": "./src"
+    "defaultOrm": "mongoose",
+    "outDir": "./src",
+    "structure": "flat"
   },
   "project": {
     "bootstrap": "src/bootstrap.ts",

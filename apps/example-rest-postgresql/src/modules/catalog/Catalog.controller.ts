@@ -13,7 +13,7 @@ import {
   Query,
   PaginatedResponse,
 } from '@banana-universe/bananajs'
-import { CatalogAppService } from './application/Catalog.service.js'
+import { CatalogAppService } from './Catalog.service.js'
 import {
   CatalogItemIdParamsSchema,
   CatalogListQuerySchema,

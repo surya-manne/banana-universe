@@ -81,7 +81,6 @@ function buildContextBody(
   const orm = config.generate?.defaultOrm ?? config.generate?.preset ?? 'typeorm'
   const apiPrefix = config.project?.apiPrefix ?? '(not set)'
   const bootstrap = config.project?.bootstrap ?? 'src/bootstrap.ts'
-  const layoutVersion = config.project?.moduleLayoutVersion ?? '1'
 
   return `## Project context
 
@@ -90,7 +89,6 @@ function buildContextBody(
 | ORM | \`${orm}\` |
 | API prefix | \`${apiPrefix}\` |
 | Bootstrap | \`${bootstrap}\` |
-| Module layout version | \`${layoutVersion}\` |
 
 ## Discovered modules
 

@@ -7,6 +7,7 @@ import { tryFormatFileWithPrettier } from './format-prettier.js'
 export type CreateAppOptions = {
   appName: string
   preset: AppPreset
+  structure: 'ddd' | 'flat'
 }
 
 const FORMATTABLE_EXTENSIONS = new Set(['.ts', '.mjs', '.js', '.json'])
@@ -19,6 +20,7 @@ export async function writeScaffoldedApp(appDir: string, options: CreateAppOptio
   const ctx: ScaffoldContext = {
     appName: options.appName,
     packageName: npmPackageNameFromAppName(options.appName),
+    structure: options.structure,
   }
   const files = options.preset.buildFiles(ctx)
   await fs.mkdir(appDir, { recursive: true })

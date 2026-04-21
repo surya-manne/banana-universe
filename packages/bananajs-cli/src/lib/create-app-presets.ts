@@ -92,6 +92,8 @@ export type ScaffoldContext = {
   appName: string
   /** package.json "name" field (npm-safe) */
   packageName: string
+  /** Module folder structure: DDD layered (default) or flat (no domain/application/infrastructure subdirs) */
+  structure: 'ddd' | 'flat'
 }
 
 export type ScaffoldFile = { relativePath: string; content: string }
@@ -216,11 +218,15 @@ function sqlPackageJson(ctx: ScaffoldContext): string {
 }
 
 function mongoReadme(ctx: ScaffoldContext): string {
+  const layoutNote =
+    ctx.structure === 'flat'
+      ? 'Layout: **flat modules** under `src/modules/<feature>/` — controller, service, repository, and DTOs at module root.'
+      : 'Layout: **DDD feature modules** under `src/modules/<feature>/` using `createModule` (BananaJS v0.6+) with `domain/` / `application/` / `infrastructure/` subdirectories.'
   return `# ${ctx.appName}
 
 **BananaJS** is a TypeScript framework on Express with decorator-based routing, Zod validation, and pluggable persistence—see the [documentation](https://surya-manne.github.io/banana-universe/) and [repository](https://github.com/surya-manne/banana-universe).
 
-This project was generated with \`bananajs new\` (**MongoDB / Mongoose** preset). Layout: **feature modules** under \`src/modules/<feature>/\` using \`createModule\` (BananaJS v0.6+).
+This project was generated with \`bananajs new\` (**MongoDB / Mongoose** preset). ${layoutNote}
 
 ## Scripts
 
@@ -256,7 +262,7 @@ function sqlReadme(ctx: ScaffoldContext): string {
 
 **BananaJS** is a TypeScript framework on Express with decorator-based routing, Zod validation, and pluggable persistence—see the [documentation](https://surya-manne.github.io/banana-universe/) and [repository](https://github.com/surya-manne/banana-universe).
 
-This project was generated with \`bananajs new\` (**PostgreSQL / TypeORM** preset). Layout: **feature modules** under \`src/modules/<feature>/\` using \`createModule\` (BananaJS v0.6+).
+This project was generated with \`bananajs new\` (**PostgreSQL / TypeORM** preset). Layout: **flat modules** under \`src/modules/<feature>/\` using \`createModule\` (BananaJS v0.6+).
 
 ## Scripts
 
@@ -289,7 +295,7 @@ The scaffold includes a minimal \`NoteEntity\` so TypeORM can synchronize schema
 }
 
 function buildMongoFiles(ctx: ScaffoldContext): ScaffoldFile[] {
-  return [
+  const sharedFiles: ScaffoldFile[] = [
     { relativePath: 'package.json', content: mongoPackageJson(ctx) },
     { relativePath: 'tsconfig.json', content: sharedTsconfig() },
     { relativePath: '.gitignore', content: sharedGitignore() },
@@ -384,6 +390,180 @@ export async function createMongoApp(): Promise<BananaApp> {
 }
 `,
     },
+  ]
+
+  const moduleFiles: ScaffoldFile[] =
+    ctx.structure === 'flat'
+      ? buildMongoFlatArticleFiles()
+      : buildMongoDddArticleFiles()
+
+  return [...sharedFiles, ...moduleFiles]
+}
+
+/** Flat article module — all files at src/modules/articles/ root, no DDD subdirs. */
+function buildMongoFlatArticleFiles(): ScaffoldFile[] {
+  return [
+    {
+      relativePath: 'src/modules/articles/Article.dto.ts',
+      content: `import { z } from 'zod'
+
+export const CreateArticleSchema = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().min(1).max(10000),
+})
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/Article.repository.ts',
+      content: `import type { InjectionToken } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
+import type { Connection, Model } from 'mongoose'
+import { Schema, type HydratedDocument } from 'mongoose'
+import { randomUUID } from 'node:crypto'
+
+export interface ArticleRecord {
+  id: string
+  title: string
+  body: string
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+export const ArticleRepositoryToken = Symbol('ArticleRepository') as InjectionToken<ArticleFlatRepository>
+
+export interface ArticleFlatRepository {
+  findAll(): Promise<ArticleRecord[]>
+  findById(id: string): Promise<ArticleRecord | null>
+  save(record: ArticleRecord): Promise<ArticleRecord>
+}
+
+type ArticleDoc = HydratedDocument<{ _id: string; title: string; body: string; createdAt: Date; updatedAt: Date }>
+
+const articleSchema = new Schema(
+  {
+    _id: { type: String, required: true },
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+  },
+  { collection: 'articles', timestamps: true },
+)
+
+function getArticleModel(connection: Connection): Model<ArticleDoc> {
+  return (connection.models['Article'] as Model<ArticleDoc> | undefined) ??
+    connection.model<ArticleDoc>('Article', articleSchema)
+}
+
+@injectable()
+export class ArticleMongooseRepository implements ArticleFlatRepository {
+  private readonly model: Model<ArticleDoc>
+  constructor(@inject('mongooseConnection') connection: Connection) {
+    this.model = getArticleModel(connection)
+  }
+
+  async findAll(): Promise<ArticleRecord[]> {
+    const docs = await this.model.find().lean()
+    return docs.map((d) => ({
+      id: String(d._id),
+      title: d.title,
+      body: d.body,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
+    }))
+  }
+
+  async findById(id: string): Promise<ArticleRecord | null> {
+    const d = await this.model.findById(id).lean()
+    if (!d) return null
+    return { id: String(d._id), title: d.title, body: d.body, createdAt: d.createdAt, updatedAt: d.updatedAt }
+  }
+
+  async save(record: ArticleRecord): Promise<ArticleRecord> {
+    const id = record.id ?? randomUUID()
+    await this.model.findByIdAndUpdate(
+      id,
+      { _id: id, title: record.title, body: record.body },
+      { upsert: true, new: true },
+    )
+    return { ...record, id }
+  }
+}
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/Article.service.ts',
+      content: `import { randomUUID } from 'node:crypto'
+import { inject, injectable } from 'tsyringe'
+import type { ArticleFlatRepository, ArticleRecord } from './Article.repository'
+import { ArticleRepositoryToken } from './Article.repository'
+
+@injectable()
+export class ArticleService {
+  constructor(
+    @inject(ArticleRepositoryToken)
+    private readonly repo: ArticleFlatRepository,
+  ) {}
+
+  async create(title: string, body: string): Promise<ArticleRecord> {
+    return this.repo.save({ id: randomUUID(), title, body })
+  }
+}
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/Article.controller.ts',
+      content: `import 'reflect-metadata'
+import type { Request, Response } from 'express'
+import { inject, injectable } from 'tsyringe'
+import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
+import { ArticleService } from './Article.service'
+import { CreateArticleSchema } from './Article.dto'
+
+@injectable()
+@Controller('articles')
+export class ArticleController extends BaseController {
+  constructor(@inject(ArticleService) private readonly articleService: ArticleService) {
+    super()
+  }
+
+  @Get('healthz')
+  @Public()
+  health(_req: Request, res: Response) {
+    return this.ok(res, 'ok', { status: 'up' })
+  }
+
+  @Post('')
+  @Body(CreateArticleSchema)
+  async create(req: Request, res: Response) {
+    const { title, body } = req.body as { title: string; body: string }
+    const created = await this.articleService.create(title, body)
+    return this.ok(res, 'created', { id: created.id, title: created.title })
+  }
+}
+`,
+    },
+    {
+      relativePath: 'src/modules/articles/index.ts',
+      content: `import { createModule } from '@banana-universe/bananajs'
+import { ArticleController } from './Article.controller'
+import { ArticleService } from './Article.service'
+import { ArticleRepositoryToken, ArticleMongooseRepository } from './Article.repository'
+
+export const articlesModule = createModule({
+  id: 'articles',
+  controller: ArticleController,
+  providers: [
+    { token: ArticleRepositoryToken, useClass: ArticleMongooseRepository },
+    ArticleService,
+  ],
+})
+`,
+    },
+  ]
+}
+
+/** DDD article module — domain/ application/ infrastructure/ subdirectories. */
+function buildMongoDddArticleFiles(): ScaffoldFile[] {
+  return [
     {
       relativePath: 'src/modules/articles/index.ts',
       content: `import { createModule } from '@banana-universe/bananajs'

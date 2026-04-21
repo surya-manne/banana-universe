@@ -16,9 +16,9 @@ bjs --version
 Scaffolds an app from **built-in presets** (MongoDB/Mongoose or SQL/TypeORM). Writes files under **`./<appName>`**—**no git** and no remote template.
 
 - Prompts for app name if omitted (default suggestion: **`my-bananajs-app`**)
-- Interactive terminal: prompts for **MongoDB** vs **SQL** preset
+- Interactive terminal: prompts for **MongoDB** vs **SQL** preset, then **Flat** vs **DDD layered** folder structure (default: **flat**)
 - **`--preset <id>`** — **`mongodb`** \| **`sql`** — skip the preset prompt (use in CI/scripts)
-- Non-interactive stdin (no TTY): defaults to **`sql`** if **`--preset`** is omitted; pass **`--preset`** explicitly to choose MongoDB or silence the default
+- Non-interactive stdin (no TTY): defaults to **`sql`** preset and **flat** structure; pass **`--preset`** explicitly to choose MongoDB
 
 **Scaffold defaults** (both presets):
 
@@ -36,11 +36,14 @@ Details: [Getting started](/guide/getting-started) (section **What the generated
 
 - Omit **`type`** and **`name`** in a **TTY** to be prompted (resource kind, then name).
 - **`controller` / `dto` / `middleware`** — writes **`cwd/<name>.controller.ts`** (or `.dto.ts` / `.middleware.ts`).
-- **`module`** — DDD feature layout aligned with **`bjs new`**: **`src/modules/<kebab>/`** with **`createModule`** in **`index.ts`**, **`domain/`** (entity + repository token), **`application/`**, **`infrastructure/`**, **`<Pascal>.dto.ts`** and **`<Pascal>.controller.ts`** at the module root, tsyringe **`@injectable` / `@inject`**.
-  - After a successful write (not **`--dry-run`**), the CLI **registers** the module in **`bootstrap.ts`** (path from **`.bananarc.json`** **`project.bootstrap`**, or **`src/bootstrap.ts`**, or auto-detected). For **TypeORM**, it also **appends** the **`OrmEntity`** to the first **`entities: [...]`** it finds under **`src/`** (best effort).
-  - **`--orm typeorm|mongoose|none`** — infrastructure (default: **`typeorm`** when non-interactive and **`--orm`** omitted). **`--orm`** wins over **`--preset`**.
-  - **`--preset mongodb|sql`** — same as **`bjs new --preset`** for default ORM mapping.
-  - **`--out <dir>`** — base directory (default **`./src`**); module files live under **`modules/<feature>/`** inside that base.
+- **`module`** — feature layout aligned with **`bjs new`**: **`src/modules/<kebab>/`** with **`createModule`** in **`index.ts`** and tsyringe **`@injectable` / `@inject`**. Two structure modes (prompted interactively; default: **flat**):
+  - **Flat** *(default)* — controller, service, repository (interface + ORM impl), and DTO all at the module root; no subdirectories.
+  - **DDD layered** — **`domain/`** (entity + repository token), **`application/`**, **`infrastructure/`**, **`<Pascal>.dto.ts`** and **`<Pascal>.controller.ts`** at the module root.
+  - After a successful write (not **`--dry-run`**), the CLI **registers** the module in **`bootstrap.ts`** and, for TypeORM, appends the ORM entity to **`entities[]`**.
+  - **`--structure ddd|flat`** — override the default (**`flat`**); omit to be prompted in a TTY.
+  - **`--orm typeorm|mongoose|none`** — infrastructure adapter (default: **`typeorm`** when non-interactive). **`--orm`** wins over **`--preset`**.
+  - **`--preset mongodb|sql`** — default ORM mapping.
+  - **`--out <dir>`** — base directory (default **`./src`**).
   - **`--skip-bootstrap`** — do not patch **`bootstrap.ts`** or TypeORM **`entities[]`**.
 - **`--dry-run`** — print content without writing.
 
@@ -72,7 +75,7 @@ Subcommands have **one-letter aliases** (e.g. **`bjs ai g`** = **`bjs ai generat
 | Command           | Alias   | Purpose                                                                                                                                                                                                                                                 |
 | ----------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`ai setup`**    | **`s`** | Configure provider + **`.bananarc.json`**                                                                                                                                                                                                               |
-| **`ai generate`** | **`g`** | Flat scaffold (**`--from-schema`** / **`--from-prompt`**) or DDD **`--module`**; **TTY** walks through DDD vs flat, then schema vs text. After write, registers bootstrap / TypeORM **`entities[]`** when applicable—same as **`bjs generate module`**. |
+| **`ai generate`** | **`g`** | Flat module scaffold *(default)* or DDD **`--module`** (LLM extraction); **TTY** walks through flat-module → DDD → legacy flat, then schema vs text. After write, registers bootstrap / TypeORM **`entities[]`** when applicable—same as **`bjs generate module`**. |
 | **`ai doc`**      | **`d`** | JSDoc on controllers; **`--file`**, **`--dry-run`**                                                                                                                                                                                                     |
 | **`ai review`**   | **`r`** | Structured LLM review; **`--file`**, **`--module`**, or positional path; **`--format json`**, **`--sarif`**                                                                                                                                             |
 | **`ai wire`**     | **`w`** | Bootstrap wiring hints (dry-run); optional **`--llm`**                                                                                                                                                                                                  |
@@ -81,12 +84,15 @@ Subcommands have **one-letter aliases** (e.g. **`bjs ai g`** = **`bjs ai generat
 
 Shared: **`--out <dir>`**, **`--dry-run`** where applicable.
 
-::: info DDD modules
-**`bjs ai setup`**, **`.bananarc.json`**, and **`ai generate --module`** drive LLM-assisted DDD module generation (same folder layout and **`createModule`** wiring as **`bjs generate module`**). **`bjs ai generate`** with no flags in a TTY asks **DDD vs flat**, then schema vs description (or prompt). A bare **`--module`** flag prompts for inputs.
+::: info Flat and DDD modules
+Both **`bjs generate module`** and **`bjs ai generate`** support two folder structures — **flat** (default) and **DDD layered**:
+
+- **Flat** *(default)* — controller, service, repository, and DTO live at **`src/modules/<feature>/`** root; no `domain/` / `application/` / `infrastructure/` subdirs.
+- **DDD layered** — full **`domain/`**, **`application/`**, **`infrastructure/`** subdirectory layout with DDD `Entity<Props>` base class and repository port pattern.
+
+Pass **`--structure flat`** (default) or **`--structure ddd`** to skip the interactive prompt. In a TTY, the prompt shows **Flat** first.
 
 **`bjs ai generate --module`** accepts **`--orm`** and **`--preset mongodb|sql`**. In **`.bananarc.json`**, **`generate.preset`** sets the default ORM when **`generate.defaultOrm`** is omitted (**`mongodb`** → mongoose, **`sql`** → typeorm).
-
-For **`bjs generate module`** only, **`--skip-bootstrap`** skips patching **`bootstrap.ts`** and TypeORM **`entities[]`**—see [Generate](#bjs-generate-type-name-alias-g) above.
 :::
 
 ## Related

@@ -18,13 +18,11 @@ export type OrmPreference = 'typeorm' | 'mongoose' | 'none'
 
 /** Optional project context for codegen, wire hints, and AI rubrics (minimal schema; extend with care). */
 export interface BananarcProjectContext {
-  /** Layout contract for generated modules (e.g. \`1\` = current enterprise layout). */
-  moduleLayoutVersion?: string
-  /** Default URI prefix when documenting or suggesting routes (e.g. \`/api/v1\`). */
+  /** Default URI prefix when documenting or suggesting routes (e.g. `/api/v1`). */
   apiPrefix?: string
-  /** Path to bootstrap relative to project root (default: \`src/bootstrap.ts\`). */
+  /** Path to bootstrap relative to project root (default: `src/bootstrap.ts`). */
   bootstrap?: string
-  /** Entry file relative to project root (default: \`src/main.ts\`). */
+  /** Entry file relative to project root (default: `src/main.ts`). */
   main?: string
 }
 
@@ -41,6 +39,8 @@ export interface BananarcConfig {
     /** Same as `ban new --preset`: sets default ORM when `defaultOrm` is omitted (`mongodb` → mongoose, `sql` → typeorm). */
     preset?: 'mongodb' | 'sql'
     outDir?: string
+    /** Default folder structure for generated modules: flat (all files at module root) | ddd (layered subdirs). Default: flat. */
+    structure?: 'flat' | 'ddd'
   }
   /** Project layout and bootstrap hints for AI / wire commands. */
   project?: BananarcProjectContext
@@ -59,9 +59,9 @@ export const DEFAULT_BANANARC: BananarcConfig = {
   generate: {
     defaultOrm: 'typeorm',
     outDir: './src',
+    structure: 'flat',
   },
   project: {
-    moduleLayoutVersion: '1',
     bootstrap: 'src/bootstrap.ts',
     main: 'src/main.ts',
   },

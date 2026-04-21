@@ -6,7 +6,7 @@ import * as path from 'path'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import { generateController, generateDto, generateMiddleware } from './lib/generate'
-import { buildDddModuleFiles, type OrmChoice } from './lib/generate-module.js'
+import { buildDddModuleFiles, buildFlatModuleFiles, type OrmChoice } from './lib/generate-module.js'
 import { listRoutes } from './lib/routes'
 import { migrateCodemod } from './lib/migrate'
 import { dbStatus } from './lib/db'
@@ -68,7 +68,7 @@ program
   .command('generate [type] [name]')
   .alias('g')
   .description(
-    'Generate a BananaJS resource (controller | dto | middleware | module — DDD layered module). Omit args in a TTY to be prompted.',
+    'Generate a BananaJS resource (controller | dto | middleware | module). Omit args in a TTY to be prompted.',
   )
   .option('--dry-run', 'Print files that would be created without writing them')
   .option(
@@ -84,6 +84,10 @@ program
     '--skip-bootstrap',
     'For type module: do not register in bootstrap or patch TypeORM entities[]',
   )
+  .option(
+    '--structure <structure>',
+    'For type module: ddd (layered domain/application/infrastructure) | flat (all files at module root)',
+  )
   .action(function (this: Command, typeArg?: string, nameArg?: string) {
     const options = this.opts() as {
       dryRun?: boolean
@@ -91,6 +95,7 @@ program
       preset?: string
       out?: string
       skipBootstrap?: boolean
+      structure?: string
     }
     resolveGenerateArgs(typeArg, nameArg)
       .then(({ type, name }) =>
@@ -100,6 +105,7 @@ program
           preset: options.preset,
           out: options.out,
           skipBootstrap: options.skipBootstrap ?? false,
+          structure: options.structure,
         }),
       )
       .catch((err: unknown) => {
@@ -313,13 +319,14 @@ aiCmd
         const wantDdd = opts.module !== undefined || opts.planOnly || Boolean(opts.context)
         const wantFlat = Boolean(opts.fromSchema || opts.fromPrompt) && !wantDdd
         if (!wantDdd && !wantFlat && process.stdin.isTTY) {
-          const { mode } = await inquirer.prompt<{ mode: 'ddd' | 'flat' }>([
+          const { mode } = await inquirer.prompt<{ mode: 'ddd' | 'flat-module' | 'flat' }>([
             {
               type: 'list',
               name: 'mode',
               message: 'What should the AI generate?',
               choices: [
-                { name: 'Full DDD module under src/modules/ (LLM extraction)', value: 'ddd' },
+                { name: 'Flat module under src/modules/ (template scaffold, no subdirs)', value: 'flat-module' },
+                { name: 'DDD module under src/modules/ (LLM extraction, layered structure)', value: 'ddd' },
                 { name: 'Flat controller + dto + service (legacy scaffold)', value: 'flat' },
               ],
             },
@@ -333,6 +340,25 @@ aiCmd
               dryRun: opts.dryRun,
               detailed: opts.detailed,
               debug: opts.debug,
+            })
+            return
+          }
+          if (mode === 'flat-module') {
+            const { entityName } = await inquirer.prompt<{ entityName: string }>([
+              {
+                type: 'input',
+                name: 'entityName',
+                message: 'Module / entity name (e.g. Product or order-item):',
+                validate: (v) => (v && v.trim().length > 0 ? true : 'Enter a name'),
+              },
+            ])
+            await generateModuleResource(entityName.trim(), {
+              dryRun: opts.dryRun ?? false,
+              orm: opts.orm,
+              preset: opts.preset,
+              out: opts.out,
+              skipBootstrap: false,
+              structure: 'flat',
             })
             return
           }
@@ -854,6 +880,24 @@ async function createApp(
     process.exit(1)
   }
 
+  // ── Ask folder structure ─────────────────────────────────────────────────
+  let structure: 'ddd' | 'flat' = 'ddd'
+  if (process.stdin.isTTY) {
+    const { s } = await inquirer.prompt<{ s: 'ddd' | 'flat' }>([
+      {
+        type: 'list',
+        name: 's',
+        message: 'Folder structure for modules?',
+        choices: [
+          { name: 'Flat         (all files at module root, no subdirs)', value: 'flat' },
+          { name: 'DDD layered  (domain/ application/ infrastructure/ subdirs)', value: 'ddd' },
+        ],
+        default: 'flat',
+      },
+    ])
+    structure = s
+  }
+
   const appDir = path.join(process.cwd(), appName)
 
   try {
@@ -868,7 +912,7 @@ async function createApp(
   }
 
   try {
-    await writeScaffoldedApp(appDir, { appName, preset })
+    await writeScaffoldedApp(appDir, { appName, preset, structure })
     console.log(chalk.green(`App "${appName}" created successfully!`))
     console.log(chalk.cyan(`Next: cd ${appName} && npm install && npm run build && npm start`))
   } catch (error) {
@@ -892,7 +936,7 @@ async function resolveGenerateArgs(
           name: 't',
           message: 'What do you want to generate?',
           choices: [
-            { name: 'module (DDD feature under src/modules/)', value: 'module' },
+            { name: 'module (feature under src/modules/)', value: 'module' },
             { name: 'controller', value: 'controller' },
             { name: 'dto', value: 'dto' },
             { name: 'middleware', value: 'middleware' },
@@ -931,6 +975,7 @@ async function generateResource(
     preset?: string
     out?: string
     skipBootstrap?: boolean
+    structure?: string
   },
 ): Promise<void> {
   const validTypes = ['controller', 'dto', 'middleware', 'module']
@@ -943,8 +988,6 @@ async function generateResource(
     await generateModuleResource(name, opts)
     return
   }
-
-  const dryRun = opts.dryRun
   let fileName: string
   let content: string
 
@@ -961,7 +1004,7 @@ async function generateResource(
 
   const outputPath = path.join(process.cwd(), fileName)
 
-  if (dryRun) {
+  if (opts.dryRun) {
     console.log(chalk.cyan(`[dry-run] Would create: ${outputPath}`))
     console.log(chalk.gray('---'))
     console.log(chalk.gray(content))
@@ -974,8 +1017,38 @@ async function generateResource(
 
 async function generateModuleResource(
   name: string,
-  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string; skipBootstrap?: boolean },
+  opts: { dryRun: boolean; orm?: string; preset?: string; out?: string; skipBootstrap?: boolean; structure?: string },
 ): Promise<void> {
+  // ── Resolve folder structure (DDD vs flat) ────────────────────────────────
+  const cfg = await loadBananarc(process.cwd())
+  let structure: 'ddd' | 'flat'
+  const rawStructure = opts.structure?.toLowerCase()
+  if (rawStructure === 'ddd' || rawStructure === 'flat') {
+    structure = rawStructure
+  } else if (opts.structure !== undefined) {
+    console.log(chalk.red(`Invalid --structure "${opts.structure}". Use ddd or flat.`))
+    process.exit(1)
+  } else if (cfg.generate?.structure === 'ddd' || cfg.generate?.structure === 'flat') {
+    structure = cfg.generate.structure
+  } else if (process.stdin.isTTY) {
+    const { s } = await inquirer.prompt<{ s: 'ddd' | 'flat' }>([
+      {
+        type: 'list',
+        name: 's',
+        message: 'Folder structure?',
+        choices: [
+          { name: 'Flat         (all files at module root, no subdirs)', value: 'flat' },
+          { name: 'DDD layered  (domain/ application/ infrastructure/ subdirs)', value: 'ddd' },
+        ],
+        default: 'flat',
+      },
+    ])
+    structure = s
+  } else {
+    structure = 'flat'
+  }
+
+  // ── Resolve ORM ───────────────────────────────────────────────────────────
   let ormChoice: OrmChoice
   const raw = opts.orm?.toLowerCase()
   if (raw === 'typeorm' || raw === 'mongoose' || raw === 'none') {
@@ -1011,7 +1084,10 @@ async function generateModuleResource(
 
   const cwd = process.cwd()
   const outBase = path.join(cwd, opts.out ?? 'src')
-  const files = buildDddModuleFiles(name, ormChoice)
+  const files =
+    structure === 'flat'
+      ? buildFlatModuleFiles(name, ormChoice)
+      : buildDddModuleFiles(name, ormChoice)
 
   for (const f of files) {
     const outputPath = path.join(outBase, f.relativePath)
@@ -1046,12 +1122,13 @@ async function generateModuleResource(
   })
 
   if (ormChoice === 'typeorm') {
-    const entityAbs = path.join(
-      outBase,
-      moduleOutputBase(kebab),
-      'infrastructure',
-      `${Pascal}.orm-entity.ts`,
-    )
+    // Flat: ORM entity lives in <Pascal>.repository.ts (module root)
+    // DDD:  ORM entity lives in infrastructure/<Pascal>.orm-entity.ts
+    const entityRelPath =
+      structure === 'flat'
+        ? path.join(moduleOutputBase(kebab), `${Pascal}.repository.ts`)
+        : path.join(moduleOutputBase(kebab), 'infrastructure', `${Pascal}.orm-entity.ts`)
+    const entityAbs = path.join(outBase, entityRelPath)
     await patchTypeormEntitiesArray({
       cwd,
       entityFileAbs: path.resolve(entityAbs),

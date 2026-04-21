@@ -40,7 +40,7 @@ Requires a reachable **MongoDB** at `MONGODB_URI` (default `mongodb://127.0.0.1:
 
 ## Project context (AI / CLI)
 
-This app includes a minimal `.bananarc.json` with `project` fields (`moduleLayoutVersion`, `bootstrap`, `main`, `apiPrefix`) so `bananajs ai wire` and codegen can align with layout. See the docs-site **AI** section (`/ai/` when the site is built).
+This app includes a minimal `.bananarc.json` with `project` fields (`bootstrap`, `main`) so `bananajs ai wire` and codegen can align with layout. See the docs-site **AI** section (`/ai/` when the site is built).
 
 ## Dependency pins
 

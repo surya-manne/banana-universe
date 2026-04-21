@@ -497,7 +497,7 @@ Every call prepends the same **versioned** rules (layout, ORM boundaries, HTTP, 
 
 ## Project context (`.bananarc.json`)
 
-Optional **`project`** block documents bootstrap and layout for codegen and **`ai wire`**: **`moduleLayoutVersion`**, **`apiPrefix`**, **`bootstrap`**, **`main`**. Types live in `packages/bananajs-cli/src/lib/llm/bananarc.ts`; **`generate`** holds **`defaultOrm`**, **`preset`**, **`outDir`**.
+Optional **`project`** block documents bootstrap for codegen and **`ai wire`**: **`apiPrefix`**, **`bootstrap`**, **`main`**. Types live in `packages/bananajs-cli/src/lib/llm/bananarc.ts`; **`generate`** holds **`defaultOrm`**, **`preset`**, **`outDir`**, **`structure`**.
 
 ## Structured review schema
 

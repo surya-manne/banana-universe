@@ -126,7 +126,7 @@ No automated tests (spec/test files) currently exist in the workspace. Testing i
 
 ## BananaJS CLI and `.bananarc.json`
 
-The **`bananajs-cli`** package reads **`.bananarc.json`** for LLM provider settings, **`generate`** defaults (`defaultOrm`, `preset`, `outDir`), and optional **`project`** context (`moduleLayoutVersion`, `apiPrefix`, `bootstrap`, `main`) used by **`ai generate`**, **`ai wire`**, and shared LLM rules. Types and merge behavior: `packages/bananajs-cli/src/lib/llm/bananarc.ts`.
+The **`bananajs-cli`** package reads **`.bananarc.json`** for LLM provider settings, **`generate`** defaults (`defaultOrm`, `preset`, `outDir`, `structure`), and optional **`project`** context (`apiPrefix`, `bootstrap`, `main`) used by **`ai generate`**, **`ai wire`**, and shared LLM rules. Types and merge behavior: `packages/bananajs-cli/src/lib/llm/bananarc.ts`.
 
 ## Publishing
 

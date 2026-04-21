@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import type { Request, Response } from 'express'
 import { inject, injectable } from 'tsyringe'
 import { BaseController, Body, Controller, Get, Post, Public } from '@banana-universe/bananajs'
-import { ArticleAppService } from './application/Article.service.js'
+import { ArticleAppService } from './Article.service.js'
 import { CreateArticleSchema } from './Article.dto.js'
 
 @injectable()
