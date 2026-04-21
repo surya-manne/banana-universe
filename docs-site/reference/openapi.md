@@ -46,10 +46,10 @@ What is inferred automatically:
 | --- | --- |
 | `@Controller('segment')` | Path prefix |
 | `@Get`, `@Post`, `@Put`, `@Patch`, `@Delete` | HTTP method + full path |
-| `@Body(zodSchema)` | `requestBody` with JSON Schema |
-| `@Params(zodSchema)` | Path parameters |
-| `@Query(zodSchema)` | Query parameters |
-| `@Headers(zodSchema)` | Header parameters |
+| `@Body(schema)` | `requestBody` with JSON Schema |
+| `@Params(schema)` | Path parameters |
+| `@Query(schema)` | Query parameters |
+| `@Headers(schema)` | Header parameters |
 | `@Auth()` on class or method | `security: [{ BearerAuth: [] }]` |
 | Controller class name | Default tag (e.g. `UserController` → **User**) |
 | Method name | Default `summary` (camelCase → Title Case) |
@@ -111,10 +111,10 @@ class UserController extends BaseController {
 | --- | --- | --- |
 | `@ApiTags(...tags)` | Class | Group endpoints under one or more tags |
 | `@ApiOperation(options)` | Method | `summary`, `description`, `deprecated` |
-| `@ApiBody({ schema, description?, required? })` | Method | Override inferred request body; accepts a Zod schema |
+| `@ApiBody({ schema, description?, required? })` | Method | Override inferred request body; accepts a validation schema |
 | `@ApiResponseDoc({ status, description, schema? })` | Method | Document one response status; stackable |
 
-> **Tip:** `@ApiBody` is optional when `@Body(zodSchema)` is already applied — BananaJS infers the request body schema directly from the validation decorator.
+> **Tip:** `@ApiBody` is optional when `@Body(schema)` is already applied — BananaJS infers the request body schema directly from the validation decorator.
 
 ## Authentication in the spec
 

@@ -25,7 +25,6 @@ publish_one plugin-ai plugin-ai
 publish_one plugin-typeorm plugin-typeorm
 publish_one plugin-mongoose plugin-mongoose
 publish_one plugin-otel plugin-otel
-publish_one plugin-zod plugin-zod
 publish_one plugin-websocket plugin-websocket
 publish_one adapter-fastify adapter-fastify
 publish_one bananajs-cli bananajs-cli

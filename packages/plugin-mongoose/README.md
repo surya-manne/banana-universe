@@ -1,14 +1,55 @@
 # @banana-universe/plugin-mongoose
 
-Mongoose integration for BananaJS: **`MongoosePlugin`**, **`@Transactional()`** (MongoDB sessions), **`MongooseRepositoryAdapter`**, and unit-of-work helpers.
+Mongoose integration plugin for BananaJS with session-based transaction support.
 
-See the docs site: [Mongoose integration](https://github.com/surya-manne/banana-universe/blob/main/docs-site/integrations/mongoose.md).
+## Homepage
 
-## Peer dependencies
+https://surya-manne.github.io/banana-universe/
 
-- `mongoose` >= 8
-- `@banana-universe/bananajs` >= 0.3
-- `@banana-universe/ddd` >= 0.1
+## Installation
+
+```bash
+npm install @banana-universe/plugin-mongoose mongoose reflect-metadata
+```
+
+## Core API Surface
+
+- `MongoosePlugin(connection)`
+- `Transactional()`
+- `MongooseTransactionContext`
+
+## Minimal Working Setup
+
+```ts
+import mongoose from 'mongoose';
+import { BananaApp } from '@banana-universe/bananajs';
+import { MongoosePlugin } from '@banana-universe/plugin-mongoose';
+
+const connection = await mongoose.createConnection('mongodb://127.0.0.1:27017/banana').asPromise();
+
+await BananaApp.create({
+  controllers: [],
+  plugins: [MongoosePlugin(connection)],
+});
+```
+
+## Transactional Method Example
+
+```ts
+import { Transactional, MongooseTransactionContext } from '@banana-universe/plugin-mongoose';
+
+class InventoryService {
+  @Transactional()
+  async reserve() {
+    const session = MongooseTransactionContext.getSession();
+    // pass { session } to model operations
+  }
+}
+```
+
+## Documentation
+
+- Project docs: https://surya-manne.github.io/banana-universe/
 
 ## License
 

@@ -6,7 +6,7 @@ Each recipe is a **vertical slice**: HTTP surface, application services, and per
 
 ## Why this exists
 
-BananaJS is opinionated about **structure** (decorators, Zod, `SuccessResponse`, modules with **tsyringe**). Recipes show what that structure **feels like** when the domain is real enough to need **auth**, **pagination**, **two databases**, or **WebSockets**—without hiding the boring parts (env files, Docker, lint, CLI).
+BananaJS is opinionated about **structure** (decorators, validation, `SuccessResponse`, modules with **tsyringe**). Recipes show what that structure **feels like** when the domain is real enough to need **auth**, **pagination**, **two databases**, or **WebSockets**—without hiding the boring parts (env files, Docker, lint, CLI).
 
 If [Getting started](/guide/getting-started) gets you a blank canvas, recipes are **finished sketches** you trace.
 
@@ -17,7 +17,7 @@ Ask what you are trying to **prove** first—not which database you like on pape
 | If you want to…                                                                              | Start with                                                                                                       |
 | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Ship a **relational** API with layered modules, auth, and optional traces                    | [example-rest-postgresql](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-postgresql) |
-| Prefer **MongoDB** and Mongoose with Zod on the wire                                         | [example-rest-mongodb](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-mongodb)       |
+| Prefer **MongoDB** and Mongoose with validation schemas on the wire                                         | [example-rest-mongodb](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-mongodb)       |
 | See **TypeORM and Mongoose in one process** without blending concerns—**one ORM per module** | [example-rest-dual-orm](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-dual-orm)     |
 | Run **Fastify** next to Express or explore a hybrid HTTP stack                               | [example-fastify](https://github.com/surya-manne/banana-universe/tree/main/apps/example-fastify)                 |
 | Add **WebSockets** beside REST                                                               | [example-websocket-chat](https://github.com/surya-manne/banana-universe/tree/main/apps/example-websocket-chat)   |
@@ -48,7 +48,7 @@ flowchart TB
 
 - **Modules, not loose controllers** — Prefer **`defineBananaAppOptions({ modules: [...] })`** and **`createModule`** so each feature brings its own **tsyringe** child container. A flat **`controllers`** list still works for small apps; recipes lean toward **modules** because that is where the framework’s **enterprise-shaped** DX pays off. See [Layered architecture](/guide/layered-architecture) and [Domain & persistence](/guide/domain-and-persistence) for how slices meet storage.
 - **One HTTP class per module** — Split modules if the API surface forks (e.g. public vs admin); don’t grow a “god controller.”
-- **Validation at the edge** — `@Body`, `@Params`, `@Query`, `@Headers` with **Zod** keep failures **400** and predictable.
+- **Validation at the edge** — `@Body`, `@Params`, `@Query`, `@Headers` with **validation schemas** keep failures **400** and predictable.
 - **Cross-cutting concerns** — Auth guards, tenancy, and OpenAPI sit in **options** and **decorators** (`@Auth`, `@Public`, `@Roles`, `@Can`); see [Authentication](/integrations/auth) when you wire identity.
 
 ::: tip Greenfield vs exploration
@@ -57,7 +57,7 @@ Use **`bananajs new`** ([Getting started](/guide/getting-started)) to **generate
 
 ## Conventions (shared across recipes)
 
-- **Layout** — `src/modules/<feature>/` per vertical slice: controller, DTOs, services, infrastructure. **Dotted role names** for feature files (e.g. `Catalog.controller.ts`, `CatalogItem.entity.ts`, `Article.service.ts`); keep **`main.ts`**, **`bootstrap.ts`**, and barrel **`index.ts`** in **lowercase**. In **`createModule`**, list only **non-controller** providers—the **`controller`** field registers the HTTP class; **do not** duplicate it in **`providers`**. Domain persistence contracts use **`domain/<Entity>.mapper.ts`** (repository port) or **`domain/<Entity>.repository.ts`**; combine list/query Zod shapes into the feature **`*.dto.ts`** instead of scattering one-off query files.
+- **Layout** — `src/modules/<feature>/` per vertical slice: controller, DTOs, services, infrastructure. **Dotted role names** for feature files (e.g. `Catalog.controller.ts`, `CatalogItem.entity.ts`, `Article.service.ts`); keep **`main.ts`**, **`bootstrap.ts`**, and barrel **`index.ts`** in **lowercase**. In **`createModule`**, list only **non-controller** providers—the **`controller`** field registers the HTTP class; **do not** duplicate it in **`providers`**. Domain persistence contracts use **`domain/<Entity>.mapper.ts`** (repository port) or **`domain/<Entity>.repository.ts`**; combine list/query schemas into the feature **`*.dto.ts`** instead of scattering one-off query files.
 - **Shared code** — Cross-cutting helpers under `src/lib/` (e.g. `BearerAuthGuard.ts`).
 - **Environment** — Copy `.env.example` → `.env`; entry loads **`dotenv`** (`import 'dotenv/config'` in `main.ts`).
 - **Development** — `npm run dev` uses **`tsx watch`**; `npm run build` / `npm start` for production-style runs.
@@ -69,7 +69,7 @@ Use **`bananajs new`** ([Getting started](/guide/getting-started)) to **generate
 | Recipe                                                                                                           | Stack             | What it demonstrates                                                             |
 | ---------------------------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------- |
 | [example-rest-postgresql](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-postgresql) | SQL (PostgreSQL)  | Layered `modules/catalog`, auth, pagination, optional observability, API docs    |
-| [example-rest-mongodb](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-mongodb)       | MongoDB           | `modules/articles`, Mongoose + `@Body(Zod)` (see app README for deployment)      |
+| [example-rest-mongodb](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-mongodb)       | MongoDB           | `modules/articles`, Mongoose + `@Body(schema)` (see app README for deployment)      |
 | [example-rest-dual-orm](https://github.com/surya-manne/banana-universe/tree/main/apps/example-rest-dual-orm)     | SQL + MongoDB     | **One ORM per module**: `widgets` (TypeORM), `tags` (Mongoose); shared bootstrap |
 | [example-fastify](https://github.com/surya-manne/banana-universe/tree/main/apps/example-fastify)                 | Fastify + Express | `modules/health`, hybrid HTTP via `@fastify/express`                             |
 | [example-websocket-chat](https://github.com/surya-manne/banana-universe/tree/main/apps/example-websocket-chat)   | WebSockets        | `modules/health` + `modules/chat`, WebSocket plugin alongside HTTP               |

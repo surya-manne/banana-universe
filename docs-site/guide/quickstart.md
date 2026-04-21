@@ -1,6 +1,6 @@
 # Quickstart
 
-Build a working REST API in 5 minutes. No theory — just a controller, a Zod schema, and a running server.
+Build a working REST API in 5 minutes. No theory — just a controller, a validation schema, and a running server.
 
 **Prerequisites:** Node.js 20+ and npm (or pnpm / yarn).
 
@@ -39,7 +39,7 @@ import { Controller, Get, Post, Body, BaseController } from '@banana-universe/ba
 import type { Request, Response } from 'express'
 import { z } from 'zod'
 
-// Define the shape of the request body with Zod
+// Define the request body schema
 const GreetSchema = z.object({
   name: z.string().min(1),
 })
@@ -108,7 +108,7 @@ curl -X POST http://localhost:3000/hello/greet \
 
 That's it. You have:
 - **Decorator-based routing** — no `router.get()` boilerplate
-- **Automatic validation** — Zod schema on `@Body`, bad input → 400 automatically
+- **Automatic validation** — validation schema on `@Body`, bad input → 400 automatically
 - **Consistent responses** — every success and error uses the same JSON shape
 
 </div>

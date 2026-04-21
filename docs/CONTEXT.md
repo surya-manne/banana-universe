@@ -43,7 +43,6 @@ BananaJS is an opinionated Node.js framework built for developers who want the p
 - `packages/plugin-mongoose` — Mongoose integration plugin.
 - `packages/plugin-otel` — OpenTelemetry integration plugin.
 - `packages/plugin-websocket` — WebSocket (ws) integration plugin.
-- `packages/plugin-zod` — Zod validation plugin (backwards-compat shim).
 - `apps/example-rest-postgresql` — reference REST app using TypeORM + PostgreSQL.
 - `apps/example-rest-mongodb` — reference REST app using Mongoose + MongoDB.
 - `apps/example-multitenant` — reference multi-tenant REST app.

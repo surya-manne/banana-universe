@@ -266,7 +266,7 @@ bjs ai context --format copilot
 
 ### 9 · Generate fixture factories for a module
 
-**Scene:** You have a `Users` module with Zod DTOs and want type-safe factory functions for tests and Storybook — without hard-coding fragile object literals everywhere.
+**Scene:** You have a `Users` module with typed DTOs and want type-safe factory functions for tests and Storybook — without hard-coding fragile object literals everywhere.
 
 **Run:**
 
@@ -274,7 +274,7 @@ bjs ai context --format copilot
 bjs ai mock --module src/modules/users
 ```
 
-**You get:** a `__fixtures__/` folder next to your module with one `*.fixtures.ts` file per Zod schema found. Each export follows the `build<Type>(overrides?)` pattern so you can override specific fields per test.
+**You get:** a `__fixtures__/` folder next to your module with one `*.fixtures.ts` file per validation schema found. Each export follows the `build<Type>(overrides?)` pattern so you can override specific fields per test.
 
 ```typescript
 // __fixtures__/create-user.dto.fixtures.ts  (generated)
@@ -480,7 +480,7 @@ In tests, override the token with a stub — no network calls ever leave your te
 <div class="ai-cmd-card"><code class="cmd-name">ai test</code><p><code>node:test</code> + supertest scaffold</p></div>
 <div class="ai-cmd-card"><code class="cmd-name">ai explain [file]</code><p>Short LLM summary of one file</p></div>
 <div class="ai-cmd-card"><code class="cmd-name">ai context</code><p>Generate IDE context files (CLAUDE.md, Cursor rules, Copilot instructions, AGENTS.md)</p></div>
-<div class="ai-cmd-card"><code class="cmd-name">ai mock</code><p>TypeScript fixture factories and JSON samples from Zod schemas</p></div>
+<div class="ai-cmd-card"><code class="cmd-name">ai mock</code><p>TypeScript fixture factories and JSON samples from validation schemas</p></div>
 <div class="ai-cmd-card"><code class="cmd-name">ai openapi enrich</code><p>Fill missing summaries, descriptions, tags in an OpenAPI spec</p></div>
 <div class="ai-cmd-card"><code class="cmd-name">ai doc</code><p>Legacy JSDoc path — prefer OpenAPI + <a href="/tooling/cli#bjs-openapi-export">docs</a></p></div>
 <div class="ai-cmd-card"><code class="cmd-name">ai debug [input]</code><p>Parse a runtime stack trace into root cause + fix (<code>AiDebugJson</code>)</p></div>
@@ -515,7 +515,7 @@ JSON output carries **`schemaVersion`**. Published schema: **`ai-review.schema.j
 | `bananajs_explain` | Return a concise LLM summary of any source file |
 | `bananajs_review` | Run a structured convention review; returns `AiReviewJson` |
 | `bananajs_generate` | Scaffold a flat bundle or full DDD module tree |
-| `bananajs_mock` | Generate `build<Type>()` fixture factories from Zod schemas |
+| `bananajs_mock` | Generate `build<Type>()` fixture factories from validation schemas |
 | `bananajs_debug` | Parse a stack trace into root cause + fix (`AiDebugJson`) |
 | `bananajs_perf` | Static-first N+1 and performance scan |
 | `bananajs_upgrade` | Upgrade readiness check — **always dry-run**, no files written |
@@ -730,7 +730,7 @@ The MCP server resolves your project root from the directory it starts in. If yo
 3. A `__fixtures__/create-order.dto.fixtures.ts` file is written alongside your module with a `buildCreateOrderDto(overrides?)` export.
 4. You import it at the top of your test — one line — and override only the fields your test cares about.
 
-**Why this matters:** Factories stay in sync with your Zod schema automatically on the next `bjs ai mock` run. No more stale object literals causing type errors three sprints later.
+**Why this matters:** Factories stay in sync with your validation schema automatically on the next `bjs ai mock` run. No more stale object literals causing type errors three sprints later.
 
 </details>
 

@@ -91,6 +91,7 @@ export default withMermaid(
             text: 'Learning',
             items: [
               { text: 'Core Concepts', link: '/guide/basic-concepts' },
+              { text: 'Consistent Responses', link: '/guide/consistent-responses' },
               { text: 'Advanced Concepts', link: '/guide/advanced-concepts' },
             ],
           },

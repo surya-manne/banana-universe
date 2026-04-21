@@ -63,7 +63,7 @@ protectedRoute(req: Request, res: Response) { ... }
 
 ## Validation {#validation}
 
-BananaJS validates request data **declaratively** using **Zod schemas**. Add a decorator and the framework runs validation before your handler — you never write `if (!req.body.email) return res.status(400)...` manually.
+BananaJS validates request data **declaratively** using **validation schemas**. Add a decorator and the framework runs validation before your handler — you never write `if (!req.body.email) return res.status(400)...` manually.
 
 ```typescript
 import { Body, Params, Query } from '@banana-universe/bananajs'
@@ -127,7 +127,7 @@ export class UserController extends BaseController {
 
 **`@Headers(schema)`** works the same way for request headers.
 
-::: tip Zod coercion for query params
+::: tip Schema coercion for query params
 Query string values are always strings in Express. Use `z.coerce.number()` instead of `z.number()` for numeric query params — it converts `"42"` to `42` before passing to your handler.
 :::
 

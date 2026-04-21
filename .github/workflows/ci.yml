@@ -58,10 +58,6 @@ jobs:
         run: npx tsc -p tsconfig.lib.json --noEmit
         working-directory: packages/plugin-otel
 
-      - name: Type check — packages/plugin-zod
-        run: npx tsc -p tsconfig.lib.json --noEmit
-        working-directory: packages/plugin-zod
-
       - name: Type check — packages/plugin-websocket
         run: npx tsc -p tsconfig.lib.json --noEmit
         working-directory: packages/plugin-websocket

@@ -12,7 +12,7 @@
     "type": "git",
     "url": "https://github.com/surya-manne/banana-universe.git"
   },
-  "homepage": "https://github.com/surya-manne/banana-universe/tree/main/packages/bananajs-cli",
+  "homepage": "https://surya-manne.github.io/banana-universe/",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

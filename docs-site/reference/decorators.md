@@ -13,7 +13,7 @@ Hand-written overview; generated signatures live under [**TypeDoc API**](/api/) 
 
 | Export                               | Role                                    |
 | ------------------------------------ | --------------------------------------- |
-| `Body`, `Params`, `Query`, `Headers` | **Zod** schemas (`z.ZodType`) per slice |
+| `Body`, `Params`, `Query`, `Headers` | **Validation** schemas (`z.ZodType`) per slice |
 
 ## Responses (success)
 

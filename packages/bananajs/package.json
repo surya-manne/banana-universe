@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/surya-manne/banana-universe.git"
   },
-  "homepage": "https://github.com/surya-manne/banana-universe/tree/main/packages/bananajs",
+  "homepage": "https://surya-manne.github.io/banana-universe/",
   "license": "MIT",
   "version": "0.6.0",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 # Getting Started
 
-BananaJS (**`@banana-universe/bananajs`**) is TypeScript on **Express**: decorators, **Zod** validation, typed responses and errors, optional **modules** with **tsyringe**, and a CLI for scaffolding and AI-assisted workflows. Read [**Philosophy**](/guide/philosophy) for the product stance; this page is **how to run something**.
+BananaJS (**`@banana-universe/bananajs`**) is TypeScript on **Express**: decorators, built-in **validation**, typed responses and errors, optional **modules** with **tsyringe**, and a CLI for scaffolding and AI-assisted workflows. Read [**Philosophy**](/guide/philosophy) for the product stance; this page is **how to run something**.
 
 **Prerequisites:** **Node.js 20+** and **npm**, **pnpm**, or **yarn**.
 

@@ -22,7 +22,7 @@ The chef doesn't care whether the food is in a fridge or a freezer. The recipe b
 ```
 src/modules/article/
   Article.controller.ts    ← Waiter: HTTP only, no business logic
-  Article.dto.ts           ← Request/response shapes (Zod)
+  Article.dto.ts           ← Request/response shapes (schema)
   application/
     Article.service.ts     ← Chef: orchestrates the use case
   domain/
@@ -153,7 +153,7 @@ export class ArticleTypeOrmRepo
 
 ### Step 5 — Controller: HTTP wiring
 
-Thin. Validates input with Zod, calls the service, returns the response.
+Thin. Validates input with schemas, calls the service, returns the response.
 
 ```typescript
 // Article.controller.ts

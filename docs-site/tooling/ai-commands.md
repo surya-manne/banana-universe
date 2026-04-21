@@ -152,12 +152,12 @@ Commit the generated context files so every team member's IDE agent follows the 
 
 ## `bjs ai mock`
 
-Generates TypeScript fixture factories and JSON sample files from Zod schemas in a controller, DTO, or module directory.
+Generates TypeScript fixture factories and JSON sample files from validation schemas in a controller, DTO, or module directory.
 
 | Option                  | Description                                                                  |
 | ----------------------- | ---------------------------------------------------------------------------- |
-| **`--schema <file>`**   | Path to a TypeScript file containing a Zod schema                            |
-| **`--module <path>`**   | Directory — generates fixtures for all Zod schema files found                |
+| **`--schema <file>`**   | Path to a TypeScript file containing a validation schema                     |
+| **`--module <path>`**   | Directory — generates fixtures for all validation schema files found         |
 | **`--out <dir>`**       | Base directory for `__fixtures__/` output (default: alongside input)         |
 | **`--format ts\|json`** | TypeScript factory functions (`ts`) or JSON samples (`json`) (default: `ts`) |
 | **`--dry-run`**         | Preview without writing                                                      |
@@ -459,7 +459,7 @@ Generate **Pact-compatible consumer contract tests** from an exported OpenAPI sp
 **Workflow: combine `ai mock` + `ai contract` to minimize LLM calls:**
 
 ```bash
-# Generate JSON fixtures from Zod schemas
+# Generate JSON fixtures from validation schemas
 bjs ai mock --module src/modules/users --format json --out src/__fixtures__
 
 # Generate contract tests reusing those fixtures
@@ -543,7 +543,7 @@ await BananaApp.create({
 Inject in controllers via `@inject(AI_PROVIDER_TOKEN)`.
 
 ::: danger Prompt injection
-`BananaAiPlugin` does **not** sanitize user input. Always validate input with Zod `@Body` schemas, cap string lengths, and never pass raw `req.headers` / `req.params` into LLM prompts. See the plugin README for full security guidance.
+`BananaAiPlugin` does **not** sanitize user input. Always validate input with `@Body` schemas, cap string lengths, and never pass raw `req.headers` / `req.params` into LLM prompts. See the plugin README for full security guidance.
 :::
 
 ---

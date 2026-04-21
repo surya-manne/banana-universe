@@ -51,7 +51,7 @@ Always call `bananajs_plan_module` first for complex requests (webhooks, sagas, 
 | `bananajs_review` | Run a structured convention review; returns `AiReviewJson` |
 | `bananajs_plan_module` | Classify use case + return HITL questions before generation (call first for non-CRUD modules) |
 | `bananajs_generate` | Scaffold a flat bundle or full DDD module tree; accepts `context` from `bananajs_plan_module` |
-| `bananajs_mock` | Generate `build<Type>()` fixture factories from Zod schemas |
+| `bananajs_mock` | Generate `build<Type>()` fixture factories from validation schemas |
 | `bananajs_debug` | Parse a stack trace into root cause + fix (`AiDebugJson`) |
 | `bananajs_perf` | Static-first N+1 and performance scan |
 | `bananajs_upgrade` | Upgrade readiness check — **always dry-run**, no files written |
@@ -267,7 +267,7 @@ The server resolves your project root from the directory it starts in. If your I
 3. `__fixtures__/create-order.dto.fixtures.ts` written alongside the module with `buildCreateOrderDto(overrides?)`.
 4. Import it at the top of your test — one line — override only what the test needs.
 
-**Why this matters:** Factories stay in sync with your Zod schema on the next `bjs ai mock` run. No stale literals, no type errors three sprints later.
+**Why this matters:** Factories stay in sync with your validation schema on the next `bjs ai mock` run. No stale literals, no type errors three sprints later.
 
 </details>
 

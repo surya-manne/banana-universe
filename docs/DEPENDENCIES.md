@@ -151,17 +151,6 @@ Direct dependencies for each module in the banana-universe monorepo.
 
 ---
 
-## packages/plugin-zod v0.1.0
-
-### Peer Dependencies
-
-| Package                   | Version | Purpose          |
-| ------------------------- | ------- | ---------------- |
-| @banana-universe/bananajs | *       | Plugin interface |
-| zod                       | *       | Zod schema core  |
-
----
-
 ## packages/adapter-fastify v0.0.1
 
 ### Peer Dependencies

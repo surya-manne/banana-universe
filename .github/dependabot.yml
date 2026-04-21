@@ -63,12 +63,6 @@
 #       day: monday
 
 #   - package-ecosystem: npm
-#     directory: /packages/plugin-zod
-#     schedule:
-#       interval: weekly
-#       day: monday
-
-#   - package-ecosystem: npm
 #     directory: /packages/plugin-ai
 #     schedule:
 #       interval: weekly

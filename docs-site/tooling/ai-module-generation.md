@@ -70,7 +70,7 @@ flowchart TD
         HitlQ["Prompt user\nfor answers"]
         ExitTwo(["exit 2\nstdout: plan JSON"])
         Plan["Plan\nBuild extraction prompt"]
-        ActStep["Act\nCall LLM · Zod-validate\nRetry once on failure"]
+        ActStep["Act\nCall LLM · validate\nRetry once on failure"]
         Val["Validate\nWrite files · patch bootstrap"]
 
         Prep --> Res --> Dec
@@ -139,7 +139,7 @@ The CLI runs the five-stage pipeline:
 1. **Prepare** — loads `.bananarc.json`, resolves the LLM provider, and validates the `--orm` flag.
 2. **Research** — analyses the use-case; classifies as `crud`; no HITL questions needed for a straightforward entity.
 3. **Plan** — builds the strict JSON extraction prompt (entity name + fields).
-4. **Act** — calls the configured LLM; parses and validates the response with **Zod** (`EntityExtractionSchema`). On failure it retries once, then exits with a clear error (use **`--debug`** to print raw LLM output and per-stage timings).
+4. **Act** — calls the configured LLM; parses and validates the response with the validation library (`EntityExtractionSchema`). On failure it retries once, then exits with a clear error (use **`--debug`** to print raw LLM output and per-stage timings).
 5. **Validate** — fills **embedded templates** for the standard DDD layout: `domain/`, `application/`, `infrastructure/`, and **`<Name>.controller.ts`** at the feature root (same **dotted filenames** as **`bjs generate module`** — see [Layered architecture](/guide/layered-architecture)). Writes files and patches bootstrap.
 
 ```mermaid
@@ -155,7 +155,7 @@ flowchart LR
     P --- p1["Load .bananarc.json\nResolve LLM provider\nValidate flags & ORM"]
     R --- r1["Classify use-case\nNo HITL for CRUD"]
     PL --- pl1["Build entity\nextraction prompt"]
-    A --- a1["Call LLM\nZod-validate JSON\nRetry once"]
+    A --- a1["Call LLM\nvalidate JSON\nRetry once"]
     V --- v1["Fill DDD templates\nWrite files\nPatch bootstrap.ts"]
 
     style P fill:#162036,stroke:#2196f3,color:#fff
@@ -332,7 +332,7 @@ npx @banana-universe/bananajs-cli ai generate --module "Product catalog with nam
 The CLI:
 
 1. Calls the configured LLM with a **strict JSON extraction** prompt (entity name + fields).
-2. Parses and validates the response with **Zod** (`EntityExtractionSchema`); on failure it **retries once** (then exits with a clear error; use **`--debug`** to print raw LLM output).
+2. Parses and validates the response with the validation library (`EntityExtractionSchema`); on failure it **retries once** (then exits with a clear error; use **`--debug`** to print raw LLM output).
 3. Fills **embedded templates** for the standard DDD layout: `domain/`, `application/`, `infrastructure/`, and **`<Name>.controller.ts`** at the feature root (same **dotted filenames** as **`bjs generate module`** — see [Layered architecture](/guide/layered-architecture)).
 
 ### From JSON Schema or OpenAPI

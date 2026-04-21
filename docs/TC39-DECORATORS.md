@@ -34,7 +34,6 @@
 | Decorator                       | Location       | `reflect-metadata` usage                         | Migratability         |
 | ------------------------------- | -------------- | ------------------------------------------------ | --------------------- |
 | `@Body/@Params/@Query/@Headers` | Validator      | Descriptor wrapping (no reflect-metadata read)   | ⚠️ Requires redesign  |
-| `@ZodBody/@ZodQuery/@ZodParams` | plugin-zod     | Descriptor wrapping                              | ⚠️ Requires redesign  |
 | `@InjectRepository(Entity)`     | plugin-typeorm | Explicit `paramIndex` + `Reflect.defineMetadata` | ❌ No TC39 equivalent |
 
 ---
@@ -109,7 +108,7 @@
 
 - [ ] Remove `experimentalDecorators: true` from all `tsconfig` files
 - [ ] Update `packages/bananajs` to use TC39 stage 3 decorator syntax
-- [ ] Update `packages/plugin-typeorm`, `plugin-mongoose`, `plugin-otel`, `plugin-zod`
+- [ ] Update `packages/plugin-typeorm`, `plugin-mongoose`, `plugin-otel`
 - [ ] Update `packages/plugin-websocket` (note: `@WsBody` is a parameter decorator — TC39 stage 3 does NOT support parameter decorators; requires alternative design)
 - [ ] Publish v2.0.0 with migration guide
 - [ ] Deprecate `experimentalDecorators` path with 6-month notice

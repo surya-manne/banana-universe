@@ -224,7 +224,7 @@ security: { helmet: false, cors: false }
 
 | Layer | How BananaJS covers it |
 |---|---|
-| Input validation | `@Body`, `@Query`, `@Params` with Zod — rejects malformed input before handlers |
+| Input validation | `@Body`, `@Query`, `@Params` with validation schemas — rejects malformed input before handlers |
 | HTML injection / XSS | `@Sanitize` strips unsafe HTML from string fields |
 | SQL / ORM injection | Use TypeORM/Mongoose query builders, not raw string concatenation |
 | Auth | `@Auth`, `@Roles`, `AuthGuard` — pluggable identity verification |

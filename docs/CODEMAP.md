@@ -159,9 +159,6 @@ banana-universe/
 │   │       ├── WsMetadata.ts
 │   │       ├── WsRouter.ts
 │   │       └── index.ts
-│   └── plugin-zod/                      # Zod plugin shim (v0.1.0, deprecated re-export)
-│       └── src/
-│           └── index.ts
 ├── apps/
 │   ├── example-rest-postgresql/         # REST + PostgreSQL example (TypeORM)
 │   ├── example-rest-mongodb/            # REST + MongoDB example (Mongoose)

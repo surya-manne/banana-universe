@@ -78,13 +78,6 @@ Technology stack across all modules in the banana-universe monorepo.
 | Published as | @banana-universe/plugin-websocket   | 0.1.0   |
 | Peer dep     | ws                                  | optional |
 
-## packages/plugin-zod
-
-| Category     | Technology                          | Version |
-| ------------ | ----------------------------------- | ------- |
-| Published as | @banana-universe/plugin-zod         | 0.1.0   |
-| Purpose      | Deprecated re-export shim for ZodPlugin compatibility |
-
 ## Shared Tooling
 
 | Category       | Technology                   | Version          |

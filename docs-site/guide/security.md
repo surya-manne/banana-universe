@@ -17,7 +17,7 @@ recommended production configuration.
 | Authentication | `AuthGuard` + `@Auth` | ⚠️ opt-in |
 | Role-based access | `RolesGuard` + `@Roles` | ⚠️ opt-in |
 | Resource/action access | `AbacGuard` + `@Can` | ⚠️ opt-in |
-| Input validation | `@Body` / `@Query` (Zod) | ⚠️ opt-in per route |
+| Input validation | `@Body` / `@Query` (validation) | ⚠️ opt-in per route |
 | HTML sanitisation | `@Sanitize` | ⚠️ opt-in per route |
 | Secret management | `BananaConfig` `sensitive` | ⚠️ opt-in per field |
 | Log redaction | `PinoLogger` default paths | ✅ enabled by default |
@@ -100,7 +100,7 @@ they reach any controller.
 
 ## A03 — Injection
 
-### Input validation with Zod
+### Input validation
 
 Validate every external input at the boundary using `@Body`, `@Query`, `@Params`,
 or `@Headers`. The decorator parses the request through the schema and replaces
@@ -153,7 +153,7 @@ await dataSource.query(`SELECT * FROM users WHERE email = '${userInput}'`)
 ```
 
 **Mongoose** — avoid passing raw query objects from `req.body` directly to Mongoose
-operators (`$where`, `$regex`). Validate shapes with Zod before querying:
+operators (`$where`, `$regex`). Validate shapes before querying:
 
 ```typescript
 // ✅ validated first

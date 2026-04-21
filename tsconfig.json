@@ -22,9 +22,6 @@
       "path": "./packages/plugin-otel"
     },
     {
-      "path": "./packages/plugin-zod"
-    },
-    {
       "path": "./packages/plugin-websocket"
     },
     {

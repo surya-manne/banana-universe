@@ -1,6 +1,6 @@
-# Zod
+# Validation
 
-**BananaJS** uses **Zod** as the **default** validation path: use **`@Body`**, **`@Query`**, **`@Params`**, and **`@Headers`** with a **`z.ZodType`** schema.
+**BananaJS** ships with built-in validation: use **`@Body`**, **`@Query`**, **`@Params`**, and **`@Headers`** with a schema and the framework validates the incoming data automatically.
 
 ## Install
 
@@ -8,14 +8,19 @@
 npm install zod
 ```
 
-`zod` is a **dependency** of `@banana-universe/bananajs` — your app should list **`zod`** for direct schema imports.
+The validation library is a **dependency** of `@banana-universe/bananajs` — your app should list it for direct schema imports.
 
-## `@banana-universe/plugin-zod`
+## Plugin status
 
-The plugin is a **deprecated shim** that re-exports **`ZodBody` → `Body`**, **`ZodQuery` → `Query`**, **`ZodParams` → `Params`** from the core package. Prefer importing from **`@banana-universe/bananajs`**.
+`@banana-universe/plugin-zod` is decommissioned and removed from this monorepo.
 
-**`ZodPlugin()`** is a no-op retained for backward compatibility.
+Use the validation decorators directly from `@banana-universe/bananajs`:
+
+- `Body`
+- `Query`
+- `Params`
+- `Headers`
 
 ## OpenAPI
 
-Request body documentation is generated from Zod via **`zod-to-json-schema`** (and from explicit **`@ApiBody({ schema })`** when provided).
+Request body documentation is generated from your schemas via **`zod-to-json-schema`** (and from explicit **`@ApiBody({ schema })`** when provided).
