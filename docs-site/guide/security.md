@@ -167,7 +167,7 @@ await UserModel.findOne({ email: parsed.email })
 
 ### AuthGuard
 
-Implement `AuthGuard` and pass it to `BananaApp`. See [Authentication](./integrations/auth.md)
+Implement `AuthGuard` and pass it to `BananaApp`. See [Authentication](/integrations/auth)
 for the full API. Key points:
 
 - Sign JWTs with a strong secret stored in an environment variable, never in source code.

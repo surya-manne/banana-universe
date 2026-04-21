@@ -8,7 +8,7 @@
 
 > **BananaConfig**\<`S`\>(`schema`): [`ConfigResult`](../type-aliases/ConfigResult.md)\<`S`\> & [`BananaConfigInstance`](../interfaces/BananaConfigInstance.md)\<[`ConfigResult`](../type-aliases/ConfigResult.md)\<`S`\>\>
 
-Defined in: packages/bananajs/src/lib/Config/BananaConfig.ts:72
+Defined in: packages/bananajs/src/lib/Config/BananaConfig.ts:91
 
 ## Type Parameters
 

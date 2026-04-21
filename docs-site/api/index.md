@@ -79,6 +79,7 @@
 - [SanitizeOptions](interfaces/SanitizeOptions.md)
 - [TenantOptions](interfaces/TenantOptions.md)
 - [ThrottleOptions](interfaces/ThrottleOptions.md)
+- [ThrottleStore](interfaces/ThrottleStore.md)
 - [UploadConfig](interfaces/UploadConfig.md)
 - [UploadOptions](interfaces/UploadOptions.md)
 
@@ -94,6 +95,7 @@
 - [CreateBananaApplicationInput](type-aliases/CreateBananaApplicationInput.md)
 - [DeclarativeBananaOptions](type-aliases/DeclarativeBananaOptions.md)
 - [HealthStatus](type-aliases/HealthStatus.md)
+- [HelmetOptions](type-aliases/HelmetOptions.md)
 - [PaginationQuery](type-aliases/PaginationQuery.md)
 
 ## Variables
@@ -113,6 +115,7 @@
 - [ApiBody](functions/ApiBody.md)
 - [ApiOperation](functions/ApiOperation.md)
 - [ApiResponseDoc](functions/ApiResponseDoc.md)
+- [ApiSecurity](functions/ApiSecurity.md)
 - [ApiTags](functions/ApiTags.md)
 - [Auth](functions/Auth.md)
 - [BananaConfig](functions/BananaConfig.md)
@@ -125,6 +128,7 @@
 - [createBananaApplication](functions/createBananaApplication.md)
 - [~~createBananaContainer~~](functions/createBananaContainer.md)
 - [createBananaProviderContainer](functions/createBananaProviderContainer.md)
+- [createCorsOptions](functions/createCorsOptions.md)
 - [createDevToolsEndpoint](functions/createDevToolsEndpoint.md)
 - [createErrorMiddleware](functions/createErrorMiddleware.md)
 - [createHealthEndpoint](functions/createHealthEndpoint.md)

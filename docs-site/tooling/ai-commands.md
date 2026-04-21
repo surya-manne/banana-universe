@@ -336,7 +336,7 @@ bjs ai perf --module src/modules/catalog --format json
 
 Scan the codebase for deprecated BananaJS patterns and generate migration hints or patch files. Detection is **static regex-first** — no LLM call required for scanning. An optional LLM pass provides migration hints for patterns that require manual intervention.
 
-Pattern manifest is seeded from [`docs/MIGRATION.md`](/migration/) — covers all breaking changes across BananaJS versions.
+Pattern manifest is seeded from [`docs/MIGRATION.md`](/migration/from-express) — covers all breaking changes across BananaJS versions.
 
 | Option               | Description                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -528,7 +528,7 @@ The `bananajs_upgrade` tool always runs in dry-run mode. File-mutating operation
 
 ### `@banana-universe/plugin-ai` — `BananaAiPlugin`
 
-Framework plugin that registers a configured `LlmProvider` on the tsyringe root container under the `"AiProvider"` injection token. Full reference: [Plugin AI](/plugins/plugin-ai).
+Framework plugin that registers a configured `LlmProvider` on the tsyringe root container under the `"AiProvider"` injection token. Full reference: [Plugin AI](/plugins/overview).
 
 ```typescript
 import { BananaApp } from '@banana-universe/bananajs'

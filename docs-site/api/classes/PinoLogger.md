@@ -6,7 +6,7 @@
 
 # Class: PinoLogger
 
-Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:4
+Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:16
 
 ## Implements
 
@@ -18,7 +18,7 @@ Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:4
 
 > **new PinoLogger**(`options?`): `PinoLogger`
 
-Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:7
+Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:19
 
 #### Parameters
 
@@ -36,7 +36,7 @@ Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:7
 
 > **debug**(`message`, `meta?`): `void`
 
-Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:26
+Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:46
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:26
 
 > **error**(`message`, `meta?`): `void`
 
-Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:22
+Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:42
 
 #### Parameters
 
@@ -88,7 +88,7 @@ Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:22
 
 > **info**(`message`, `meta?`): `void`
 
-Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:14
+Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:34
 
 #### Parameters
 
@@ -114,7 +114,7 @@ Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:14
 
 > **warn**(`message`, `meta?`): `void`
 
-Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:18
+Defined in: packages/bananajs/src/lib/Logger/PinoLogger.ts:38
 
 #### Parameters
 

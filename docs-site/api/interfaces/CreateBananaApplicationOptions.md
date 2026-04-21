@@ -6,7 +6,7 @@
 
 # Interface: CreateBananaApplicationOptions
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:596
+Defined in: packages/bananajs/src/lib/Core/App.ts:611
 
 Options for [createBananaApplication](../functions/createBananaApplication.md) — extends [BananaAppOptions](BananaAppOptions.md) with optional listen helpers.
 
@@ -20,7 +20,7 @@ Options for [createBananaApplication](../functions/createBananaApplication.md) �
 
 > `optional` **abac?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:101
+Defined in: packages/bananajs/src/lib/Core/App.ts:109
 
 #### guard
 
@@ -36,7 +36,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:101
 
 > `optional` **apiPrefix?**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:60
+Defined in: packages/bananajs/src/lib/Core/App.ts:68
 
 Prepended to every controller base path (e.g. `v1` → `/v1/...`). Use URI versioning per enterprise DX docs.
 
@@ -50,7 +50,7 @@ Prepended to every controller base path (e.g. `v1` → `/v1/...`). Use URI versi
 
 > `optional` **auth?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:67
+Defined in: packages/bananajs/src/lib/Core/App.ts:75
 
 #### guard
 
@@ -62,11 +62,26 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:67
 
 ***
 
+### bodyLimit?
+
+> `optional` **bodyLimit?**: `string`
+
+Defined in: packages/bananajs/src/lib/Core/App.ts:60
+
+Maximum request body size accepted by the JSON and URL-encoded body parsers.
+Uses the same format as the `bytes` package (e.g. `'1mb'`, `'500kb'`). Defaults to `'1mb'`.
+
+#### Inherited from
+
+[`BananaAppOptions`](BananaAppOptions.md).[`bodyLimit`](BananaAppOptions.md#bodylimit)
+
+***
+
 ### cache?
 
 > `optional` **cache?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:92
+Defined in: packages/bananajs/src/lib/Core/App.ts:100
 
 #### store?
 
@@ -82,7 +97,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:92
 
 > `optional` **container?**: `DependencyContainer`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:56
+Defined in: packages/bananajs/src/lib/Core/App.ts:64
 
 Root tsyringe container; optional — created when using `modules` without an explicit container.
 
@@ -96,7 +111,7 @@ Root tsyringe container; optional — created when using `modules` without an ex
 
 > `optional` **devTools?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:95
+Defined in: packages/bananajs/src/lib/Core/App.ts:103
 
 #### Inherited from
 
@@ -108,7 +123,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:95
 
 > `optional` **gracefulShutdown?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:65
+Defined in: packages/bananajs/src/lib/Core/App.ts:73
 
 #### Inherited from
 
@@ -120,7 +135,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:65
 
 > `optional` **health?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:85
+Defined in: packages/bananajs/src/lib/Core/App.ts:93
 
 #### checks?
 
@@ -144,7 +159,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:85
 
 > `optional` **hostname?**: `string`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:599
+Defined in: packages/bananajs/src/lib/Core/App.ts:614
 
 ***
 
@@ -152,7 +167,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:599
 
 > `optional` **lazyControllers?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:105
+Defined in: packages/bananajs/src/lib/Core/App.ts:113
 
 #### Inherited from
 
@@ -164,7 +179,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:105
 
 > `optional` **logger?**: `false` \| [`Logger`](Logger.md)
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:54
+Defined in: packages/bananajs/src/lib/Core/App.ts:62
 
 #### Inherited from
 
@@ -176,7 +191,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:54
 
 > `optional` **metrics?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:96
+Defined in: packages/bananajs/src/lib/Core/App.ts:104
 
 #### enabled
 
@@ -196,7 +211,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:96
 
 > `optional` **middlewares?**: `RequestHandler`\<`ParamsDictionary`, `any`, `any`, `ParsedQs`, `Record`\<`string`, `any`\>\>[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:48
+Defined in: packages/bananajs/src/lib/Core/App.ts:51
 
 #### Inherited from
 
@@ -208,7 +223,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:48
 
 > `optional` **onListening?**: (`info`) => `void`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:600
+Defined in: packages/bananajs/src/lib/Core/App.ts:615
 
 #### Parameters
 
@@ -232,7 +247,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:600
 
 > `optional` **plugins?**: [`BananaPlugin`](BananaPlugin.md)[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:91
+Defined in: packages/bananajs/src/lib/Core/App.ts:99
 
 #### Inherited from
 
@@ -244,7 +259,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:91
 
 > `optional` **port?**: `number`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:598
+Defined in: packages/bananajs/src/lib/Core/App.ts:613
 
 When set, calls `Application.listen` after the app is created.
 
@@ -254,7 +269,7 @@ When set, calls `Application.listen` after the app is created.
 
 > `optional` **rateLimit?**: `false` \| \{ `max?`: `number`; `message?`: `string`; `windowMs?`: `number`; \}
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:78
+Defined in: packages/bananajs/src/lib/Core/App.ts:86
 
 #### Inherited from
 
@@ -266,7 +281,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:78
 
 > `optional` **requestId?**: `boolean`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:53
+Defined in: packages/bananajs/src/lib/Core/App.ts:61
 
 #### Inherited from
 
@@ -278,7 +293,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:53
 
 > `optional` **security?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:49
+Defined in: packages/bananajs/src/lib/Core/App.ts:52
 
 #### cors?
 
@@ -298,7 +313,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:49
 
 > `optional` **swagger?**: `object`
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:70
+Defined in: packages/bananajs/src/lib/Core/App.ts:78
 
 #### description?
 
@@ -332,7 +347,7 @@ Defaults to `true` — omit or set to `false` to disable.
 
 > `optional` **tenant?**: [`TenantOptions`](TenantOptions.md)
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:104
+Defined in: packages/bananajs/src/lib/Core/App.ts:112
 
 #### Inherited from
 
@@ -344,7 +359,7 @@ Defined in: packages/bananajs/src/lib/Core/App.ts:104
 
 > `optional` **testOverrides?**: [`BananaProviderRegistration`](../type-aliases/BananaProviderRegistration.md)[]
 
-Defined in: packages/bananajs/src/lib/Core/App.ts:64
+Defined in: packages/bananajs/src/lib/Core/App.ts:72
 
 Applied to the root container after plugin/module setup — for tests (e.g. swap a repository port for a fake).
 

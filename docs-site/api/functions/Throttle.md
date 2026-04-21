@@ -8,7 +8,7 @@
 
 > **Throttle**(`options`): `MethodDecorator` & `ClassDecorator`
 
-Defined in: packages/bananajs/src/lib/Security/Throttle.decorator.ts:11
+Defined in: packages/bananajs/src/lib/Security/Throttle.decorator.ts:17
 
 ## Parameters
 

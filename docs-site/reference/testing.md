@@ -271,4 +271,4 @@ expect(table).toContainEqual(
 - [Dependency injection](/guide/dependency-injection) — `testOverrides`, container model
 - [Authentication](/integrations/auth) — testing guards and auth flows
 - [BananaAppOptions](/reference/bananaapp-options) — `testOverrides` field
-- TypeDoc: [`BananaTestApp`](/api/classes/BananaTestApp)
+- TypeDoc: [`BananaTestApp`](/api/)
