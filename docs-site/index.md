@@ -52,6 +52,12 @@ features:
     linkText: OpenAPI docs
 ---
 
+<div class="sky-scene" aria-hidden="true">
+  <span class="sky-orb sky-orb-1"></span>
+  <span class="sky-orb sky-orb-2"></span>
+  <span class="sky-orb sky-orb-3"></span>
+</div>
+
 <div class="home-hero-section">
 
 <br/><br/>

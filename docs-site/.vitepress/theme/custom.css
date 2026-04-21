@@ -498,6 +498,134 @@
   margin: 0;
 }
 
+/* ================================================================
+   Home page — subtle confetti dots (home layout only, not doc pages)
+   ================================================================ */
+
+/*
+ * Scoped to .VPHome so doc pages are completely unaffected.
+ * Very low opacity — ambient texture, not competing with content.
+ */
+.dark .VPHome {
+  background-image:
+    /* gold */
+    radial-gradient(circle 6px at  14%  18%, rgba(253, 185,  19, 0.22) 35%, transparent 70%),
+    radial-gradient(circle 4px at  55%  42%, rgba(253, 185,  19, 0.16) 35%, transparent 70%),
+    radial-gradient(circle 5px at  78%  85%, rgba(253, 185,  19, 0.18) 35%, transparent 70%),
+    radial-gradient(circle 3px at  34%  68%, rgba(253, 185,  19, 0.13) 35%, transparent 70%),
+    /* teal */
+    radial-gradient(circle 4px at  68%  11%, rgba( 78, 205, 196, 0.19) 35%, transparent 70%),
+    radial-gradient(circle 3px at  22%  55%, rgba( 78, 205, 196, 0.15) 35%, transparent 70%),
+    radial-gradient(circle 5px at  88%  48%, rgba( 78, 205, 196, 0.17) 35%, transparent 70%),
+    radial-gradient(circle 3px at  46%  92%, rgba( 78, 205, 196, 0.12) 35%, transparent 70%),
+    /* purple */
+    radial-gradient(circle 5px at  82%  27%, rgba(167, 119, 227, 0.17) 35%, transparent 70%),
+    radial-gradient(circle 3px at  28%  82%, rgba(167, 119, 227, 0.13) 35%, transparent 70%),
+    radial-gradient(circle 4px at  10%  45%, rgba(167, 119, 227, 0.14) 35%, transparent 70%),
+    radial-gradient(circle 3px at  62%  72%, rgba(167, 119, 227, 0.11) 35%, transparent 70%),
+    /* coral */
+    radial-gradient(circle 5px at  42%  28%, rgba(255, 138,  61, 0.17) 35%, transparent 70%),
+    radial-gradient(circle 3px at  92%  67%, rgba(255, 138,  61, 0.14) 35%, transparent 70%),
+    radial-gradient(circle 4px at  18%  90%, rgba(255, 138,  61, 0.15) 35%, transparent 70%),
+    radial-gradient(circle 3px at  75%  56%, rgba(255, 138,  61, 0.11) 35%, transparent 70%);
+  background-size: 160px 160px;
+  animation: bg-confetti-drift 60s linear infinite;
+}
+
+/* Remove the body-level pattern so doc pages are clean */
+.dark body {
+  background-image: none;
+  animation: none;
+}
+
+@keyframes bg-confetti-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 160px 160px; }
+}
+
+/* Fixed-viewport sky container — orbs only */
+.sky-scene {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Glow orb — base */
+.dark .sky-orb {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Orb 1 — large gold, top-left, slow wide drift */
+.dark .sky-orb-1 {
+  width: 540px;
+  height: 540px;
+  top: -140px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(253, 185, 19, 0.1) 0%, transparent 68%);
+  filter: blur(64px);
+  animation: orb-drift-a 22s ease-in-out infinite;
+}
+
+/* Orb 2 — large teal, right side */
+.dark .sky-orb-2 {
+  width: 460px;
+  height: 460px;
+  top: 8%;
+  right: -100px;
+  background: radial-gradient(circle, rgba(78, 205, 196, 0.08) 0%, transparent 68%);
+  filter: blur(58px);
+  animation: orb-drift-b 28s ease-in-out infinite;
+  animation-delay: -11s;
+}
+
+/* Orb 3 — smaller gold, lower center, pulses gently */
+.dark .sky-orb-3 {
+  width: 300px;
+  height: 300px;
+  bottom: 18%;
+  left: 42%;
+  background: radial-gradient(circle, rgba(253, 185, 19, 0.07) 0%, transparent 68%);
+  filter: blur(48px);
+  animation: orb-pulse-c 13s ease-in-out infinite;
+  animation-delay: -6s;
+}
+
+/* --- Orb float keyframes --- */
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0,     0)    scale(1);    opacity: 0.9; }
+  33%      { transform: translate(55px,  45px) scale(1.08); opacity: 0.7; }
+  66%      { transform: translate(-30px, 65px) scale(0.96); opacity: 1;   }
+}
+
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0,     0)    scale(1);    opacity: 0.85; }
+  40%      { transform: translate(-52px, 58px) scale(1.1);  opacity: 0.65; }
+  75%      { transform: translate(28px, -42px) scale(0.93); opacity: 1;    }
+}
+
+@keyframes orb-pulse-c {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.38); opacity: 0.88; }
+}
+
+/* Reduce on small screens */
+@media (max-width: 640px) {
+  .dark .sky-orb-1     { width: 300px; height: 300px; }
+  .dark .sky-orb-2     { width: 260px; height: 260px; }
+  .dark .sky-orb-3     { display: none; }
+}
+
+/* Honour reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .dark .VPHome { animation: none; }
+  .dark .sky-orb { animation: none; }
+  .dark .sky-orb { opacity: 0; }
+}
+
 /* kept for backwards compat — not rendered in markdown anymore */
 .step-arrow { display: none; }
 
