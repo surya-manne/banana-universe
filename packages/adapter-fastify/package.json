@@ -31,5 +31,8 @@
     "@banana-universe/bananajs": "*",
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

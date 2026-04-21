@@ -11,7 +11,7 @@
     "release:dry-run": "nx release --dry-run",
     "release:version": "nx release version",
     "release:publish": "nx release publish --registry=https://registry.npmjs.org",
-    "release:full": "nx release --registry=https://registry.npmjs.org"
+    "release:full": "npm_config_registry=https://registry.npmjs.org nx release"
   },
   "private": true,
   "overrides": {

@@ -72,8 +72,8 @@
     "helmet": "^8.1.0",
     "pino": "^9.6.0",
     "reflect-metadata": "^0.2.2",
-    "tsyringe": "^4.8.0",
     "tslib": "^2.3.0",
+    "tsyringe": "^4.8.0",
     "uuid": "^8.3.2",
     "zod": "^3.24.0",
     "zod-to-json-schema": "^3.24.0"
@@ -89,5 +89,8 @@
     "prom-client": "^15.0.0",
     "sanitize-html": "^2.15.0",
     "supertest": "^7.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

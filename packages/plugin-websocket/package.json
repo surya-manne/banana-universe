@@ -37,10 +37,13 @@
   "devDependencies": {
     "@banana-universe/bananajs": "*",
     "@types/ws": "^8.5.14",
-    "tsyringe": "^4.8.0",
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.8.0",
     "ws": "^8.18.1",
     "zod": "^3.24.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
