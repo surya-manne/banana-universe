@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/ddd",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Domain-driven design primitives for BananaJS — Entity, ValueObject, AggregateRoot, Repository, layer decorators.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
@@ -32,7 +32,7 @@
     "reflect-metadata": ">=0.2.0"
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
+    "@banana-universe/bananajs": "0.6.1",
     "reflect-metadata": "^0.2.2",
     "typescript": "~5.7.2"
   },

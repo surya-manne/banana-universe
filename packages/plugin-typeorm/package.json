@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/plugin-typeorm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeORM plugin for BananaJS — DataSource registration, @InjectRepository, and @Transactional decorator.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
@@ -30,8 +30,8 @@
     "typeorm": ">=0.3.0"
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
-    "@banana-universe/ddd": "*",
+    "@banana-universe/bananajs": "0.6.1",
+    "@banana-universe/ddd": "0.1.1",
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.0"

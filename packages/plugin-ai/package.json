@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/plugin-ai",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "BananaAiPlugin — registers a configured LlmProvider on the tsyringe root container for AI-powered BananaJS handlers.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "typecheck": "tsc -p tsconfig.lib.json --noEmit"
   },
   "dependencies": {
-    "@banana-universe/ai-provider-core": "*",
+    "@banana-universe/ai-provider-core": "0.1.1",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
@@ -42,7 +42,7 @@
     }
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
+    "@banana-universe/bananajs": "0.6.1",
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2",
     "typescript": "~5.2.2"

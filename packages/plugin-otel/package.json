@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/plugin-otel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenTelemetry plugin for BananaJS — automatic HTTP instrumentation and span enrichment.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
@@ -42,7 +42,7 @@
     }
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
+    "@banana-universe/bananajs": "0.6.1",
     "@opentelemetry/api": "^1.4.0",
     "@opentelemetry/auto-instrumentations-node": "^0.40.0",
     "@opentelemetry/sdk-node": "^0.50.0",

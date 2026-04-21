@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/adapter-fastify",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Fastify adapter exploration stub for BananaJS — implements FrameworkAdapter interface. Not yet functional.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
@@ -28,7 +28,7 @@
     "@banana-universe/bananajs": ">=0.4.0"
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
+    "@banana-universe/bananajs": "0.6.1",
     "express": "^4.21.2",
     "reflect-metadata": "^0.2.2"
   },

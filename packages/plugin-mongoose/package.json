@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/plugin-mongoose",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Mongoose plugin for BananaJS — Connection registration, @Transactional (sessions), and Repository adapter.",
   "author": "Surya Prakash Manne",
   "license": "MIT",
@@ -35,8 +35,8 @@
     }
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
-    "@banana-universe/ddd": "*",
+    "@banana-universe/bananajs": "0.6.1",
+    "@banana-universe/ddd": "0.1.1",
     "express": "^4.21.2",
     "mongoose": "^8.9.0",
     "reflect-metadata": "^0.2.2"

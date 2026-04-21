@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/ai-provider-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared LlmProvider interface contract for BananaJS — consumed by bananajs-cli and plugin-ai.",
   "author": "Surya Prakash Manne",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/benchmarks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Performance benchmarks for BananaJS using autocannon. Not published.",
   "private": true,
   "author": "Surya Prakash Manne",
@@ -10,7 +10,7 @@
     "report": "node --loader ts-node/esm src/report.ts"
   },
   "devDependencies": {
-    "@banana-universe/bananajs": "*",
+    "@banana-universe/bananajs": "0.6.1",
     "@types/autocannon": "^7.12.5",
     "autocannon": "^7.15.0",
     "ts-node": "^10.9.2",

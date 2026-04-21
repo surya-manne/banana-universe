@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/example-multitenant",
-  "version": "0.1.1",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "description": "Recipe: TypeORM + PostgreSQL, @Tenant, per-tenant data, @Can ABAC",
@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "@banana-universe/bananajs": "*",
-    "@banana-universe/ddd": "*",
-    "@banana-universe/plugin-typeorm": "*",
+    "@banana-universe/bananajs": "0.6.1",
+    "@banana-universe/ddd": "0.1.1",
+    "@banana-universe/plugin-typeorm": "0.1.1",
     "tsyringe": "^4.8.0",
     "express": "^4.21.2",
     "pg": "^8.13.1",
@@ -28,7 +28,7 @@
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
-    "@banana-universe/bananajs-cli": "0.5.0",
+    "@banana-universe/bananajs-cli": "0.5.1",
     "@eslint/js": "^9.8.0",
     "@types/node": "~18.16.9",
     "eslint": "^9.8.0",
