@@ -10,8 +10,8 @@
     "publish:local": "bash scripts/publish-local-verdaccio.sh",
     "release:dry-run": "nx release --dry-run",
     "release:version": "nx release version",
-    "release:publish": "nx release publish",
-    "release:full": "nx release"
+    "release:publish": "nx release publish --registry=https://registry.npmjs.org",
+    "release:full": "nx release --registry=https://registry.npmjs.org"
   },
   "private": true,
   "overrides": {
