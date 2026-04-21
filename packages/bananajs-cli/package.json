@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/bananajs-cli",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A command-line interface (CLI) tool to create a new Bananajs app with different configurations, such as MongoDB or SQL-based setups. This CLI helps you quickly set up a project with your desired backend configuration.",
   "bin": {
     "bananajs": "./dist/index.js",

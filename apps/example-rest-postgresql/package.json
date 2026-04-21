@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/example-rest-postgresql",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Recipe: TypeORM + PostgreSQL, DDD layers, auth, pagination, OTel, Swagger",
@@ -29,7 +29,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@banana-universe/bananajs-cli": "*",
+    "@banana-universe/bananajs-cli": "0.5.0",
     "@eslint/js": "^9.8.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.0.0",

@@ -130,5 +130,9 @@ The **`bananajs-cli`** package reads **`.bananarc.json`** for LLM provider setti
 
 ## Publishing
 
+See [../PUBLISHING.md](../PUBLISHING.md) for full manual publish steps.
+
 - **Local only:** `npm run registry:local` starts Verdaccio (Nx `local-registry` target, port 4873, config `.verdaccio/config.yml`).
-- **Publish all packages in order:** `npm run publish:local` → `scripts/publish-local-verdaccio.sh` (optional env `NPM_PUBLISH_REGISTRY` for a non-default URL).
+- **Publish all packages in order (local test):** `npm run publish:local` → `scripts/publish-local-verdaccio.sh` (optional env `NPM_PUBLISH_REGISTRY` for a non-default URL).
+- **Public versioning:** `npm run release:version` (Nx Release automatic conventional commits bump, independent).
+- **Public publish:** `npm run release:publish` (Only pushes modified packages).

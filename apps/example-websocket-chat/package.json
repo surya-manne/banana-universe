@@ -1,6 +1,6 @@
 {
   "name": "@banana-universe/example-websocket-chat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Recipe: WebSocket chat rooms with @WsBody validation and HTTP health checks",
@@ -25,7 +25,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@banana-universe/bananajs-cli": "*",
+    "@banana-universe/bananajs-cli": "0.5.0",
     "@eslint/js": "^9.8.0",
     "@types/node": "~18.16.9",
     "eslint": "^9.8.0",

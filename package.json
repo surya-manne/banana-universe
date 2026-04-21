@@ -7,7 +7,11 @@
   },
   "scripts": {
     "registry:local": "nx local-registry",
-    "publish:local": "bash scripts/publish-local-verdaccio.sh"
+    "publish:local": "bash scripts/publish-local-verdaccio.sh",
+    "release:dry-run": "nx release --dry-run",
+    "release:version": "nx release version",
+    "release:publish": "nx release publish",
+    "release:full": "nx release"
   },
   "private": true,
   "overrides": {
