@@ -24,19 +24,25 @@ interface BananaPlugin {
 
 ## Lifecycle
 
-Hooks run in this order for every plugin (sequentially by plugin array index):
+Hooks run in deterministic order. `register` runs forward (plugin A → B → C), so dependencies are open before consumers register on top. `onShutdown` runs in reverse (C → B → A) so resources tear down in the opposite order they were created — the database connection closes after the OTel exporter that traces it.
 
-```
-BananaApp.create()
-  └─ for each plugin in order:
-       register()        ← middleware, DB open, SDK start
-  └─ controllers mounted
-  └─ for each plugin in order:
-       onReady()         ← post-mount work (optional)
+```mermaid
+flowchart LR
+  Boot([BananaApp.create]) --> RA[A.register]
+  RA --> RB[B.register]
+  RB --> RC[C.register]
+  RC --> Mount[mount controllers]
+  Mount --> RDA[A.onReady]
+  RDA --> RDB[B.onReady]
+  RDB --> RDC[C.onReady]
+  RDC --> Run([app running])
+  Run -.->|SIGTERM / app.close| SC[C.onShutdown]
+  SC --> SB[B.onShutdown]
+  SB --> SA[A.onShutdown]
+  SA --> Done([process exits])
 
-app.close() / SIGTERM
-  └─ for each plugin in reverse order:
-       onShutdown()      ← clean teardown (optional)
+  classDef phase fill:#0f2440,stroke:#fdb913,stroke-width:1px,color:#f8fafc
+  class RA,RB,RC,Mount,RDA,RDB,RDC,SA,SB,SC phase
 ```
 
 ::: tip Always use `BananaApp.create` with async plugins

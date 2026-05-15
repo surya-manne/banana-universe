@@ -72,13 +72,210 @@
   --vp-local-search-highlight-text: #0a1628;
 }
 
-/* Hero: soft gold radial glow */
+/* ================================================================
+   Hero — split-composition style matching the presentation slide.
+   Left ~60%: huge gold "BananaJS" + gold rule + white subtitle + gold tagline.
+   Right ~40%: golden ribbon art.
+   ================================================================ */
+
 .dark .VPHero {
-  background: radial-gradient(
-    ellipse 90% 70% at 50% -10%,
-    rgba(253, 185, 19, 0.12) 0%,
-    transparent 55%
-  );
+  /* VitePress applies margin-top: -nav-height to slide under the navbar;
+   * add nav-height back to the top padding so content never hides under it. */
+  padding: calc(var(--vp-nav-height) + clamp(2.5rem, 5vw, 4rem)) 0 clamp(3rem, 7vw, 6rem);
+  background:
+    radial-gradient(ellipse 80% 60% at 25% 30%, rgba(253, 185, 19, 0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 75% 70%, rgba(253, 185, 19, 0.05) 0%, transparent 65%);
+}
+
+.dark .VPHero .container {
+  display: grid !important;
+  flex-direction: unset;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 2.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  /* Match VitePress VPHomeContent padding exactly so edges align with features */
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .dark .VPHero .container {
+    padding: 0 48px;
+  }
+}
+
+@media (min-width: 960px) {
+  .dark .VPHero .container {
+    padding: 0 64px;
+  }
+}
+
+/* Left side — text block, left aligned */
+.dark .VPHero .main {
+  order: 0;
+  /* Reset flex/VitePress sizing — we're in a grid, not flex */
+  width: auto !important;
+  max-width: none !important;
+  flex-grow: unset;
+  flex-shrink: unset;
+  text-align: left;
+  padding: 0;
+  min-width: 0;
+}
+
+/* Huge gold "BananaJS" */
+.dark .VPHero .name {
+  display: block;
+  margin: 0;
+  font-size: clamp(3.5rem, 8.5vw, 7rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+  color: var(--vp-c-brand-1);
+  background: none;
+  -webkit-text-fill-color: var(--vp-c-brand-1);
+  text-shadow: 0 0 32px rgba(253, 185, 19, 0.22);
+}
+
+.dark .VPHero .name .clip {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--vp-c-brand-1);
+  -webkit-text-fill-color: var(--vp-c-brand-1);
+}
+
+/* Gold rule under the name */
+.dark .VPHero .name::after {
+  content: '';
+  display: block;
+  width: clamp(80px, 9vw, 130px);
+  height: 3px;
+  background: var(--vp-c-brand-1);
+  margin: 1.1rem 0 1.4rem;
+  border-radius: 2px;
+}
+
+/* White subtitle — two lines */
+.dark .VPHero .text {
+  margin: 0 0 1.1rem;
+  max-width: 14em;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--vp-c-text-1);
+  letter-spacing: -0.01em;
+}
+
+/* Gold tagline with interpuncts */
+.dark .VPHero .tagline {
+  margin: 0 0 1.75rem;
+  padding: 0;
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--vp-c-brand-1);
+  max-width: none;
+}
+
+/* CTA buttons — left-aligned, tighter */
+.dark .VPHero .actions {
+  justify-content: flex-start;
+  margin-top: 0;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.dark .VPHero .action {
+  padding-top: 0;
+}
+
+/* Right side — ribbon image bleeds to viewport edge */
+.dark .VPHero .image {
+  order: 1;
+  position: relative;
+  width: 100%;
+  margin: 0 -24px 0 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .dark .VPHero .image {
+    margin-right: -48px;
+  }
+}
+
+@media (min-width: 960px) {
+  .dark .VPHero .image {
+    margin-right: -64px;
+  }
+}
+
+.dark .VPHero .image-container {
+  position: relative;
+  transform: none;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 0 0 0 auto;
+  padding: 0;
+}
+
+/* Soft gold radial halo behind the ribbon */
+.dark .VPHero .image-container::before {
+  content: '';
+  position: absolute;
+  /* inset-based centering works regardless of container height */
+  inset: -20% -10%;
+  background:
+    radial-gradient(circle, rgba(253, 185, 19, 0.2) 0%, rgba(253, 185, 19, 0.07) 40%, transparent 70%);
+  filter: blur(60px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dark .VPHero .image-bg {
+  display: none;
+}
+
+.dark .VPHero .image-src,
+.VPHero .image img {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  max-height: none;
+  height: auto;
+  filter: drop-shadow(-20px 30px 50px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4));
+}
+
+@media (max-width: 860px) {
+  .dark .VPHero .container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .dark .VPHero .image {
+    order: 0;
+    margin-right: 0;
+    align-self: auto;
+  }
+  .dark .VPHero .image-container { max-width: 360px; margin: 0 auto; }
+  .dark .VPHero .image-container::before {
+    width: 80%;
+    right: 10%;
+  }
+  .dark .VPHero .image-src,
+  .VPHero .image img { max-width: 360px; }
 }
 
 .dark .VPNav {
@@ -88,12 +285,69 @@
 
 .dark .VPNavBarTitle .title {
   color: var(--vp-c-text-1);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  text-shadow: 0 0 18px rgba(253, 185, 19, 0.08);
+}
+
+/* Home beta banner — centered card, sits between the hero and the rest of
+ * the home page. Explicit top + bottom margins so it never visually collides
+ * with VPFeatures above or the next section below. Solid backdrop so the
+ * decorative orbs don't bleed through. */
+.vp-doc .home-beta-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  max-width: 56rem;
+  margin: 2.5rem auto 2.75rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid rgba(253, 185, 19, 0.28);
+  background:
+    linear-gradient(140deg, rgba(255, 248, 231, 0.06), rgba(253, 185, 19, 0.09)),
+    rgba(10, 22, 40, 0.85);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  position: relative;
+  isolation: isolate;
+  z-index: 2;
+}
+
+.vp-doc .home-beta-banner .beta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.26rem 0.65rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fdb913 0%, #ffe08a 100%);
+  color: #0a1628;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.vp-doc .home-beta-banner p {
+  margin: 0;
+  flex: 1 1 280px;
+  color: var(--vp-c-text-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.vp-doc .home-beta-banner a {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* Home page polish */
 .vp-doc .home-hero-section {
   text-align: center;
-  padding: 0 1rem 2.5rem;
+  /* No horizontal padding — VPHomeContent container already provides 24–64px gutters */
+  padding: 2.5rem 0;
   max-width: 52rem;
   margin: 0 auto;
 }
@@ -146,19 +400,45 @@
 }
 
 .vp-doc .home-why {
-  max-width: 48rem;
-  margin: 0 auto 3rem;
-  padding: 1.75rem 1.5rem;
+  max-width: 52rem;
+  margin: 0 auto 3.5rem;
+  padding: 2rem 2rem 2rem 2.25rem;
   border-radius: 12px;
-  border: 1px solid rgba(160, 169, 184, 0.18);
-  background: rgba(15, 36, 64, 0.55);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(160, 169, 184, 0.12);
+  border-left: 3px solid var(--vp-c-brand-1);
+  background: rgba(10, 22, 40, 0.5);
 }
 
 .vp-doc .home-why h2 {
   margin-top: 0;
-  font-size: 1.35rem;
+  margin-bottom: 0.3rem;
+  font-size: 1.2rem;
   border: none;
+  color: var(--vp-c-text-1);
+  letter-spacing: -0.01em;
+}
+
+.vp-doc .home-why-sub {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc .home-why p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--vp-c-text-2);
+  margin: 0 0 0.75rem;
+}
+
+.vp-doc .home-why p:last-child {
+  margin-bottom: 0;
+}
+
+.vp-doc .home-why p strong {
   color: var(--vp-c-text-1);
 }
 
@@ -166,7 +446,8 @@
 .vp-doc .home-learning-path {
   max-width: min(1080px, 100%);
   margin: 0 auto 3rem;
-  padding: 0 1.25rem;
+  /* No horizontal padding — VPHomeContent container already provides 24–64px gutters */
+  padding: 0;
 }
 
 .vp-doc .home-learning-path h2 {
@@ -291,6 +572,37 @@
   color: var(--vp-c-text-2);
 }
 
+/* ── Learning path standalone page ─────────────────────────── */
+.vp-doc .lp-hero {
+  margin: 0 0 2.5rem;
+  padding: 2rem 1.75rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(15, 36, 64, 0.7) 0%, rgba(10, 22, 40, 0.85) 100%);
+  border: 1px solid rgba(253, 185, 19, 0.18);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.28);
+}
+
+.vp-doc .lp-tagline {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc .lp-tagline .gradient-text {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Make the tracks grid usable outside .home-learning-path on this page */
+.vp-doc .home-learning-path {
+  max-width: none;
+  margin: 0 0 2rem;
+  padding: 0;
+}
+
+/* ── Feature grid — subtle lift ─────────────────────────────── */
 /* Feature grid — subtle lift */
 .dark .VPFeatures .item {
   background: rgba(15, 36, 64, 0.4);
@@ -626,6 +938,454 @@
   .dark .sky-orb { opacity: 0; }
 }
 
+/* ================================================================
+   Home — "See it in 8 lines" code+side panel
+   ================================================================ */
+
+/* "See it in 8 lines" — clean two-column card
+ * Left: code panel.  Right: short takeaway + CTA.
+ * No corner brackets, no badge, no decorative pseudo-elements. */
+.vp-doc .home-taste {
+  position: relative;
+  z-index: 1;
+  max-width: min(60rem, 100%);
+  margin: 0 auto 3rem;
+  padding: 1.6rem 1.6rem 1.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(160, 169, 184, 0.16);
+  background: linear-gradient(160deg, rgba(15, 36, 64, 0.72) 0%, rgba(10, 22, 40, 0.92) 100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+.vp-doc .home-taste h2 {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: none;
+  color: var(--vp-c-text-1);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.vp-doc .home-taste-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 1.25rem 1.5rem;
+  align-items: stretch;
+}
+
+@media (max-width: 760px) {
+  .vp-doc .home-taste-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Code panel — flat, dark, no extra chrome */
+.vp-doc .home-taste-grid > div[class*='language-'],
+.vp-doc .home-taste-code {
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(160, 169, 184, 0.16);
+  background: #061122;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  overflow: auto;
+}
+
+.vp-doc .home-taste-code pre {
+  margin: 0;
+  padding: 1rem 1.15rem;
+  background: transparent;
+  border-radius: 10px;
+  overflow: visible;
+}
+
+.vp-doc .home-taste-code code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: #a8b5c8;
+  background: transparent;
+  white-space: pre;
+  display: block;
+}
+
+.vp-doc .home-taste-grid > div[class*='language-'] pre {
+  padding: 1rem 1.15rem;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.vp-doc .home-taste-grid > div[class*='language-'] code {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Right side — takeaway + bullets + CTA */
+.vp-doc .home-taste-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.1rem 0;
+}
+
+.vp-doc .home-taste-side strong {
+  display: block;
+  color: var(--vp-c-text-1);
+  font-size: 1rem;
+  margin: 0 0 0.6rem;
+}
+
+.vp-doc .home-taste-side ul {
+  margin: 0 0 0.85rem;
+  padding: 0;
+  list-style: none;
+}
+
+.vp-doc .home-taste-side li {
+  margin: 0;
+  padding: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.vp-doc .home-taste-side p:has(a) {
+  margin: 0;
+}
+
+.vp-doc .home-taste-side a {
+  display: inline-block;
+  margin-top: 0.25rem;
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.vp-doc .home-taste-side a:hover {
+  color: #ffe08a;
+}
+
+/* ================================================================
+   Home — LangChain-style footer (home page only)
+   Columns at top · giant outlined wordmark · status / links bar
+   ================================================================ */
+
+/* Footer only — full-bleed escape from the VitePress content container.
+ * Pulls flush to the page edges and the page bottom. */
+.VPHome .home-footer {
+  width: 100vw;
+  max-width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw !important;
+  margin-right: -50vw !important;
+  margin-bottom: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Cancel bottom padding on every parent so the footer sits flush at the bottom */
+.VPHome {
+  padding-bottom: 0 !important;
+  /* VitePress scoped style adds margin-bottom: 96px/128px — zero it out */
+  margin-bottom: 0 !important;
+}
+.VPHome .VPContent,
+.VPHome > .VPContent {
+  padding-bottom: 0 !important;
+}
+.VPHome .VPContent > main {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.VPHome .vp-doc {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.VPHome .vp-doc .container {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.VPHome .VPFooter {
+  display: none !important;
+}
+
+.home-footer {
+  position: relative;
+  z-index: 1;
+  margin: 4rem 0 0;
+  padding: 3rem clamp(1.25rem, 5vw, 4rem) 1.5rem;
+  border-top: 1px solid rgba(160, 169, 184, 0.16);
+  /* Same surface tone as the top nav for visual continuity */
+  background: color-mix(in srgb, var(--vp-c-bg) 92%, #000 8%);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Inner link columns + status bar stay centered inside the full-width strip.
+ * Note: the wordmark showcase (.home-footer-showcase) is intentionally NOT
+ * constrained — it spans the full viewport width like the LangChain footer. */
+.home-footer > .home-footer-cols,
+.home-footer > .home-footer-bottom {
+  max-width: min(1180px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Top: compact 4-column link grid */
+.home-footer-cols {
+  max-width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem 2rem;
+}
+
+@media (max-width: 880px) {
+  .home-footer-cols {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-footer-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-footer-col {
+  min-width: 0;
+}
+
+.home-footer-col p,
+.home-footer-col strong {
+  display: block;
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+}
+
+.home-footer-col ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-footer-col li {
+  margin: 0;
+  padding: 0;
+  line-height: 1.85;
+}
+
+.home-footer-col a {
+  display: inline-block;
+  font-size: 0.86rem;
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.home-footer-col a:hover {
+  color: var(--vp-c-brand-1);
+}
+
+/* Middle: giant outlined wordmark — full viewport width (LangChain showcase).
+ * Breaks out of the footer's inner padding to span edge-to-edge. */
+.home-footer-showcase {
+  position: relative;
+  /* Compensate for the footer's horizontal padding so the wordmark spans the full width */
+  width: calc(100% + 2 * clamp(1.25rem, 5vw, 4rem));
+  margin: 2.25rem 0 1rem;
+  margin-left: calc(-1 * clamp(1.25rem, 5vw, 4rem));
+  margin-right: calc(-1 * clamp(1.25rem, 5vw, 4rem));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.home-footer-wordmark {
+  display: inline-block;
+  font-size: clamp(4rem, 21vw, 999rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(253, 185, 19, 0.32);
+  text-shadow: 0 0 60px rgba(253, 185, 19, 0.05);
+  white-space: nowrap;
+  font-family: var(--vp-font-family-base);
+}
+
+/* Bottom: status (left) + secondary links (right) */
+.home-footer-bottom {
+  max-width: min(1180px, 100%);
+  margin: 1.5rem auto 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(160, 169, 184, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-footer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--vp-c-text-2);
+  letter-spacing: 0.01em;
+}
+
+.home-footer-status .status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18), 0 0 12px rgba(74, 222, 128, 0.45);
+  animation: footer-status-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes footer-status-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+.home-footer-bottom-links {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.2rem;
+}
+
+.home-footer-bottom-links a {
+  font-size: 0.82rem;
+  color: var(--vp-c-text-3);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.home-footer-bottom-links a:hover {
+  color: var(--vp-c-brand-1);
+}
+
+/* Hide VitePress's built-in footer on the home page since the custom footer replaces it */
+.dark .VPHome .VPFooter {
+  display: none;
+}
+
+/* ================================================================
+   Nav — BETA pill next to the site title
+   Injected via theme/index.ts using the `nav-bar-title-after` slot
+   ================================================================ */
+.nav-beta-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.08rem 0.42rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid rgba(253, 185, 19, 0.42);
+  color: var(--vp-c-brand-1);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  vertical-align: middle;
+  position: relative;
+  top: -0.5px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .nav-beta-pill {
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.36rem;
+    font-size: 0.54rem;
+  }
+}
+
+/* ──── Doc-page callouts (4-color palette utility classes) ────────
+ * Use inline in any markdown file:
+ *   <div class="note note-beginner">…</div>   teal — beginner-friendly tips
+ *   <div class="note note-deep">…</div>       purple — architecture / deep-dive
+ *   <div class="note note-ai">…</div>         coral — AI / automation
+ *   <div class="note note-warn">…</div>       gold — important / caveats
+ * Mirrors the .phil-card border-left pattern so they slot into existing pages
+ * without new design tokens. A <strong> as the first child picks up the accent.
+ */
+.vp-doc .note {
+  position: relative;
+  margin: 1.25rem 0;
+  padding: 0.95rem 1.15rem 0.85rem;
+  border-radius: 0 10px 10px 0;
+  border: 1px solid transparent;
+  border-left-width: 3px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc .note > :first-child { margin-top: 0; }
+.vp-doc .note > :last-child  { margin-bottom: 0; }
+
+.vp-doc .note strong:first-child {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.vp-doc .note-beginner {
+  background: rgba(14, 58, 72, 0.32);
+  border-color: rgba(78, 205, 196, 0.18);
+  border-left-color: #4ecdc4;
+}
+.vp-doc .note-beginner strong:first-child { color: #4ecdc4; }
+.vp-doc .note-beginner a { color: #7eddd8; }
+.vp-doc .note-beginner a:hover { color: #4ecdc4; }
+
+.vp-doc .note-deep {
+  background: rgba(52, 22, 72, 0.32);
+  border-color: rgba(167, 119, 227, 0.18);
+  border-left-color: #a777e3;
+}
+.vp-doc .note-deep strong:first-child { color: #a777e3; }
+.vp-doc .note-deep a { color: #c4a3ec; }
+.vp-doc .note-deep a:hover { color: #a777e3; }
+
+.vp-doc .note-ai {
+  background: rgba(60, 28, 8, 0.32);
+  border-color: rgba(255, 140, 66, 0.18);
+  border-left-color: #ff8c42;
+}
+.vp-doc .note-ai strong:first-child { color: #ff8c42; }
+.vp-doc .note-ai a { color: #ffb07a; }
+.vp-doc .note-ai a:hover { color: #ff8c42; }
+
+.vp-doc .note-warn {
+  background: rgba(60, 44, 8, 0.32);
+  border-color: rgba(253, 185, 19, 0.2);
+  border-left-color: var(--vp-c-brand-1);
+}
+.vp-doc .note-warn strong:first-child { color: var(--vp-c-brand-1); }
+.vp-doc .note-warn a { color: #ffd060; }
+.vp-doc .note-warn a:hover { color: var(--vp-c-brand-1); }
+
 /* kept for backwards compat — not rendered in markdown anymore */
 .step-arrow { display: none; }
 
@@ -862,4 +1622,800 @@
 
 .ai-cmd-card p code {
   font-size: 0.78rem;
+}
+
+/* ================================================================
+   HOME PAGE — RESPONSIVE OVERRIDES
+   Breakpoints:
+     ≤480px   mobile portrait
+     481–767px  mobile landscape / small tablet
+     768–1023px iPad portrait / large tablet
+     ≥1024px    desktop (mostly handled by base styles)
+   ================================================================ */
+
+/* ── Hero ──────────────────────────────────────────────────────── */
+
+/* Stack hero on anything narrower than 860px (already exists, hardening it) */
+@media (max-width: 860px) {
+  .dark .VPHero {
+    padding: calc(var(--vp-nav-height) + 2rem) 0 2.5rem;
+  }
+  .dark .VPHero .container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .dark .VPHero .main {
+    text-align: center;
+  }
+  .dark .VPHero .actions {
+    justify-content: center;
+  }
+  .dark .VPHero .name::after {
+    margin: 0.8rem auto 1rem;
+  }
+  .dark .VPHero .image {
+    order: 0;
+    margin-right: 0;
+    align-self: auto;
+  }
+  .dark .VPHero .image-container {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .dark .VPHero .image-src,
+  .VPHero .image img {
+    max-width: 320px;
+  }
+}
+
+/* Mobile portrait */
+@media (max-width: 480px) {
+  .dark .VPHero {
+    padding: calc(var(--vp-nav-height) + 1.25rem) 0 2rem;
+  }
+  .dark .VPHero .name {
+    font-size: clamp(2.6rem, 14vw, 3.5rem);
+  }
+  .dark .VPHero .text {
+    font-size: clamp(1.15rem, 5.5vw, 1.5rem);
+    max-width: none;
+  }
+  .dark .VPHero .tagline {
+    font-size: 0.88rem;
+  }
+  .dark .VPHero .actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .dark .VPHero .action .VPButton {
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+    justify-content: center;
+  }
+  .dark .VPHero .image-container {
+    max-width: 240px;
+  }
+  .dark .VPHero .image-src,
+  .VPHero .image img {
+    max-width: 240px;
+  }
+}
+
+/* ── Features grid (VitePress VPFeatures) ──────────────────────── */
+
+/* iPad portrait: 2-col instead of 3 */
+@media (min-width: 640px) and (max-width: 959px) {
+  .dark .VPFeatures .items {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Mobile: single column */
+@media (max-width: 639px) {
+  .dark .VPFeatures .items {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Beta banner ───────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .vp-doc .home-beta-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 1.5rem auto 1.75rem;
+    padding: 0.85rem 1rem;
+  }
+  .vp-doc .home-beta-banner p {
+    font-size: 0.85rem;
+  }
+}
+
+/* ── Hero section (rich tagline below features) ─────────────────── */
+
+@media (max-width: 640px) {
+  .vp-doc .home-hero-section {
+    padding: 1.5rem 0;
+  }
+  .vp-doc .home-hero-section .tagline-rich {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+}
+
+/* ── "Why BananaJS" card ─────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .vp-doc .home-why {
+    padding: 1.25rem 1.1rem;
+    margin-bottom: 2rem;
+  }
+  .vp-doc .home-why h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* ── "See it in 8 lines" taste panel ──────────────────────────── */
+
+@media (max-width: 760px) {
+  .vp-doc .home-taste {
+    padding: 1.25rem 1.1rem 1.4rem;
+  }
+  .vp-doc .home-taste-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .vp-doc .home-taste {
+    padding: 1rem 0.9rem 1.2rem;
+    border-radius: 10px;
+  }
+  .vp-doc .home-taste h2 {
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Footer columns ────────────────────────────────────────────── */
+
+/* Already has 4→2→1 breakpoints; just tighten padding on small screens */
+@media (max-width: 640px) {
+  .home-footer {
+    padding-top: 2rem;
+    padding-bottom: 1.25rem;
+  }
+  .home-footer-cols {
+    gap: 1.25rem 1rem;
+  }
+  .home-footer-col a {
+    font-size: 0.82rem;
+  }
+}
+
+/* ── Footer wordmark ───────────────────────────────────────────── */
+
+/* On very small screens the outlined text can feel cramped — reduce stroke */
+@media (max-width: 480px) {
+  .home-footer-wordmark {
+    -webkit-text-stroke-width: 0.5px;
+    font-size: clamp(3rem, 21vw, 999rem);
+  }
+}
+
+/* ── Footer bottom bar ─────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .home-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .home-footer-bottom-links {
+    gap: 0 0.9rem;
+  }
+  .home-footer-bottom-links a {
+    font-size: 0.78rem;
+  }
+}
+
+/* ── Architecture diagram ──────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .vp-doc .home-architecture {
+    padding: 1.25rem 0.9rem 1.5rem;
+    border-radius: 12px;
+  }
+  .vp-doc .home-architecture h2 {
+    font-size: 1.2rem;
+  }
+  .vp-doc .home-architecture .mermaid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Sky orbs on mobile ────────────────────────────────────────── */
+/* Already partially handled; ensure middle orb is also hidden on narrow screens */
+@media (max-width: 480px) {
+  .dark .sky-orb-2 {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+/* ================================================================
+   Home — enterprise phase-by-phase showcase
+   Vertical timeline: 4 phases stacked, each with a 2-column row.
+   Left column (meta): colored spine, phase number, description.
+   Right column (code): syntax-highlighted code block.
+   ================================================================ */
+
+.vp-doc .home-showcase {
+  position: relative;
+  z-index: 1;
+  max-width: min(72rem, 100%);
+  margin: 0 auto 3rem;
+  padding: 1.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(160, 169, 184, 0.16);
+  background: linear-gradient(160deg, rgba(15, 36, 64, 0.72) 0%, rgba(10, 22, 40, 0.92) 100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+/* Showcase eyebrow + title */
+.vp-doc .home-showcase-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc .home-showcase-title {
+  margin: 0 0 0.55rem;
+  padding: 0;
+  border: none !important;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc .home-showcase-sub {
+  margin: 0 0 2rem;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.65;
+  max-width: 52rem;
+}
+
+.vp-doc .home-showcase-sub strong {
+  color: var(--vp-c-text-1);
+}
+
+/* ═══════════════════════════════════════════════
+   Framework feature cards
+═══════════════════════════════════════════════ */
+.vp-doc .home-fw {
+  max-width: min(1140px, 100%);
+  margin: 3rem auto;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+}
+
+.vp-doc .home-fw h2 {
+  margin: 0 0 0.25rem;
+  border: none;
+  font-size: 1.35rem;
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc .home-fw-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc .home-fw-title {
+  margin: 0 0 0.4rem;
+  border: none !important;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--vp-c-text-1);
+  padding: 0;
+}
+
+.vp-doc .home-fw-sub {
+  margin: 0 0 1.75rem;
+  font-size: 0.88rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+}
+
+/* ================================================================
+   Framework capabilities — showcase-style tabbed panel
+   ================================================================ */
+
+/* Outer wrapper — same surface as the showcase */
+.vp-doc .home-fw-showcase {
+  margin-top: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(160, 169, 184, 0.13);
+  background: rgba(10, 20, 38, 0.6);
+  overflow: hidden;
+}
+
+/* Tab bar */
+.vp-doc .home-fw-tb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 0.55rem 1rem 0;
+  border-bottom: 1px solid rgba(160, 169, 184, 0.12);
+  background: rgba(6, 14, 28, 0.55);
+}
+
+/* Tab label */
+.vp-doc .home-fw-tl {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px 6px 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--vp-font-family-mono);
+  color: var(--vp-c-text-3);
+  cursor: pointer;
+  transition: color 0.14s, background 0.14s;
+  user-select: none;
+  white-space: nowrap;
+  line-height: 1.6;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+}
+
+.vp-doc .home-fw-tl:hover {
+  color: var(--vp-c-text-1);
+}
+
+/* Radio inputs — hidden */
+.vp-doc .home-fw-tabs > input[type="radio"] {
+  position: absolute;
+  width: 0; height: 0;
+  opacity: 0; pointer-events: none;
+}
+
+/* All panels hidden by default */
+.vp-doc .home-fw-tc { display: none; }
+
+/* Show panels and highlight active tab */
+#hpfw1:checked ~ .home-fw-tp .home-fw-tc:nth-child(1),
+#hpfw2:checked ~ .home-fw-tp .home-fw-tc:nth-child(2),
+#hpfw3:checked ~ .home-fw-tp .home-fw-tc:nth-child(3),
+#hpfw4:checked ~ .home-fw-tp .home-fw-tc:nth-child(4),
+#hpfw5:checked ~ .home-fw-tp .home-fw-tc:nth-child(5),
+#hpfw6:checked ~ .home-fw-tp .home-fw-tc:nth-child(6) { display: grid; }
+
+#hpfw1:checked ~ .home-fw-tb label[for="hpfw1"],
+#hpfw2:checked ~ .home-fw-tb label[for="hpfw2"],
+#hpfw3:checked ~ .home-fw-tb label[for="hpfw3"],
+#hpfw4:checked ~ .home-fw-tb label[for="hpfw4"],
+#hpfw5:checked ~ .home-fw-tb label[for="hpfw5"],
+#hpfw6:checked ~ .home-fw-tb label[for="hpfw6"] {
+  color: var(--vp-c-text-1);
+  border-bottom-color: var(--vp-c-brand-1);
+}
+
+/* Panel grid: meta left, code right */
+.vp-doc .home-fw-tc {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.75fr);
+  gap: 0;
+  align-items: stretch;
+}
+
+/* Meta column */
+.vp-doc .home-fw-panel-meta {
+  padding: 1.6rem 1.5rem;
+  border-right: 1px solid rgba(160, 169, 184, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.vp-doc .home-fw-panel-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.vp-doc .home-fw-panel-desc {
+  font-size: 0.84rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.65;
+  margin: 0 0 0.85rem;
+}
+
+.vp-doc .home-fw-panel-pts {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  flex: 1;
+}
+
+.vp-doc .home-fw-panel-pts li {
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.75;
+  padding-left: 1.05rem;
+  position: relative;
+}
+
+.vp-doc .home-fw-panel-pts li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--vp-c-brand-1);
+  font-size: 0.85rem;
+  line-height: 1.75;
+}
+
+/* Code column */
+.vp-doc .home-fw-panel-code {
+  background: rgba(4, 11, 24, 0.85);
+  min-width: 0;
+}
+
+.vp-doc .home-fw-panel-code > div[class*='language-'] {
+  margin: 0;
+  border-radius: 0;
+  height: 100%;
+  background: transparent !important;
+  border: none;
+}
+
+.vp-doc .home-fw-panel-code > div[class*='language-'] pre {
+  padding: 1.4rem 1.35rem;
+  font-size: 0.79rem;
+  line-height: 1.62;
+  background: transparent;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.vp-doc .home-fw-panel-code > div[class*='language-'] code {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.vp-doc .home-fw-panel-code > div[class*='language-'] button.copy,
+.vp-doc .home-fw-panel-code > div[class*='language-'] span.lang {
+  display: none;
+}
+
+/* Responsive: stack on tablet */
+@media (max-width: 800px) {
+  .vp-doc .home-fw-tc {
+    grid-template-columns: 1fr;
+  }
+  .vp-doc .home-fw-panel-meta {
+    border-right: none;
+    border-bottom: 1px solid rgba(160, 169, 184, 0.1);
+    padding: 1.25rem 1.25rem 1rem;
+  }
+  .vp-doc .home-fw-panel-code > div[class*='language-'] pre {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── Old card grid styles (kept for safety, unused) ─────────────── */
+.vp-doc .home-fw-grid { display: none; }
+
+/* Phase list — vertical stacked rows */
+.vp-doc .hs-phase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Each phase: meta column (left) + code column (right) */
+.vp-doc .hs-phase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.85fr);
+  gap: 1.5rem;
+  padding: 1.75rem 0;
+  border-bottom: 1px solid rgba(160, 169, 184, 0.11);
+}
+
+.vp-doc .hs-phase:first-child { padding-top: 0; }
+.vp-doc .hs-phase:last-child  { border-bottom: none; padding-bottom: 0; }
+
+/* Meta column — colored left spine acts as the timeline track */
+.vp-doc .hs-phase-meta {
+  padding-left: 1.1rem;
+  border-left: 3px solid;
+  display: flex;
+  flex-direction: column;
+}
+
+.vp-doc .hs-phase-1 .hs-phase-meta { border-left-color: #ff8a3d; }
+.vp-doc .hs-phase-2 .hs-phase-meta { border-left-color: #4ecdc4; }
+.vp-doc .hs-phase-3 .hs-phase-meta { border-left-color: #a777e3; }
+.vp-doc .hs-phase-4 .hs-phase-meta { border-left-color: #fdb913; }
+.vp-doc .hs-phase-5 .hs-phase-meta { border-left-color: #f472b6; }
+.vp-doc .hs-phase-6 .hs-phase-meta { border-left-color: #34d399; }
+
+/* Header row: phase number + tag chip */
+.vp-doc .hs-phase-hd {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Large monospace phase number */
+.vp-doc .hs-num {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  font-family: var(--vp-font-family-mono);
+  letter-spacing: -0.03em;
+}
+
+.hs-c1 { color: #ff8a3d; }
+.hs-c2 { color: #4ecdc4; }
+.hs-c3 { color: #a777e3; }
+.hs-c4 { color: #fdb913; }
+.hs-c5 { color: #f472b6; }
+.hs-c6 { color: #34d399; }
+
+/* Tag chip */
+.vp-doc .hs-tag {
+  font-size: 0.7rem;
+  font-family: var(--vp-font-family-mono);
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.vp-doc .hs-tag-1 { color: #ff8a3d; background: rgba(255, 138, 61, 0.1); border: 1px solid rgba(255, 138, 61, 0.22); }
+.vp-doc .hs-tag-2 { color: #4ecdc4; background: rgba(78, 205, 196, 0.1); border: 1px solid rgba(78, 205, 196, 0.22); }
+.vp-doc .hs-tag-3 { color: #a777e3; background: rgba(167, 119, 227, 0.1); border: 1px solid rgba(167, 119, 227, 0.22); }
+.vp-doc .hs-tag-4 { color: #fdb913; background: rgba(253, 185, 19, 0.1); border: 1px solid rgba(253, 185, 19, 0.22); }
+.vp-doc .hs-tag-5 { color: #f472b6; background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.22); }
+.vp-doc .hs-tag-6 { color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.22); }
+
+/* Phase title */
+.vp-doc .hs-ptitle {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+  margin-bottom: 0.45rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+/* Phase description */
+.vp-doc .hs-pdesc {
+  font-size: 0.855rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.65;
+  margin: 0 0 0.65rem;
+}
+
+/* Bullet list */
+.vp-doc .hs-pts {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  flex: 1;
+}
+
+.vp-doc .hs-pts li {
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.75;
+  padding-left: 1.05rem;
+  position: relative;
+}
+
+.vp-doc .hs-pts li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--vp-c-text-3);
+  font-size: 0.85rem;
+  line-height: 1.75;
+}
+
+/* CTA link — flex:1 on the pts list pushes this to the bottom */
+.vp-doc .hs-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0.28rem 0.75rem 0.28rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(253, 185, 19, 0.28);
+  background: rgba(253, 185, 19, 0.06);
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.vp-doc .hs-cta:hover {
+  background: rgba(253, 185, 19, 0.13);
+  border-color: rgba(253, 185, 19, 0.55);
+  color: #ffe08a;
+}
+
+/* ── CSS-only tab switcher ─────────────────────────────────────── */
+
+/* Radio inputs control state — hidden but accessible */
+.hs-tabs > input[type="radio"] {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
+}
+
+/* Tab bar strip */
+.vp-doc .hs-tb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(160, 169, 184, 0.1);
+}
+
+/* Tab label — inactive */
+.vp-doc .hs-tl {
+  display: inline-block;
+  padding: 0.22rem 0.65rem;
+  border-radius: 5px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  font-family: var(--vp-font-family-mono);
+  color: var(--vp-c-text-3);
+  cursor: pointer;
+  transition: color 0.14s, background 0.14s;
+  user-select: none;
+  white-space: nowrap;
+  line-height: 1.65;
+}
+
+.vp-doc .hs-tl:hover {
+  color: var(--vp-c-text-1);
+  background: rgba(160, 169, 184, 0.09);
+}
+
+/* All panels hidden by default */
+.vp-doc .hs-tc { display: none; }
+
+/* Show panel when its radio is checked — nth-child matches tab order */
+#hsp1t1:checked ~ .hs-tp .hs-tc:nth-child(1),
+#hsp2t1:checked ~ .hs-tp .hs-tc:nth-child(1),
+#hsp3t1:checked ~ .hs-tp .hs-tc:nth-child(1),
+#hsp4t1:checked ~ .hs-tp .hs-tc:nth-child(1),
+#hsp5t1:checked ~ .hs-tp .hs-tc:nth-child(1),
+#hsp6t1:checked ~ .hs-tp .hs-tc:nth-child(1) { display: block; }
+
+#hsp1t2:checked ~ .hs-tp .hs-tc:nth-child(2),
+#hsp2t2:checked ~ .hs-tp .hs-tc:nth-child(2),
+#hsp3t2:checked ~ .hs-tp .hs-tc:nth-child(2),
+#hsp4t2:checked ~ .hs-tp .hs-tc:nth-child(2),
+#hsp5t2:checked ~ .hs-tp .hs-tc:nth-child(2),
+#hsp6t2:checked ~ .hs-tp .hs-tc:nth-child(2) { display: block; }
+
+#hsp2t3:checked ~ .hs-tp .hs-tc:nth-child(3),
+#hsp3t3:checked ~ .hs-tp .hs-tc:nth-child(3),
+#hsp4t3:checked ~ .hs-tp .hs-tc:nth-child(3),
+#hsp6t3:checked ~ .hs-tp .hs-tc:nth-child(3) { display: block; }
+
+#hsp4t4:checked ~ .hs-tp .hs-tc:nth-child(4) { display: block; }
+
+/* Active tab label highlight */
+#hsp1t1:checked ~ .hs-tb label[for="hsp1t1"],
+#hsp1t2:checked ~ .hs-tb label[for="hsp1t2"],
+#hsp2t1:checked ~ .hs-tb label[for="hsp2t1"],
+#hsp2t2:checked ~ .hs-tb label[for="hsp2t2"],
+#hsp2t3:checked ~ .hs-tb label[for="hsp2t3"],
+#hsp3t1:checked ~ .hs-tb label[for="hsp3t1"],
+#hsp3t2:checked ~ .hs-tb label[for="hsp3t2"],
+#hsp3t3:checked ~ .hs-tb label[for="hsp3t3"],
+#hsp4t1:checked ~ .hs-tb label[for="hsp4t1"],
+#hsp4t2:checked ~ .hs-tb label[for="hsp4t2"],
+#hsp4t3:checked ~ .hs-tb label[for="hsp4t3"],
+#hsp4t4:checked ~ .hs-tb label[for="hsp4t4"],
+#hsp5t1:checked ~ .hs-tb label[for="hsp5t1"],
+#hsp5t2:checked ~ .hs-tb label[for="hsp5t2"],
+#hsp6t1:checked ~ .hs-tb label[for="hsp6t1"],
+#hsp6t2:checked ~ .hs-tb label[for="hsp6t2"],
+#hsp6t3:checked ~ .hs-tb label[for="hsp6t3"] {
+  color: var(--vp-c-text-1);
+  background: rgba(160, 169, 184, 0.14);
+}
+
+/* Code column */
+.vp-doc .hs-phase-code {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Strip VitePress chrome inside each tab panel */
+.vp-doc .hs-tc > div[class*='language-'] {
+  margin: 0;
+  border-radius: 10px;
+  background: rgba(4, 11, 24, 0.95) !important;
+}
+
+.vp-doc .hs-tc > div[class*='language-'] pre {
+  padding: 0.9rem 1.1rem;
+  font-size: 0.78rem;
+  line-height: 1.62;
+  background: transparent;
+}
+
+.vp-doc .hs-tc > div[class*='language-'] code {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Hide copy button and lang label */
+.vp-doc .hs-tc > div[class*='language-'] button.copy,
+.vp-doc .hs-tc > div[class*='language-'] span.lang {
+  display: none;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+
+/* Tablet: single column, meta above code */
+@media (max-width: 800px) {
+  .vp-doc .hs-phase {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1.25rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .vp-doc .home-showcase {
+    padding: 1.25rem 1rem;
+    border-radius: 10px;
+  }
+
+  .vp-doc .home-showcase > h2 {
+    font-size: 0.75rem;
+  }
+
+  .vp-doc .hs-num {
+    font-size: 1.4rem;
+  }
+
+  .vp-doc .hs-tc > div[class*='language-'] pre {
+    font-size: 0.73rem;
+  }
 }

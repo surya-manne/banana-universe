@@ -1,6 +1,6 @@
 # Migrating from Express
 
-BananaJS runs on **Express** — middleware, `Request`/`Response`, and ecosystem packages still work. For a **step-by-step** migration strategy, the repository includes **`docs/MIGRATION.md`** (incremental adoption, `BananaRouter`, testing).
+BananaJS runs on **Express** — middleware, `Request`/`Response`, and ecosystem packages still work. You can migrate **one route at a time**: mount BananaJS routes under a prefix and leave the rest of your Express app untouched, or run the codemod and convert handlers in bulk.
 
 ## Incremental mount with `BananaRouter`
 
@@ -22,7 +22,41 @@ app.get('/legacy', (_req, res) => res.send('ok'))
 app.listen(3000)
 ```
 
-`BananaRouter` is a **function** that returns an Express **`Router`** — use it directly with `app.use`. (The longer **`docs/MIGRATION.md`** example in-repo may still say `new BananaRouter` / `.router`; prefer the pattern above.)
+`BananaRouter` is a **function** that returns an Express **`Router`** — use it directly with `app.use`.
+
+## A migrated endpoint — before & after
+
+**Before** (Express, four concerns tangled):
+
+```typescript
+router.post('/users', async (req, res) => {
+  if (!req.body?.email || !req.body?.name) {
+    return res.status(400).json({ error: 'Missing fields' })
+  }
+  try {
+    const user = await db.users.create(req.body)
+    res.json({ success: true, data: user })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+```
+
+**After** (BananaJS, handler is only business logic):
+
+```typescript
+@Controller('users')
+export class UserController extends BaseController {
+  @Post('')
+  @Body(CreateUserSchema)
+  async create(req: Request, res: Response) {
+    const user = await this.service.create(req.body)
+    return this.ok(res, 'User created', user)
+  }
+}
+```
+
+Validation, error shape, and response envelope are all handled by the framework. The codemod (`bjs migrate`) emits this `*.controller.ts` shape from your existing Express routes.
 
 ## What changes conceptually
 

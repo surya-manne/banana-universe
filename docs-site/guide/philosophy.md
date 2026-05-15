@@ -15,12 +15,16 @@ Express is excellent. But every Express codebase eventually diverges: routes def
 
 A `@Controller` class, Validation schema, a `createModule` binding — that is the full mental model. You do not configure a router, register error middleware manually, or wire validators to handlers. The framework does it; you write business logic.
 
+[→ See it in the Quickstart](/guide/quickstart)
+
 </div>
 <div class="phil-card phil-gold">
 
 **🧩 Heavy is optional**
 
 The core is lean — routing, validation, responses, errors, DI. Everything heavier (ORMs, observability, auth, caching, rate limiting, multi-tenancy, WebSocket) is a plugin or a decorator behind a peer dependency. You install what you need; nothing else is in your bundle.
+
+[→ Plugin overview](/plugins/overview)
 
 </div>
 <div class="phil-card phil-purple">
@@ -29,12 +33,16 @@ The core is lean — routing, validation, responses, errors, DI. Everything heav
 
 Start with a flat controller. When the model warrants it, introduce `createModule` feature slices with domain entities, repository ports, and infrastructure adapters — no forced ceremony. The `@banana-universe/ddd` package and `bjs generate module` scaffold exactly this layered structure; you adopt at your own pace.
 
+[→ DDD primitives reference](/reference/ddd-primitives)
+
 </div>
 <div class="phil-card phil-coral">
 
 **🤖 AI as a first-class citizen**
 
-The `bjs` CLI ships AI-assisted workflows: generate a layered module from a description or schema, review and scaffold tests, explain code, and more. The LLM layer supports Ollama (default), llama.cpp, OpenAI, and Anthropic. See [AI commands](/tooling/ai-commands).
+The `bjs` CLI ships AI-assisted workflows: generate a layered module from a description or schema, review and scaffold tests, explain code, and more. **Bring your own model** — OpenAI, Anthropic, Gemini, Bedrock, or local Ollama / llama.cpp through a one-config-field swap.
+
+[→ AI hub](/ai/) · [→ LLM providers](/integrations/llm-providers)
 
 </div>
 </div>

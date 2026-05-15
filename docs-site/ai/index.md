@@ -534,120 +534,12 @@ The tabs below use the **`npx`** form throughout. Swap the `command`/`args` bloc
 
 ### One-time setup per IDE
 
-::: code-group
+<div class="note note-ai">
 
-```json [Cursor · .mcp.json]
-// File: <project-root>/.mcp.json
-// Or globally: ~/.cursor/mcp.json
-{
-  "mcpServers": {
-    "bananajs": {
-      "command": "npx",
-      "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-    }
-  }
-}
-```
+**Per-IDE config blocks live in <a href="/mcp/#setup-per-ide">MCP server → Setup per IDE</a>.**
+Cursor · VS Code (Copilot) · Claude Desktop · Claude Code CLI · Windsurf · OpenCode · Zed · Continue — same `mcpServers` entry across all of them, with copy-paste blocks per IDE. The working-directory caveat and restart steps live there too. Single source of truth — this page links instead of duplicating.
 
-```json [VS Code · GitHub Copilot]
-// File: <project-root>/.vscode/mcp.json
-// Requires VS Code ≥ 1.99 with Copilot extension
-{
-  "servers": {
-    "bananajs": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-    }
-  }
-}
-```
-
-```json [Claude Desktop]
-// macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
-// Windows: %APPDATA%\Claude\claude_desktop_config.json
-{
-  "mcpServers": {
-    "bananajs": {
-      "command": "npx",
-      "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-    }
-  }
-}
-```
-
-```bash [Claude Code CLI]
-# One command — no config file editing needed
-claude mcp add bananajs -- npx -y @banana-universe/bananajs-cli mcp start
-
-# Verify it registered
-claude mcp list
-```
-
-```json [Windsurf]
-// File: ~/.codeium/windsurf/mcp_server_config.json
-{
-  "mcpServers": {
-    "bananajs": {
-      "command": "npx",
-      "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-    }
-  }
-}
-```
-
-```json [OpenCode]
-// File: <project-root>/opencode.json  (or ~/.config/opencode/config.json globally)
-{
-  "mcp": {
-    "bananajs": {
-      "command": "npx",
-      "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-    }
-  }
-}
-```
-
-```json [Zed]
-// File: ~/.config/zed/settings.json  — merge into the existing object
-{
-  "context_servers": {
-    "bananajs": {
-      "command": {
-        "path": "npx",
-        "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-      }
-    }
-  }
-}
-```
-
-```json [Continue]
-// File: <project-root>/.continue/config.json
-{
-  "mcpServers": [
-    {
-      "name": "bananajs",
-      "command": "npx",
-      "args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start"]
-    }
-  ]
-}
-```
-
-:::
-
-::: tip Restart once, use everywhere
-After saving the config, **restart the IDE** (or reload the MCP server from its settings panel). The server registers all 8 tools automatically — no further setup needed until you change the config file.
-:::
-
-::: warning Working directory matters
-The MCP server resolves your project root from the directory it starts in. If your IDE launches it from the wrong folder, pass `--cwd` explicitly:
-
-```json
-"args": ["-y", "@banana-universe/bananajs-cli", "mcp", "start", "--cwd", "/absolute/path/to/my-app"]
-```
-:::
+</div>
 
 
 ### Real-world use cases

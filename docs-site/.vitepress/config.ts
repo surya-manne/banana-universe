@@ -13,6 +13,7 @@ const referenceApiSidebar = [
       { text: 'BananaAppOptions', link: '/reference/bananaapp-options' },
       { text: 'Error Types', link: '/reference/error-types' },
       { text: 'Config Module', link: '/reference/config-module' },
+      { text: 'DDD primitives', link: '/reference/ddd-primitives' },
     ],
   },
   {
@@ -59,12 +60,6 @@ export default withMermaid(
 
       nav: [
         { text: 'Guide', link: '/guide/quickstart', activeMatch: '/guide/' },
-        { text: 'Philosophy', link: '/guide/philosophy' },
-        {
-          text: 'AI',
-          link: '/ai/',
-          activeMatch: '^/(ai/|tooling/(ai-commands|ai-module-generation))',
-        },
         { text: 'Recipes', link: '/recipes/', activeMatch: '/recipes/' },
         {
           text: 'Reference',
@@ -72,9 +67,18 @@ export default withMermaid(
           activeMatch: '^/(reference|api)(/|$)',
         },
         { text: 'Integrations', link: '/integrations/typeorm', activeMatch: '/integrations/' },
+        {
+          text: 'AI & Tooling',
+          activeMatch: '^/(ai/|mcp/|tooling/)',
+          items: [
+            { text: 'AI hub', link: '/ai/' },
+            { text: 'CLI reference', link: '/tooling/cli' },
+            { text: 'AI commands', link: '/tooling/ai-commands' },
+            { text: 'MCP server', link: '/mcp/' },
+            { text: 'Benchmarks', link: '/tooling/benchmarks' },
+          ],
+        },
         { text: 'Plugins', link: '/plugins/overview', activeMatch: '/plugins/' },
-        { text: 'Tooling', link: '/tooling/cli', activeMatch: '/tooling/' },
-        { text: 'MCP', link: '/mcp/', activeMatch: '/mcp/' },
       ],
 
       sidebar: {
@@ -88,9 +92,10 @@ export default withMermaid(
             ],
           },
           {
-            text: 'Learning',
+            text: 'Core',
             items: [
               { text: 'Core Concepts', link: '/guide/basic-concepts' },
+              { text: 'Validation', link: '/guide/validation' },
               { text: 'Consistent Responses', link: '/guide/consistent-responses' },
               { text: 'Advanced Concepts', link: '/guide/advanced-concepts' },
             ],
@@ -113,6 +118,14 @@ export default withMermaid(
             ],
           },
           {
+            text: 'Operating',
+            items: [
+              { text: 'Security', link: '/guide/security' },
+              { text: 'Testing', link: '/reference/testing' },
+              { text: 'Multi-tenancy', link: '/reference/multi-tenancy' },
+            ],
+          },
+          {
             text: 'Migration',
             items: [{ text: 'From Express', link: '/migration/from-express' }],
           },
@@ -130,6 +143,7 @@ export default withMermaid(
               { text: 'Authentication', link: '/integrations/auth' },
               { text: 'OpenTelemetry', link: '/integrations/opentelemetry' },
               { text: 'Zod', link: '/integrations/zod' },
+              { text: 'LLM providers', link: '/integrations/llm-providers' },
             ],
           },
         ],
@@ -208,9 +222,9 @@ export default withMermaid(
         ],
       },
 
-      footer: {
-        message: 'Released under the MIT License.',
-        copyright: 'Copyright © 2026',
+      editLink: {
+        pattern: 'https://github.com/surya-manne/banana-universe/edit/main/docs-site/:path',
+        text: 'Edit this page on GitHub',
       },
 
       search: {
